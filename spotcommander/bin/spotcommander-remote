@@ -4,7 +4,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ if(!$daemon_server)
 
 chmod(daemon_socket, 0666);
 
-$spotify_is_testing = spotify_is_testing();
+$spotify_is_unsupported = spotify_is_unsupported();
 $qdbus = daemon_qdbus_select();
 $pulseaudio = daemon_pulseaudio_check();
 $logind = daemon_logind_check($qdbus);
@@ -81,7 +81,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'spotify_quit')
 	{
-		if($spotify_is_testing)
+		if($spotify_is_unsupported)
 		{
 			exec('killall spotify');
 		}
@@ -171,23 +171,6 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'play_uri')
 	{
-		if($spotify_is_testing)
-		{
-			$type = get_uri_type($data);
-
-			if($type == 'track' || $type == 'album')
-			{
-				if($type == 'album')
-				{
-					$metadata = get_album($data);
-					$data = $metadata['discs'][1][0]['uri'];
-				}
-
-				exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause');
-				usleep(250000);
-			}
-		}
-
 		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $data);
 	}
 	elseif($action == 'play_uri_from_playlist')
@@ -197,34 +180,12 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 		$playlist_uri = $data[0];
 		$uri = $data[1];
 
-		if($spotify_is_testing)
-		{
-			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause');
-		}
-		else
-		{
-			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $playlist_uri);
-		}
-
+		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $playlist_uri);
 		usleep(250000);
 		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $uri);
 	}
 	elseif($action == 'shuffle_play_uri')
 	{
-		if($spotify_is_testing)
-		{
-			$type = get_uri_type($data);
-
-			if($type == 'album')
-			{
-				$metadata = get_album($data);
-				$data = $metadata['discs'][1][0]['uri'];
-
-				exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause');
-				usleep(250000);
-			}
-		}
-
 		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $data);
 		exec('xte \'keydown Control_R\' \'key s\' \'keyup Control_R\' && sleep 0.25 && xte \'keydown Control_R\' \'key s\' \'keyup Control_R\'');
 		usleep(250000);
@@ -315,7 +276,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'shut_down_computer')
 	{
-		if($spotify_is_testing)
+		if($spotify_is_unsupported)
 		{
 			exec('killall spotify');
 		}

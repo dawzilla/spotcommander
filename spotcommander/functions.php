@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ function spotify_is_running()
 	return false;
 }
 
-function spotify_is_testing()
+function spotify_is_unsupported()
 {
-	return (trim(file_get_contents(__DIR__ . '/run/spotify.version')) == 'testing');
+	return (trim(file_get_contents(__DIR__ . '/run/spotify.version')) == 'new');
 }
 
 // Daemon
@@ -53,7 +53,7 @@ function daemon_start($user)
 
 	file_write($user_file, $user);
 
-	$log = (daemon_spotify_is_testing()) ? "\nSpotify is testing version.\n\n" : "\nSpotify is stable version.\n\n";
+	$log = (daemon_spotify_is_unsupported()) ? "\nSpotify is unsupported version.\n\n" : "\nSpotify is supported version.\n\n";
 
 	file_write($log_file, $log);
 
@@ -90,14 +90,14 @@ function daemon_inotifywait($action)
 	file_write(__DIR__ . '/run/daemon.inotify', $action);
 }
 
-function daemon_spotify_is_testing()
+function daemon_spotify_is_unsupported()
 {
 	$version_file = __DIR__ . '/run/spotify.version';
-	$version = (trim(shell_exec('grep -c autologin\.saved_credentials /home/' . daemon_user() . '/.config/spotify/prefs')) == 1) ? 'testing' : 'stable';
+	$version = (trim(shell_exec('grep -c autologin\.saved_credentials /home/' . daemon_user() . '/.config/spotify/prefs')) == 1) ? 'new' : 'stable';
 
 	file_write($version_file, $version);
 
-	return ($version == 'testing');
+	return ($version == 'new');
 }
 
 function daemon_user()
@@ -294,7 +294,7 @@ function queue_uris($uris, $randomly)
 
 	if($type == 'playlist')
 	{
-		$spotify_is_testing = spotify_is_testing();
+		$spotify_is_unsupported = spotify_is_unsupported();
 
 		$playlist = get_playlist($uris);
 
@@ -308,7 +308,7 @@ function queue_uris($uris, $randomly)
 
 		foreach($tracks as $track)
 		{
-			if($spotify_is_testing)
+			if($spotify_is_unsupported)
 			{
 				$type = get_uri_type($track['uri']);
 
@@ -2192,7 +2192,7 @@ function get_external_files($uris, $headers, $post)
 	for($i = 0; $i < $count; $i++)
 	{
 		$uri = $uris[$i];
-		$ua = (preg_match('/^https?:\/\/open\.spotify\.com\//', $uri)) ? 'Mozilla/5.0 (Android 6.0.1; Mobile; rv:46.0) Gecko/46.0 Firefox/46.0' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:46.0) Gecko/20100101 Firefox/46.0';
+		$ua = (preg_match('/^https?:\/\/open\.spotify\.com\//', $uri)) ? 'Mozilla/5.0 (Android 7.1.1; Mobile; rv:51.0) Gecko/51.0 Firefox/51.0' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:51.0) Gecko/20100101 Firefox/51.0';
 
 		$ch[$i] = curl_init();
 
@@ -2336,8 +2336,9 @@ function check_for_updates()
 
 	$cookie_version = str_replace('.', '_', $version);
 	$installed = (isset($_COOKIE['installed_' . $cookie_version]) && is_numeric($_COOKIE['installed_' . $cookie_version])) ? round($_COOKIE['installed_' . $cookie_version] / 1000) : 0;
+	$spotify = (spotify_is_unsupported()) ? 'Unsupported' : 'Supported';
 
-	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode($version) . '&installed=' . rawurlencode($installed) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
+	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode($version) . '&installed=' . rawurlencode($installed) . '&spotify=' . rawurlencode($spotify) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
 	$latest_version = trim($files[0]);
 
 	return (preg_match('/^\d+\.\d+$/', $latest_version)) ? $latest_version : 'error';
@@ -2447,7 +2448,7 @@ function get_uri_type($uri)
 	{
 		$type = 'track';
 	}
-	elseif(preg_match('/^spotify:local:[^:]+:[^:]*:[^:]+:\d*$/', $uri) || preg_match('/^https?:\/\/[^\.]+\.spotify\.com\/local\/[^\/]+\/[^\/]*\/[^\/]+\/\d*$/', $uri))
+	elseif(preg_match('/^spotify:local:/', $uri) || preg_match('/^https?:\/\/[^\.]+\.spotify\.com\/local\//', $uri))
 	{
 		$type = 'local';
 	}
@@ -2522,7 +2523,7 @@ function url_to_uri($uri)
 function uri_to_id($uri)
 {
 	preg_match('/^spotify:.+:(.+)$/', $uri, $ids);
-	return $ids[1];
+	return (empty($ids[1])) ? '' : $ids[1];
 }
 
 function get_playlist_user($uri)

@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,11 +22,12 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 // Project
 
 define('project_name', 'SpotCommander');
-define('project_version', 12.8);
-define('project_serial', 1864);
+define('project_version', 12.9);
+define('project_serial', 2000);
 define('project_website', 'http://www.olejon.net/code/spotcommander/');
+define('project_website_https', 'https://www.olejon.net/code/spotcommander/');
 define('project_developer', 'Ole Jon Bjørkum');
-define('project_android_app_minimum_version', 6.0);
+define('project_android_app_minimum_version', 7.6);
 
 // Configuration
 
@@ -146,10 +147,11 @@ elseif(isset($_GET['global_variables']))
 		'project_version' => project_version,
 		'project_serial' => project_serial,
 		'project_website' => project_website,
+		'project_website_https' => project_website_https,
 		'project_developer' => project_developer,
 		'project_android_app_minimum_version' => project_android_app_minimum_version,
 		'project_error_code' => check_for_errors(),
-		'project_spotify_is_testing' => spotify_is_testing()
+		'project_spotify_is_unsupported' => spotify_is_unsupported()
 	);
 
 	echo json_encode($global_variables);

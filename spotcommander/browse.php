@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -522,7 +522,7 @@ else
 		<div>
 		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="new-releases" data-args="" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div album_grey_24_img_div"></div></div><div class="card_text_div"><div>New Releases</div><div>In ' . $country . '.</div></div></div>
 		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=streamed" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div headphones_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Streamed</div><div>Today in ' . $country . '.</div></div></div>
-		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=viral" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div share_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Viral</div><div>Today ' . $country . '.</div></div></div>
+		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=viral" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div share_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Viral</div><div>Today in ' . $country . '.</div></div></div>
 		</div>
 		</div>
 		</div>

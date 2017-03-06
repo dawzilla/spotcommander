@@ -1,6 +1,6 @@
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -463,6 +463,7 @@ div#dialog_head_div
 div#dialog_body_div
 {
 	max-height: 320px;
+	overflow-x: hidden;
 	overflow-y: hidden;
 	overflow-scrolling: touch;
 	-webkit-overflow-scrolling: touch;

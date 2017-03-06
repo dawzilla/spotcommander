@@ -3,7 +3,7 @@
 Modernizr 3.3.1
 Source: https://github.com/modernizr/modernizr
 
-Copyright 2016
+Copyright 2017
 License: http://opensource.org/licenses/MIT
 
 Build: http://modernizr.com/download/?-csstransforms3d-csstransitions-inputtypes-notification-touchevents-domprefixes-prefixed-prefixes-shiv-testallprops-testprop-teststyles

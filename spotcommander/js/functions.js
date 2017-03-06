@@ -1,6 +1,6 @@
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -802,25 +802,11 @@ function playUri(uri)
 {
 	var type = getUriType(uri);
 
-	if(project_spotify_is_testing)
-	{
-		if(type != 'track' && type != 'album')
-		{
-			showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. You can not play playlists, artists or local files.<br><br>A workaround is to queue all tracks from the overflow menu.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: null });
-			return;
-		}
-	}
-
 	startRefreshNowplaying();
 
 	$.post('main.php?'+getCurrentTime(), { action: 'play_uri', data: uri }, function()
 	{
-		var timeout = (project_spotify_is_testing) ? 500 : 0;
-
-		setTimeout(function()
-		{
-			refreshNowplaying('manual');
-		}, timeout);
+		refreshNowplaying('manual');
 	});
 
 	if(type == 'playlist') saveRecentPlaylist(uri);
@@ -828,29 +814,13 @@ function playUri(uri)
 
 function playUriFromPlaylist(playlist_uri, uri)
 {
-	if(project_spotify_is_testing)
-	{
-		var type = getUriType(uri);
-
-		if(type != 'track')
-		{
-			showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. You can not play local files.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: null });
-			return;
-		}
-	}
-
 	startRefreshNowplaying();
 
 	var data = JSON.stringify([playlist_uri, uri]);
 
 	$.post('main.php?'+getCurrentTime(), { action: 'play_uri_from_playlist', data: data }, function()
 	{
-		var timeout = (project_spotify_is_testing) ? 500 : 0;
-
-		setTimeout(function()
-		{
-			refreshNowplaying('manual');
-		}, timeout);
+		refreshNowplaying('manual');
 	});
 
 	saveRecentPlaylist(playlist_uri);
@@ -858,13 +828,16 @@ function playUriFromPlaylist(playlist_uri, uri)
 
 function shufflePlayUri(uri)
 {
-	var type = getUriType(uri);
-
-	if(project_spotify_is_testing && type != 'album')
+	if(project_spotify_is_unsupported)
 	{
-		showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. You can not play playlists or artists.<br><br>A workaround is to queue all tracks from the overflow menu.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: null });
+		showToast('Shuffle must already be enabled', 2);
+
+		playUri(uri);
+
 		return;
 	}
+
+	var type = getUriType(uri);
 
 	var cookie = { id: 'hide_shuffle_play_uri_dialog', value: 'true', expires: 3650 };
 
@@ -878,12 +851,7 @@ function shufflePlayUri(uri)
 
 		$.post('main.php?'+getCurrentTime(), { action: 'shuffle_play_uri', data: uri }, function()
 		{
-			var timeout = (project_spotify_is_testing) ? 500 : 0;
-
-			setTimeout(function()
-			{
-				refreshNowplaying('manual');
-			}, timeout);
+			refreshNowplaying('manual');
 		});
 
 		if(type == 'playlist') saveRecentPlaylist(uri);
@@ -897,10 +865,6 @@ function startTrackRadio(uri, play_first)
 	if(getUriType(uri) == 'local')
 	{
 		showToast('Not possible for local files', 4);
-	}
-	else if(project_spotify_is_testing)
-	{
-		showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. This feature will not work.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: null });
 	}
 	else if(!isCookie(cookie.id))
 	{
@@ -1179,7 +1143,7 @@ function refreshNowplaying(type)
 
 				if(nowplaying.is_local)
 				{
-					$.getJSON(project_website+'api/1/cover-art/?type=album&artist='+encodeURIComponent(nowplaying.artist)+'&album='+encodeURIComponent(nowplaying.album)+'&callback=?', function(metadata)
+					$.getJSON(project_website_https+'api/1/cover-art/?type=album&artist='+encodeURIComponent(nowplaying.artist)+'&album='+encodeURIComponent(nowplaying.album)+'&callback=?', function(metadata)
 					{
 						var lastfm_cover_art = (typeof metadata.mega == 'undefined' || metadata.mega == '') ? 'img/no-cover-art-640.png?'+project_serial : metadata.mega;
 
@@ -1554,15 +1518,6 @@ function queueUri(artist, title, uri)
 {
 	var type = getUriType(uri);
 
-	if(project_spotify_is_testing)
-	{
-		if(type != 'track')
-		{
-			showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. You can not queue local files.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: null });
-			return;
-		}
-	}
-
 	$.post('queue.php?queue_uri&'+getCurrentTime(), { artist: artist, title: title, uri: uri }, function(xhr_data)
 	{
 		if(xhr_data == 'spotify_is_not_running')
@@ -1594,10 +1549,7 @@ function queueUris(uris, randomly)
 			var number = parseInt(xhr_data);
 			var toast = (number == 1) ? 'track' : 'tracks';
 
-			var toast_append = (project_spotify_is_testing) ? ' (not local files)' : '';
-			var toast_seconds = (project_spotify_is_testing) ? 6 : 2;
-
-			showToast(number+' '+toast+' queued'+toast_append, toast_seconds);
+			showToast(number+' '+toast+' queued', 2);
 			refreshQueueActivity();
 		}
 	});
@@ -2223,7 +2175,7 @@ function getArtistBiography()
 
 	var artist = div.data('artist');
 
-	$.getJSON(project_website+'api/1/artist/biography/?artist='+artist+'&callback=?', function(metadata)
+	$.getJSON(project_website_https+'api/1/artist/biography/?artist='+artist+'&callback=?', function(metadata)
 	{
 		var biography = (metadata.biography == '') ? 'No biography available.' : metadata.biography;
 
@@ -2302,7 +2254,7 @@ function applySettings()
 function disableSetting(div)
 {
 	$(div+' > div.setting_text_div > div:first-child').addClass('setting_disabled_div');
-	$(div+' > div.setting_text_div > div:last-child').html('Not supported on this device.');
+	$(div+' > div.setting_text_div > div:last-child').html('Not supported on this device');
 	$(div+' > div.setting_edit_div').css('visibility', 'hidden');
 }
 
@@ -2908,18 +2860,6 @@ function checkForDialogs()
 {
 	if(isDisplayed('div#dialog_div')) return;
 
-	if(project_spotify_is_testing)
-	{
-		var cookie = { id: 'hide_spotify_is_testing_dialog', value: 'true', expires: 3650 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'Spotify Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported Spotify version. The new MPRIS behaviour breaks some features, like playing playlists, artists and albums.<br><br>A workaround is to queue all tracks from the overflow menu.<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: cookie });
-	}
-
-	if(!ua_is_supported)
-	{
-		var cookie = { id: 'hide_unsupported_browser_dialog_'+project_version, value: 'true', expires: 7 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'Browser Warning', body_class: 'dialog_message_div', body_content: 'You are using an unsupported browser. If things do not work as they should, you know why.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?requirements'] }, cookie: cookie });
-	}
-
 	if(!ua_supports_csstransitions || !ua_supports_csstransforms3d)
 	{
 		var cookie = { id: 'hide_software_accelerated_animations_dialog_'+project_version, value: 'true', expires: 3650 };
@@ -2954,7 +2894,6 @@ function checkForDialogs()
 			}
 
 			var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
-
 			if(!isCookie(cookie.id)) showDialog({ title: 'Android App Tip', body_class: 'dialog_message_div', body_content: 'You can use the hardware volume buttons on your device to control Spotify\'s volume.<br><br>There are also some extra features that can be enabled in Settings.', button1: null, button2: null, cookie: cookie });
 
 			var installed = parseInt($.cookie('installed_'+project_version));
@@ -2970,7 +2909,6 @@ function checkForDialogs()
 			}
 
 			var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
-
 			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48) showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
 		}
 		else
@@ -3015,6 +2953,9 @@ function checkForDialogs()
 		var cookie = { id: 'hide_windows_desktop_integration_dialog', value: 'true', expires: 3650 };
 		if(!isCookie(cookie.id)) showDialog({ title: 'Windows Desktop Tip', body_class: 'dialog_message_div', body_content: 'Pin '+project_name+' to the taskbar to get additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?windows_desktop_integration'] }, cookie: cookie });
 	}
+
+	var cookie = { id: 'hide_spotify_is_unsupported_dialog_'+project_version, value: 'true', expires: 7 };
+	if(!isCookie(cookie.id) && project_spotify_is_unsupported) showDialog({ title: 'Unsupported Spotify', body_class: 'dialog_message_div', body_content: '&bull; Playing a single track will repeat it over and over<br>&bull; Manually skipping to the next track will in many cases not play queued tracks, because of the above problem<br>&bull; Starting track radios does not work<br>&bull; Manually playing local files does not work, but plays in playlists<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: cookie });
 }
 
 // Notifications
@@ -3546,7 +3487,7 @@ function getCurrentTime()
 
 function getMSIEVersion()
 {
-	var re = ua.match(/Mozilla\/\d+\.\d+ \(Windows NT \d+\.\d+;.*Trident\/\d+\.\d+;.*rv:(\d+)\.\d+\)/);
+	var re = ua.match(/Mozilla\/\d+\.\d+ \(Windows NT \d+\.\d+;.*?Trident\/\d+\.\d+;.*?rv:(\d+)\.\d+\)/);
 	return (re) ? parseInt(re[1]) : 0;
 }
 
@@ -3643,7 +3584,7 @@ function getUriType(uri)
 	{
 		type = 'track';
 	}
-	else if(uri.match(/^spotify:local:[^:]+:[^:]*:[^:]+:\d*$/) || uri.match(/^https?:\/\/[^\.]+\.spotify\.com\/local\/[^\/]+\/[^\/]*\/[^\/]+\/\d*$/))
+	else if(uri.match(/^spotify:local:/) || uri.match(/^https?:\/\/[^\.]+\.spotify\.com\/local\//))
 	{
 		type = 'local';
 	}

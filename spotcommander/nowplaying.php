@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,8 +54,9 @@ if(spotify_is_running())
 		$title = (empty($nowplaying['title'])) ? $title : $nowplaying['title'];
 		$album = (empty($nowplaying['album'])) ? $album : $nowplaying['album'];
 		$uri = ($is_local) ? preg_replace('/:\d*$/', '', $nowplaying['url']) . ':' : url_to_uri($nowplaying['url']);
+		$share_uri = ($is_local) ? 'spotify:local:' : $uri;
 		$length = convert_length($nowplaying['length'], 'mc');
-		$cover_art = (empty($nowplaying['artUrl'])) ? 'img/no-cover-art-640.png?' . project_serial : str_replace(array('https', 'open.spotify.com', '/thumb/'), array('http', 'i.scdn.co', '/image/'), $nowplaying['artUrl']);
+		$cover_art = (empty($nowplaying['artUrl'])) ? 'img/no-cover-art-640.png?' . project_serial : str_replace(array('http:', 'open.spotify.com', '/thumb/'), array('https:', 'i.scdn.co', '/image/'), $nowplaying['artUrl']);
 		$released = (empty($nowplaying['contentCreated'])) ? 'Unknown' : substr($nowplaying['contentCreated'], 0, 4);
 		$popularity = (empty($nowplaying['autoRating'])) ? 'Unknown' : convert_popularity($nowplaying['autoRating']);
 
@@ -75,7 +76,7 @@ if(spotify_is_running())
 		$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri', 'isauthorizedwithspotify'), 'values' => array('hide_dialog get_recommendations', $uri, is_authorized_with_spotify));
 		$actions_dialog['actions'][] = array('text' => 'Start Track Radio', 'keys' => array('actions', 'uri', 'playfirst'), 'values' => array('hide_dialog start_track_radio', $uri, 'false'));
-		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($share_uri))));
 		$actions_dialog['actions'][] = array('text' => 'YouTube', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.youtube.com/results?search_query=' . rawurlencode($artist . ' ' . $title)));
 		$actions_dialog['actions'][] = array('text' => 'Last.fm', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'http://www.last.fm/music/' . urlencode($artist) . '/_/' . urlencode($title)));
 		$actions_dialog['actions'][] = array('text' => 'Wikipedia', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist)));

@@ -1,9 +1,9 @@
 /*
 
-jQuery Base64 plugin 0.0.3
+jQuery Base64 Plugin 0.0.3
 Source: http://github.com/yckart/jquery.base64.js
 
-Copyright 2016 Yannick Albert
+Copyright 2017 Yannick Albert
 License: http://opensource.org/licenses/MIT
 
 */

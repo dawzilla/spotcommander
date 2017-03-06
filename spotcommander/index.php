@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ require_once('main.php');
 <meta name="viewport" content="user-scalable=no, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#212121">
 <meta name="msapplication-tap-highlight" content="no">
 <meta name="msapplication-TileImage" content="img/favicon-144.png?<?php echo project_serial; ?>">
 <meta name="msapplication-TileColor" content="#212121">

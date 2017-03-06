@@ -1,6 +1,6 @@
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,10 +28,11 @@ function setGlobalVariables(global_variables)
 	project_version = parseFloat(global_variables.project_version);
 	project_serial = parseInt(global_variables.project_serial);
 	project_website = global_variables.project_website;
+	project_website_https = global_variables.project_website_https;
 	project_developer = global_variables.project_developer;
 	project_android_app_minimum_version = parseFloat(global_variables.project_android_app_minimum_version);
 	project_error_code = parseInt(global_variables.project_error_code);
-	project_spotify_is_testing = global_variables.project_spotify_is_testing;
+	project_spotify_is_unsupported = global_variables.project_spotify_is_unsupported;
 
 	// User agent
 	ua = window.navigator.userAgent;
@@ -61,7 +62,6 @@ function setGlobalVariables(global_variables)
 	}
 
 	// Device & browser
-	ua_is_supported = (shc(ua, 'MSIE') || shc(ua, 'Firefox') && shc(ua, 'Mobile') || shc(ua, 'Firefox') && shc(ua, 'Tablet') || shc(ua, 'Presto') || shc(ua, 'Ubuntu') && shc(ua, 'Mobile') || shc(ua, 'Ubuntu') && shc(ua, 'Tablet') || shc(ua, 'Windows Phone')) ? false : true;
 	ua_is_android = (shc(ua, 'Android'));
 	ua_is_ios = (shc(ua, 'iPhone') || shc(ua, 'iPod') || shc(ua, 'iPad'));
 	ua_is_os_x = (shc(ua, 'Macintosh; Intel Mac OS X'));
