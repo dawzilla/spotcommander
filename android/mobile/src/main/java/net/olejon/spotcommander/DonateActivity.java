@@ -2,7 +2,7 @@ package net.olejon.spotcommander;
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -70,9 +70,10 @@ public class DonateActivity extends AppCompatActivity
 
         // Toolbar
         final Toolbar toolbar = (Toolbar) findViewById(R.id.donate_toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_close_white_24dp);
 
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if(getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // In-app billing
         Intent intent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
@@ -117,7 +118,7 @@ public class DonateActivity extends AppCompatActivity
     {
         super.onDestroy();
 
-        if(mServiceConnection != null) unbindService(mServiceConnection);
+        unbindService(mServiceConnection);
     }
 
     // Back button

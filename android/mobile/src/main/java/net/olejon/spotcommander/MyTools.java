@@ -2,7 +2,7 @@ package net.olejon.spotcommander;
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ final class MyTools
     // Current network
     public String getCurrentNetwork()
     {
-    	final WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+    	final WifiManager wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
     	if(wifiManager.isWifiEnabled()) return wifiManager.getConnectionInfo().getSSID();
 

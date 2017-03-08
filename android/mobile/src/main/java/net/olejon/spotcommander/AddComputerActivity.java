@@ -2,7 +2,7 @@ package net.olejon.spotcommander;
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
@@ -56,6 +55,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -97,7 +97,7 @@ public class AddComputerActivity extends AppCompatActivity
         toolbar.setTitleTextColor(ContextCompat.getColor(mContext, R.color.white));
 
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if(getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAddComputerNameInputLayout = (TextInputLayout) findViewById(R.id.add_computer_text_input_name_layout);
         mAddComputerUriInputLayout = (TextInputLayout) findViewById(R.id.add_computer_text_input_uri_layout);
@@ -140,8 +140,6 @@ public class AddComputerActivity extends AppCompatActivity
 		getMenuInflater().inflate(R.menu.menu_add_computer, menu);
 
         mScanNetworkMenuItem = menu.findItem(R.id.add_computer_menu_scan_network);
-
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) mScanNetworkMenuItem.setIcon(R.drawable.ic_speaker_phone_white_24dp);
 
 		return true;
 	}
@@ -261,7 +259,7 @@ public class AddComputerActivity extends AppCompatActivity
 		}
 		else
 		{
-			final WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+			final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
 			if(wifiManager.isWifiEnabled())
 			{	
@@ -269,7 +267,7 @@ public class AddComputerActivity extends AppCompatActivity
 
 				final int wifiIpAddress = wifiInfo.getIpAddress();
 
-				final String wifiSubnet = String.format("%d.%d.%d", (wifiIpAddress & 0xff), (wifiIpAddress >> 8 & 0xff), (wifiIpAddress >> 16 & 0xff));
+				final String wifiSubnet = String.format(Locale.US, "%d.%d.%d", (wifiIpAddress & 0xff), (wifiIpAddress >> 8 & 0xff), (wifiIpAddress >> 16 & 0xff));
 
 				if(wifiSubnet.equals("0.0.0"))
 				{

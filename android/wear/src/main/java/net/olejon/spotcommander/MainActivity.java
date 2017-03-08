@@ -2,7 +2,7 @@ package net.olejon.spotcommander;
 
 /*
 
-Copyright 2016 Ole Jon Bjørkum
+Copyright 2017 Ole Jon Bjørkum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.view.WatchViewStub;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -39,9 +39,9 @@ public class MainActivity extends WearableActivity
 
     private final Context mContext = this;
 
-    private GoogleApiClient mGoogleApiClient;
+    private LinearLayout linearLayout;
 
-    private WatchViewStub mWatchViewStub;
+    private GoogleApiClient mGoogleApiClient;
 
     // Create activity
     @Override
@@ -52,11 +52,10 @@ public class MainActivity extends WearableActivity
         // Layout
         setContentView(R.layout.activity_main);
 
+        linearLayout = (LinearLayout) findViewById(R.id.wear_main_inner_layout);
+
         // Ambient mode
         setAmbientEnabled();
-
-        // Stub
-        mWatchViewStub = (WatchViewStub) findViewById(R.id.watch_view_stub);
 
         // Google API client
         mGoogleApiClient = new GoogleApiClient.Builder(mContext).addApiIfAvailable(Wearable.API).build();
@@ -77,7 +76,7 @@ public class MainActivity extends WearableActivity
     {
         super.onEnterAmbient(ambientDetails);
 
-        mWatchViewStub.setBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
+        linearLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
     }
 
     @Override
@@ -85,7 +84,7 @@ public class MainActivity extends WearableActivity
     {
         super.onExitAmbient();
 
-        mWatchViewStub.setBackgroundResource(R.drawable.background);
+        linearLayout.setBackgroundResource(R.drawable.background);
     }
 
     // Buttons

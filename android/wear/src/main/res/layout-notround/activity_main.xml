@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" tools:deviceIds="wear_round" style="@style/wear_main_inner_layout">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/wear_main_inner_layout" style="@style/wear_main_inner_layout">
 
     <LinearLayout style="@style/wear_main_inner_inner_layout">
         <ImageButton android:id="@+id/wear_adjust_spotify_volume_mute_button" android:src="@drawable/ic_volume_mute_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
