@@ -32,7 +32,6 @@ require_once('main.php');
 <title><?php echo project_name ?></title>
 
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta http-equiv="x-ua-compatible" content="IE=edge">
 
 <noscript><meta http-equiv="refresh" content="0; url=error.php?code=6"></noscript>
 
@@ -74,7 +73,7 @@ require_once('main.php');
 <link rel="apple-touch-startup-image" href="img/splash-ipad-landscape.png?<?php echo project_serial; ?>" media="screen and (device-width: 768px) and (device-height: 1024px) and (orientation: landscape)">
 <link rel="apple-touch-startup-image" href="img/splash-ipad-landscape-2x.png?<?php echo project_serial; ?>" media="screen and (device-width: 768px) and (device-height: 1024px) and (orientation: landscape) and (-webkit-device-pixel-ratio: 2)">
 
-<link rel="fluid-icon" href="<?php echo project_website; ?>img/favicon.png" title="<?php echo project_name; ?>">
+<link rel="fluid-icon" href="<?php echo project_website_https; ?>img/favicon.png" title="<?php echo project_name; ?>">
 
 <link rel="stylesheet" href="css/style-fonts.css?<?php echo project_serial; ?>">
 <link rel="stylesheet" href="css/style-images.css?<?php echo project_serial; ?>">

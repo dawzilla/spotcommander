@@ -2085,7 +2085,7 @@ function getFeaturedPlaylists(fade_in_div)
 	var country = div.data('country');
 	var spotify_token = div.data('spotifytoken');
 
-	$.getJSON(project_website+'api/1/browse/featured-playlists/?time='+time+'&country='+country+'&fields='+encodeURIComponent('description,cover_art')+'&token='+spotify_token+'&callback=?', function(data)
+	$.getJSON(project_website_https+'api/1/browse/featured-playlists/?time='+time+'&country='+country+'&fields='+encodeURIComponent('description,cover_art')+'&token='+spotify_token+'&callback=?', function(data)
 	{
 		if(typeof data.metadata == 'undefined' || data.metadata == '')
 		{
@@ -2909,12 +2909,18 @@ function checkForDialogs()
 			}
 
 			var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
-			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48) showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
+
+			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48)
+			{
+				var package_name = Android.JSgetPackageName();
+
+				showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
+			}
 		}
 		else
 		{
 			var cookie = { id: 'hide_android_app_dialog', value: 'true', expires: 1 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://search?q=pub:'+encodeURIComponent(project_developer)] }, cookie: cookie });
+			if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id='+package_name] }, cookie: cookie });
 		}
 	}
 	else if(ua_is_ios)

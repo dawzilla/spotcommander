@@ -22,8 +22,8 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 // Project
 
 define('project_name', 'SpotCommander');
-define('project_version', 12.9);
-define('project_serial', 2000);
+define('project_version', 13.0);
+define('project_serial', 13000);
 define('project_website', 'http://www.olejon.net/code/spotcommander/');
 define('project_website_https', 'https://www.olejon.net/code/spotcommander/');
 define('project_developer', 'Ole Jon Bjørkum');

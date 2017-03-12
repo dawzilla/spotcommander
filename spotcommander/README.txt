@@ -10,8 +10,10 @@ BEFORE UPGRADING:
 
 * Close SpotCommander completely on all your devices before upgrading
 
-CHANGELOG v 12.9:
+CHANGELOG v 13.0:
 
+* More secure key for the repository that does not give a warning on newer distributions
+* Minor changes from v 12.9 (no changes to the changes below)
 * Improved support for Spotify version 1.0
 * Latest third party libraries
 
