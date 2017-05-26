@@ -22,12 +22,12 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity
 
                         listComputers();
                     }
-                }).contentColorRes(R.color.black).negativeColorRes(R.color.black).show();
+                }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).negativeColorRes(R.color.black).show();
 
                 return true;
             }
@@ -187,16 +187,16 @@ public class MainActivity extends AppCompatActivity
         // Information dialog
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)
         {
-            if(!mTools.getSharedPreferencesBoolean("HIDE_INFORMATION_DIALOG_75"))
+            if(!mTools.getSharedPreferencesBoolean("HIDE_INFORMATION_DIALOG_79"))
             {
                 new MaterialDialog.Builder(mContext).title(R.string.main_information_dialog_title).content(getString(R.string.main_information_dialog_message)).positiveText(R.string.main_information_dialog_positive_button).onPositive(new MaterialDialog.SingleButtonCallback()
                 {
                     @Override
                     public void onClick(@NonNull MaterialDialog materialDialog, @NonNull DialogAction dialogAction)
                     {
-                        mTools.setSharedPreferencesBoolean("HIDE_INFORMATION_DIALOG_75", true);
+                        mTools.setSharedPreferencesBoolean("HIDE_INFORMATION_DIALOG_79", true);
                     }
-                }).contentColorRes(R.color.black).show();
+                }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).show();
             }
         }
 
@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity
                             {
                                 mTools.setSharedPreferencesLong("LAST_MESSAGE_ID", id);
                             }
-                        }).contentColorRes(R.color.black).show();
+                        }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).show();
                     }
                 }
                 catch(Exception e)
@@ -273,7 +273,7 @@ public class MainActivity extends AppCompatActivity
         requestQueue.add(jsonObjectRequest);
 
         // Permissions
-        grantPermissions();
+        grantPermissions(true);
 
         // Google analytics
         final GoogleAnalytics googleAnalytics = GoogleAnalytics.getInstance(mContext);
@@ -331,20 +331,17 @@ public class MainActivity extends AppCompatActivity
             }
             case R.id.main_menu_troubleshooting:
             {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.olejon.net/code/spotcommander/?troubleshooting"));
-                startActivity(intent);
+                mTools.openChromeCustomTabsUri("http://www.olejon.net/code/spotcommander/?troubleshooting");
                 return true;
             }
             case R.id.main_menu_report_issue:
             {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.olejon.net/code/spotcommander/?issues"));
-                startActivity(intent);
+                mTools.openChromeCustomTabsUri("http://www.olejon.net/code/spotcommander/?issues");
                 return true;
             }
             case R.id.main_menu_privacy_policy:
             {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.project_privacy_policy)));
-                startActivity(intent);
+                mTools.openChromeCustomTabsUri(getString(R.string.project_privacy_policy));
                 return true;
             }
             default:
@@ -403,22 +400,37 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Permissions
-    private void grantPermissions()
+    private void grantPermissions(final boolean showDialog)
     {
-        if(ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
+        if(showDialog && ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
         {
-            String[] permissions = {Manifest.permission.READ_PHONE_STATE};
+            new MaterialDialog.Builder(mContext).title(R.string.main_permissions_dialog_title).content(R.string.main_permissions_dialog_message).positiveText(R.string.main_permissions_dialog_positive_button).onPositive(new MaterialDialog.SingleButtonCallback()
+            {
+                @Override
+                public void onClick(@NonNull MaterialDialog materialDialog, @NonNull DialogAction dialogAction)
+                {
+                    grantPermissions(false);
+                }
+            }).cancelListener(new DialogInterface.OnCancelListener()
+            {
+                @Override
+                public void onCancel(DialogInterface dialogInterface)
+                {
+                    grantPermissions(false);
+                }
+            }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).show();
+        }
+        else
+        {
+                String[] permissions = {Manifest.permission.READ_PHONE_STATE};
 
-            ActivityCompat.requestPermissions(mActivity, permissions, PERMISSIONS_REQUEST_READ_PHONE_STATE);
+                ActivityCompat.requestPermissions(mActivity, permissions, PERMISSIONS_REQUEST_READ_PHONE_STATE);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
-        if(requestCode == PERMISSIONS_REQUEST_READ_PHONE_STATE && grantResults[0] != PackageManager.PERMISSION_GRANTED)
-        {
-            mTools.showToast(getString(R.string.main_permissions_not_granted), 1);
-        }
+        if(requestCode == PERMISSIONS_REQUEST_READ_PHONE_STATE && grantResults[0] != PackageManager.PERMISSION_GRANTED) mTools.showToast(getString(R.string.main_permissions_not_granted), 1);
     }
 }

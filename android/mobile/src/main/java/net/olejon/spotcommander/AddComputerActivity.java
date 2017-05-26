@@ -119,7 +119,7 @@ public class AddComputerActivity extends AppCompatActivity
             {
                 scanNetwork();
             }
-        }).contentColorRes(R.color.black).negativeColorRes(R.color.black).show();
+        }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).negativeColorRes(R.color.black).show();
 	}
 
 	// Pause activity

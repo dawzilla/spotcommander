@@ -28,7 +28,6 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.net.Uri;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -130,6 +129,15 @@ public class WebViewActivity extends AppCompatActivity
 		// Computer
 		final long computerId = mTools.getSharedPreferencesLong("LAST_COMPUTER_ID");
 
+        if(computerId == 0)
+        {
+            mTools.showToast(getString(R.string.webview_no_computer_added_error), 1);
+
+            finish();
+
+            return;
+        }
+
 		final String[] computer = mTools.getComputer(computerId);
 
 		final String uri = computer[0];
@@ -210,9 +218,9 @@ public class WebViewActivity extends AppCompatActivity
             @Override
 			public boolean shouldOverrideUrlLoading(WebView view, String url)
 			{
-				if(url != null && !url.contains(uri) && !url.contains("olejon.net/code/spotcommander/api/1/spotify/") && !url.contains("accounts.spotify.com/") && !url.contains("facebook.com/"))
+				if(url != null && !url.contains(uri) && !url.contains("olejon.net") && !url.contains("spotify.com") && !url.contains("facebook.com"))
 				{
-					view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    mTools.openChromeCustomTabsUri(url);
 
 					return true;
 				}
@@ -244,7 +252,7 @@ public class WebViewActivity extends AppCompatActivity
 			{
                 mWebView.stopLoading();
 
-                mTools.showToast(getString(R.string.webview_error), 1);
+                mTools.showToast(getString(R.string.webview_on_received_error), 1);
 
                 mTools.navigateUp(mActivity);
 			}
@@ -263,7 +271,7 @@ public class WebViewActivity extends AppCompatActivity
                     {
                         finish();
                     }
-                }).contentColorRes(R.color.black).show();
+                }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).show();
             }
 		});
 
@@ -500,7 +508,7 @@ public class WebViewActivity extends AppCompatActivity
             {
                 if(mHasLongPressedBack) return true;
 
-                if(mWebView.canGoBack() && mWebView.getUrl().contains("accounts.spotify.com/") || mWebView.canGoBack() && mWebView.getUrl().contains("facebook.com/"))
+                if(mWebView.canGoBack() && mWebView.getUrl().contains("spotify.com") || mWebView.canGoBack() && mWebView.getUrl().contains("facebook.com"))
                 {
                     mWebView.goBack();
 
@@ -559,9 +567,7 @@ public class WebViewActivity extends AppCompatActivity
 	    @JavascriptInterface
 	    public void JSopenUri(String uri)
 	    {
-            final Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(uri));
-            startActivity(intent);
+            mTools.openChromeCustomTabsUri(uri);
 	    }
 
 	    @JavascriptInterface

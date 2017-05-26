@@ -52,7 +52,7 @@ public class MainActivity extends WearableActivity
         // Layout
         setContentView(R.layout.activity_main);
 
-        linearLayout = (LinearLayout) findViewById(R.id.wear_main_inner_layout);
+        linearLayout = (LinearLayout) findViewById(R.id.wear_main_layout);
 
         // Ambient mode
         setAmbientEnabled();

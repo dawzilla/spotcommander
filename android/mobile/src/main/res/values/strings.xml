@@ -6,7 +6,7 @@
     <string name="project_name">SpotCommander</string>
     <string name="project_website">http://www.olejon.net/code/spotcommander/</string>
     <string name="project_privacy_policy">https://github.com/olejon/spotcommander/wiki/PrivacyPolicy</string>
-    <string name="project_minimum_version">12.8</string>
+    <string name="project_minimum_version">13.0</string>
 
     <!-- Main -->
     <string name="main_title">Computers</string>
@@ -16,6 +16,9 @@
     <string name="main_information_dialog_title">Information</string>
     <string name="main_information_dialog_message">If you experience that the app becomes unresponsive, disable accelerated animations in Settings, which can be opened from the top toolbar.\n\nThis is a known issue on some devices running Android versions older than Android 4.4.</string>
     <string name="main_information_dialog_positive_button">GOT IT</string>
+    <string name="main_permissions_dialog_title">Allow features</string>
+    <string name="main_permissions_dialog_message">The features Pause on Incoming Call and Pause on Outgoing Call that can be activated in Settings in the main app require the Phone permission.</string>
+    <string name="main_permissions_dialog_positive_button">OK</string>
     <string name="main_message_dialog_positive_button">CLOSE</string>
     <string name="main_remove_computer_dialog_title">Remove Computer</string>
     <string name="main_remove_computer_dialog_message">Do you want to remove this computer?</string>
@@ -32,13 +35,10 @@
     <string name="settings_title">Settings</string>
     <string name="settings_category_appearance">Appearance</string>
     <string name="settings_category_advanced">Advanced</string>
-    <string name="settings_category_links">Links</string>
     <string name="settings_hide_status_bar_title">Hide Status Bar</string>
     <string name="settings_hide_status_bar_summary">Check this to hide the status bar in the app</string>
     <string name="settings_accelerated_animations_title">Accelerated Animations</string>
     <string name="settings_accelerated_animations_summary">Uncheck this if you experience that the app becomes unresponsive. This is a known issue on some devices running Android versions older than Android 4.4. Unchecking this will not have any effect on Android 4.4 and newer</string>
-    <string name="settings_privacy_policy_title">Privacy Policy</string>
-    <string name="settings_privacy_policy_summary">View the privacy policy for this app</string>
 
     <!-- Add computer -->
     <string name="add_computer_title">Add Computer</string>
@@ -72,8 +72,9 @@
     <string name="add_computer_menu_stop">Stop</string>
 
     <!-- Webview -->
+    <string name="webview_no_computer_added_error">No computer added</string>
     <string name="webview_back">Long-press the back button to go back to the list of computers</string>
-    <string name="webview_error">SpotCommander: Something went wrong. Make sure that you are connected and that the URL is correct.</string>
+    <string name="webview_on_received_error">SpotCommander: Something went wrong. Make sure that you are connected and that the URL is correct.</string>
     <string name="webview_authentication_failed">SpotCommander: Authentication failed. Make sure you are using the correct username and password.</string>
     <string name="webview_network_changed">Network has changed</string>
     <string name="webview_dialog_ssl_error_title">Error</string>

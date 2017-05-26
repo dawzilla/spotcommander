@@ -19,20 +19,15 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 */
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
-import android.support.v4.app.NavUtils;
-import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.MenuItem;
 
-public class SettingsActivity extends PreferenceActivity
+public class SettingsActivity extends AppCompatActivity
 {
-    private final Activity mActivity = this;
-
     private final Context mContext = this;
 
 	private final MyTools mTools = new MyTools(mContext);
@@ -49,22 +44,31 @@ public class SettingsActivity extends PreferenceActivity
 		// Layout
         setContentView(R.layout.activity_settings);
 
-        //noinspection deprecation
-        addPreferencesFromResource(R.xml.settings);
-
         // Toolbar
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-        toolbar.setTitleTextColor(ContextCompat.getColor(mContext, R.color.white));
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.settings_toolbar);
         toolbar.setTitle(getString(R.string.settings_title));
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                NavUtils.navigateUpFromSameTask(mActivity);
-            }
-        });
+        setSupportActionBar(toolbar);
+        if(getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        // Fragment
+        getFragmentManager().beginTransaction().replace(R.id.settings_container, new SettingsFragment()).commit();
 	}
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch(item.getItemId())
+        {
+            case android.R.id.home:
+            {
+                mTools.navigateUp(this);
+                return true;
+            }
+            default:
+            {
+                return super.onOptionsItemSelected(item);
+            }
+        }
+    }
 }

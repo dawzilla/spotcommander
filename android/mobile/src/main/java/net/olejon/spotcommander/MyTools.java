@@ -26,11 +26,14 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -168,6 +171,40 @@ final class MyTools
         final int size = mContext.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
 
         return ((size) == Configuration.SCREENLAYOUT_SIZE_LARGE || (size) == Configuration.SCREENLAYOUT_SIZE_XLARGE);
+    }
+
+    // Open URI
+    public void openChromeCustomTabsUri(final String uri)
+    {
+        final String packageName = "com.android.chrome";
+
+        boolean isGoogleChromeInstalled = false;
+
+        try
+        {
+            mContext.getPackageManager().getApplicationInfo(packageName, 0);
+
+            isGoogleChromeInstalled = true;
+        }
+        catch(Exception e)
+        {
+            Log.e("MyTools", Log.getStackTraceString(e));
+        }
+
+        if(isGoogleChromeInstalled)
+        {
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+            builder.setToolbarColor(ContextCompat.getColor(mContext, R.color.dark_green));
+
+            CustomTabsIntent customTabsIntent = builder.build();
+            customTabsIntent.intent.setPackage(packageName);
+            customTabsIntent.launchUrl(mContext, Uri.parse(uri));
+        }
+        else
+        {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            mContext.startActivity(browserIntent);
+        }
     }
 
     // Up navigation
