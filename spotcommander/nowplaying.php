@@ -34,7 +34,6 @@ $cover_art = 'img/no-cover-art-640.png?' . project_serial;
 $uri = '';
 $is_local = false;
 $length = '';
-$released = '';
 $popularity = '';
 
 $actions = array();
@@ -57,7 +56,6 @@ if(spotify_is_running())
 		$share_uri = ($is_local) ? 'spotify:local:' : $uri;
 		$length = convert_length($nowplaying['length'], 'mc');
 		$cover_art = (empty($nowplaying['artUrl'])) ? 'img/no-cover-art-640.png?' . project_serial : str_replace(array('http:', 'open.spotify.com', '/thumb/'), array('https:', 'i.scdn.co', '/image/'), $nowplaying['artUrl']);
-		$released = (empty($nowplaying['contentCreated'])) ? 'Unknown' : substr($nowplaying['contentCreated'], 0, 4);
 		$popularity = (empty($nowplaying['autoRating'])) ? 'Unknown' : convert_popularity($nowplaying['autoRating']);
 
 		if($playbackstatus == 'Playing') save_recently_played($artist, $title, $uri);
@@ -65,17 +63,15 @@ if(spotify_is_running())
 		$details_dialog = array();
 		$details_dialog['title'] = hsc($title);
 		$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
-		$details_dialog['details'][] = array('detail' => 'Released', 'value' => $released);
 		$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
 		$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 
 		$actions_dialog = array();
 		$actions_dialog['title'] = hsc($title);
-		$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri', 'isauthorizedwithspotify'), 'values' => array('hide_dialog add_to_playlist', $title, $uri, is_authorized_with_spotify));
+		$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 		$actions_dialog['actions'][] = array('text' => 'Go to Artist', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_artist', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
-		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri', 'isauthorizedwithspotify'), 'values' => array('hide_dialog get_recommendations', $uri, is_authorized_with_spotify));
-		$actions_dialog['actions'][] = array('text' => 'Start Track Radio', 'keys' => array('actions', 'uri', 'playfirst'), 'values' => array('hide_dialog start_track_radio', $uri, 'false'));
+		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($share_uri))));
 		$actions_dialog['actions'][] = array('text' => 'YouTube', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.youtube.com/results?search_query=' . rawurlencode($artist . ' ' . $title)));
 		$actions_dialog['actions'][] = array('text' => 'Last.fm', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'http://www.last.fm/music/' . urlencode($artist) . '/_/' . urlencode($title)));
@@ -95,7 +91,7 @@ if(spotify_is_running())
 
 		if(daemon_pulseaudio_check()) $actions[] = (get_volume_control() == 'spotify') ? array('action' => array('System Volume', ''), 'keys' => array('actions', 'volumecontrol'), 'values' => array('adjust_volume_control', 'system')) : array('action' => array('Spotify\'s Volume', ''), 'keys' => array('actions', 'volumecontrol'), 'values' => array('adjust_volume_control', 'spotify'));
 
-		$actions[] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri', 'isauthorizedwithspotify'), 'values' => array('save', rawurlencode($artist), rawurlencode($title), $uri, is_authorized_with_spotify));
+		$actions[] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), rawurlencode($title), $uri));
 		$actions[] = array('action' => array('Lyrics', ''), 'keys' => array('actions', 'artist', 'title'), 'values' => array('get_lyrics', rawurlencode($artist), rawurlencode($title)));
 		$actions[] = array('action' => array('Queue', ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('queue_uri', rawurlencode($artist), rawurlencode($title), $uri));
 		$actions[] = array('action' => array('Details', ''), 'keys' => array('actions', 'dialogdetails'), 'values' => array('show_details_dialog', base64_encode(json_encode($details_dialog))));
@@ -117,7 +113,6 @@ echo json_encode(array(
 	'uri' => $uri,
 	'is_local' => $is_local,
 	'tracklength' => $length,
-	'released' => $released,
 	'current_volume' => $volume,
 	'actions' => $actions
 ));

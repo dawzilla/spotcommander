@@ -170,45 +170,9 @@ function activityLoaded()
 	checkForUpdates('auto');
 
 	// Activities
-	if(isActivity('playlists', '') && typeof data.is_authorized_with_spotify != 'undefined')
+	if(isActivity('artist', ''))
 	{
-		if(data.is_authorized_with_spotify)
-		{
-			var cookie = { id: 'last_refresh_playlists' };
-
-			if(isCookie(cookie.id))
-			{
-				var last_refresh_playlists = parseInt($.cookie(cookie.id));
-
-				if(getCurrentTime() - last_refresh_playlists > 1000 * 300) refreshSpotifyPlaylists(true);
-			}
-			else
-			{
-				showToast('Getting your playlists&hellip;', 2);
-
-				refreshSpotifyPlaylists(true);
-			}
-		}
-	}
-	else if(isActivity('library', ''))
-	{
-		if(data.is_authorized_with_spotify)
-		{
-			var cookie = { id: 'last_refresh_library' };
-
-			if(isCookie(cookie.id))
-			{
-				var last_refresh_library = parseInt($.cookie(cookie.id));
-
-				if(getCurrentTime() - last_refresh_library > 1000 * 300) refreshLibrary();
-			}
-			else
-			{
-				showToast('Getting your library&hellip;', 2);
-
-				refreshLibrary();
-			}
-		}
+		getArtistBiography();
 	}
 	else if(isActivity('browse', ''))
 	{
@@ -250,9 +214,43 @@ function activityLoaded()
 			getFeaturedPlaylists(true);
 		}
 	}
-	else if(isActivity('artist', ''))
+	else if(isActivity('library', ''))
 	{
-		getArtistBiography();
+		var cookie = { id: 'last_refresh_library' };
+
+		if(isCookie(cookie.id))
+		{
+			var last_refresh_library = parseInt($.cookie(cookie.id));
+
+			if(getCurrentTime() - last_refresh_library > 1000 * 300) refreshLibrary();
+		}
+		else
+		{
+			showToast('Getting your library&hellip;', 2);
+
+			refreshLibrary();
+		}
+	}
+	else if(isActivity('playlists', ''))
+	{
+		var cookie = { id: 'last_refresh_playlists' };
+
+		if(isCookie(cookie.id))
+		{
+			var last_refresh_playlists = parseInt($.cookie(cookie.id));
+
+			if(getCurrentTime() - last_refresh_playlists > 1000 * 300) refreshSpotifyPlaylists(true);
+		}
+		else
+		{
+			showToast('Getting your playlists&hellip;', 2);
+
+			refreshSpotifyPlaylists(true);
+		}
+	}
+	else if(isActivity('profile', ''))
+	{
+		if(data['is_authorized_with_spotify']) window.location.replace('.');
 	}
 	else if(isActivity('settings', ''))
 	{
@@ -285,6 +283,11 @@ function activityLoaded()
 
 function changeActivity(activity, subactivity, args)
 {
+	if(!project_is_authorized_with_spotify)
+	{
+		window.location.replace('.');
+	}
+
 	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
 	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
 
@@ -293,6 +296,11 @@ function changeActivity(activity, subactivity, args)
 
 function replaceActivity(activity, subactivity, args)
 {
+	if(!project_is_authorized_with_spotify)
+	{
+		window.location.replace('.');
+	}
+
 	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
 	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
 
@@ -329,8 +337,7 @@ function getActivity()
 
 	if(hash == '')
 	{
-		var a = getDefaultActivity();
-		var activity = [a.activity, a.subactivity, a.args, a.time];
+		var activity = (project_is_authorized_with_spotify) ? ['playlists', '', '', 'default'] : ['profile', '', '', 'default'];
 	}
 	else
 	{
@@ -343,23 +350,6 @@ function getActivity()
 function getActivityData()
 {
 	return ($('div#activity_inner_div').length && $('div#activity_inner_div').attr('data-activitydata')) ? $.parseJSON($.base64.decode($('div#activity_inner_div').data('activitydata'))) : '';
-}
-
-function getDefaultActivity()
-{
-	var cookie = { id: 'hide_first_time_activity', value: 'true', expires: 3650 };
-
-	if(!isCookie(cookie.id))
-	{
-		var activity = { activity: 'first-time', subactivity: '', args: '', time: 'default' };
-		$.cookie(cookie.id, cookie.value, { expires: cookie.expires });
-	}
-	else
-	{
-		var activity = { activity: 'playlists', subactivity: '', args: '', time: 'default' };
-	}
-
-	return activity;
 }
 
 function setActivityTitle(title)
@@ -451,7 +441,7 @@ function openExternalActivity(uri)
 	}
 	else
 	{
-		if(ua_is_android && shc(ua, 'Android 2') || ua_is_ios && ua_is_standalone)
+		if(ua_is_ios && ua_is_standalone)
 		{
 			var a = document.createElement('a');
 			a.setAttribute('href', project_website+'?redirect&uri='+encodeURIComponent(uri));
@@ -858,36 +848,6 @@ function shufflePlayUri(uri)
 	}
 }
 
-function startTrackRadio(uri, play_first)
-{
-	var cookie = { id: 'hide_start_track_radio_dialog', value: 'true', expires: 3650 };
-
-	if(getUriType(uri) == 'local')
-	{
-		showToast('Not possible for local files', 4);
-	}
-	else if(!isCookie(cookie.id))
-	{
-		showDialog({ title: 'Start Track Radio', body_class: 'dialog_message_div', body_content: 'Spotify must be the active window. It may not work on all tracks. Advertisements may stop this from working.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys: ['actions', 'uri', 'playfirst'], values: ['hide_dialog start_track_radio', uri, play_first] }, cookie: cookie });
-	}
-	else
-	{
-		showToast('Starting track radio', 2);
-
-		var data = JSON.stringify([uri, play_first]);
-
-		$.post('main.php?'+getCurrentTime(), { action: 'start_track_radio', data: data }, function()
-		{
-			startRefreshNowplaying();
-
-			setTimeout(function()
-			{
-				refreshNowplaying('manual');
-			}, 2000);
-		});
-	}
-}
-
 function confirmSuspendComputer()
 {
 	showDialog({ title: 'Suspend Computer', body_class: 'dialog_message_div', body_content: 'This will suspend the computer running Spotify, and you will lose connection to '+project_name+'.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog suspend_computer'] }, cookie: null });
@@ -1139,7 +1099,7 @@ function refreshNowplaying(type)
 
 				var cover_art_div = $('div#nowplaying_cover_art_div');
 
-				cover_art_div.data('uri', nowplaying.uri).attr('title', nowplaying.album+' ('+nowplaying.released+')');
+				cover_art_div.data('uri', nowplaying.uri).attr('title', nowplaying.album);
 
 				if(nowplaying.is_local)
 				{
@@ -1603,50 +1563,36 @@ function refreshQueueActivity()
 
 // Playlists
 
-function browsePlaylist(uri, description, is_authorized_with_spotify)
+function browsePlaylist(uri, description)
 {
-	if(is_authorized_with_spotify)
-	{
-		changeActivity('playlists', 'browse', 'uri='+uri+'&description='+description);
-	}
-	else
-	{
-		changeActivity('profile', '', '');
-	}
+	changeActivity('playlists', 'browse', 'uri='+uri+'&description='+description);
 }
 
-function addToPlaylist(title, uri, is_authorized_with_spotify)
+function addToPlaylist(title, uri)
 {
-	if(is_authorized_with_spotify)
+	if(getUriType(uri) == 'local')
 	{
-		if(getUriType(uri) == 'local')
-		{
-			showToast('Not possible for local files', 4);
-		}
-		else
-		{
-			$.get('playlists.php?get_playlists_with_access_as_json', function(xhr_data)
-			{
-				var playlists = $.parseJSON(xhr_data);
-
-				var actions = [];
-
-				var i = 0;
-
-				for(var playlist in playlists)
-				{
-					actions[i] = { text: hsc(playlist), keys: ['actions', 'uri', 'uris'], values: ['hide_dialog add_uris_to_playlist', playlists[playlist], uri] };
-
-					i++;
-				}
-
-				showActionsDialog({ title: hsc(title), actions: actions });
-			});
-		}
+		showToast('Not possible for local files', 4);
 	}
 	else
 	{
-		changeActivity('profile', '', '');
+		$.get('playlists.php?get_playlists_with_access_as_json', function(xhr_data)
+		{
+			var playlists = $.parseJSON(xhr_data);
+
+			var actions = [];
+
+			var i = 0;
+
+			for(var playlist in playlists)
+			{
+				actions[i] = { text: hsc(playlist), keys: ['actions', 'uri', 'uris'], values: ['hide_dialog add_uris_to_playlist', playlists[playlist], uri] };
+
+				i++;
+			}
+
+			showActionsDialog({ title: hsc(title), actions: actions });
+		});
 	}
 }
 
@@ -1963,13 +1909,13 @@ function refreshBrowsePlaylistActivity(uri)
 
 // Library
 
-function save(artist, title, uri, is_authorized_with_spotify, element)
+function save(artist, title, uri, element)
 {
 	if(getUriType(uri) == 'local')
 	{
 		showToast('Not possible for local files', 4);
 	}
-	else if(is_authorized_with_spotify)
+	else
 	{
 		$.post('library.php?save&'+getCurrentTime(), { artist: artist, title: title, uri: uri }, function(xhr_data)
 		{
@@ -2009,39 +1955,21 @@ function save(artist, title, uri, is_authorized_with_spotify, element)
 			refreshLibraryActivity();
 		});
 	}
-	else
-	{
-		changeActivity('profile', '', '');
-	}
 }
 
-function remove(uri, is_authorized_with_spotify)
+function remove(uri)
 {
-	if(is_authorized_with_spotify)
+	$.post('library.php?remove&'+getCurrentTime(), { uri: uri }, function(xhr_data)
 	{
-		$.post('library.php?remove&'+getCurrentTime(), { uri: uri }, function(xhr_data)
-		{
-			refreshLibraryActivity();
+		refreshLibraryActivity();
 
-			if(xhr_data == 'error') showToast('Could not remove item from library', 4);
-		});
-	}
-	else
-	{
-		changeActivity('profile', '', '');
-	}
+		if(xhr_data == 'error') showToast('Could not remove item from library', 4);
+	});
 }
 
-function confirmRefreshLibrary(is_authorized_with_spotify)
+function confirmRefreshLibrary()
 {
-	if(is_authorized_with_spotify)
-	{
-		showDialog({ title: 'Refresh Library', body_class: 'dialog_message_div', body_content: 'Your library is refreshed every five minutes. This action does it manually.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog refresh_library'] }, cookie: null });
-	}
-	else
-	{
-		changeActivity('profile', '', '');
-	}
+	showDialog({ title: 'Refresh Library', body_class: 'dialog_message_div', body_content: 'Your library is refreshed every five minutes. This action does it manually.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog refresh_library'] }, cookie: null });
 }
 
 function refreshLibrary()
@@ -2104,19 +2032,15 @@ function getFeaturedPlaylists(fade_in_div)
 	});
 }
 
-function getRecommendations(uri, is_authorized_with_spotify)
+function getRecommendations(uri)
 {
 	if(getUriType(uri) == 'local')
 	{
 		showToast('Not possible for local files', 4);
 	}
-	else if(is_authorized_with_spotify)
-	{
-		changeActivity('browse', 'recommendations', 'uri='+uri);
-	}
 	else
 	{
-		changeActivity('profile', '', '');
+		changeActivity('browse', 'recommendations', 'uri='+uri);
 	}
 }
 
@@ -2208,7 +2132,7 @@ function authorizeWithSpotify()
 	var uri = window.location.href.replace(window.location.hash, '')+'#profile//spotify_token=';
 	var installed = parseInt($.cookie('installed_'+project_version));
 
-	window.location.href = project_website+'api/1/spotify/authorize/?redirect_uri='+encodeURIComponent(uri)+'&state='+installed;
+	window.location.href = project_website+'api/1/spotify/authorize/?redirect_uri='+encodeURIComponent(uri);
 }
 
 function confirmAuthorizeWithSpotify()
@@ -2220,7 +2144,7 @@ function deauthorizeFromSpotify()
 {
 	$.get('profile.php?deauthorize_from_spotify', function()
 	{
-		replaceActivity('profile', '', '');
+		window.location.replace('.');
 	});
 }
 
@@ -3184,10 +3108,7 @@ function nativeAppLoad(is_paused)
 
 			if(type == 'playlist')
 			{
-				$.get('profile.php?is_authorized_with_spotify', function(xhr_data)
-				{
-					browsePlaylist(shareUri, '', stringToBoolean(xhr_data));
-				});
+				browsePlaylist(shareUri, '');
 			}
 			else if(type == 'track' || type == 'album')
 			{
@@ -3533,14 +3454,14 @@ function hexToRgb(hex)
 
 // URIs
 
-function browseUri(uri, is_authorized_with_spotify)
+function browseUri(uri)
 {
 	var uri = urlToUri(uri);
 	var type = getUriType(uri);
 
 	if(type == 'playlist')
 	{
-		browsePlaylist(uri, '', is_authorized_with_spotify);
+		browsePlaylist(uri, '');
 	}
 	else if(type == 'artist')
 	{

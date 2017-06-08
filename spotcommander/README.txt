@@ -10,12 +10,13 @@ BEFORE UPGRADING:
 
 * Close SpotCommander completely on all your devices before upgrading
 
-CHANGELOG v 13.0:
+CHANGELOG v 13.1:
 
-* More secure key for the repository that does not give a warning on newer distributions
-* Minor changes from v 12.9 (no changes to the changes below)
-* Improved support for Spotify version 1.0
-* Latest third party libraries
+* This is an emergency release because Spotify suddenly requires authentication for all features
+* There are no new features in this release
+* Removed support for old versions of Android and iOS 5
+* Stay tuned for the next version with the new Spotify Player API
+* Premium users can expect full support for the latest Spotify Desktop Client as well as control all devices like Spotify Connect
 
 LICENSE:
 

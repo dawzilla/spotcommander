@@ -191,19 +191,6 @@ echo get_setting_dropdown($setting, $options);
 
 <div class="list_div">
 
-<?php
-
-if(is_authorized_with_spotify)
-{
-	echo '
-		<div class="setting_div actions_div" data-actions="confirm_deauthorize_from_spotify" onclick="void(0)">
-		<div class="setting_text_div"><div>Deauthorize from Spotify</div><div>Tap here to deauthorize from Spotify</div></div>
-		</div>
-	';
-}
-
-?>
-
 <div class="setting_div actions_div" data-actions="confirm_remove_all_playlists" onclick="void(0)">
 <div class="setting_text_div"><div>Remove All Playlists</div><div>Start fresh. This will not delete your playlists from Spotify</div></div>
 </div>

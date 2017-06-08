@@ -1247,11 +1247,6 @@ div#nowplaying_volume_adjust_div
 	height: 36px;
 }
 
-div#nowplaying_volume_slider_div, div#nowplaying_volume_buttons_div
-{
-	display: none;
-}
-
 div#nowplaying_volume_buttons_inner_div
 {
 	display: table;

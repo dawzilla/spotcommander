@@ -22,12 +22,12 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 // Project
 
 define('project_name', 'SpotCommander');
-define('project_version', 13.0);
-define('project_serial', 13000);
+define('project_version', 13.1);
+define('project_serial', 13100);
 define('project_website', 'http://www.olejon.net/code/spotcommander/');
 define('project_website_https', 'https://www.olejon.net/code/spotcommander/');
 define('project_developer', 'Ole Jon Bjørkum');
-define('project_android_app_minimum_version', 7.6);
+define('project_android_app_minimum_version', 7.8);
 
 // Configuration
 
@@ -40,10 +40,6 @@ require_once('functions.php');
 // Daemon
 
 define('daemon_socket', __DIR__ . '/run/daemon-user-' . daemon_user() . '.socket');
-
-// Authorized with Spotify?
-
-define('is_authorized_with_spotify', is_authorized_with_spotify());
 
 // Remote control
 
@@ -118,7 +114,7 @@ if(isset($_POST['action']))
 
 		echo $volume;
 	}
-	elseif($action == 'play_uri' || $action == 'play_uri_from_playlist' || $action == 'shuffle_play_uri' || $action == 'start_track_radio')
+	elseif($action == 'play_uri' || $action == 'play_uri_from_playlist' || $action == 'shuffle_play_uri')
 	{
 		clear_queue();
 		remote_control($action, $data);
@@ -151,6 +147,7 @@ elseif(isset($_GET['global_variables']))
 		'project_developer' => project_developer,
 		'project_android_app_minimum_version' => project_android_app_minimum_version,
 		'project_error_code' => check_for_errors(),
+		'project_is_authorized_with_spotify' => is_authorized_with_spotify(),
 		'project_spotify_is_unsupported' => spotify_is_unsupported()
 	);
 

@@ -46,17 +46,14 @@ else
 
 	$activity['title'] = hsc($profile['name']);
 
-	if(is_authorized_with_spotify)
-	{
-		$user_uri = 'spotify:user:' . rawurlencode($profile['username']);
+	$user_uri = 'spotify:user:' . rawurlencode($profile['username']);
 
-		$is_saved = is_saved($user_uri);
+	$is_saved = is_saved($user_uri);
 
-		$library_action = ($is_saved) ? 'Remove from Library' : 'Save to Library';
-		$library_icon = ($is_saved) ? 'check_white_24_img_div' : 'plus_white_24_img_div';
+	$library_action = ($is_saved) ? 'Remove from Library' : 'Save to Library';
+	$library_icon = ($is_saved) ? 'check_white_24_img_div' : 'plus_white_24_img_div';
 
-		$activity['actions'][] = array('action' => array($library_action, $library_icon), 'keys' => array('actions', 'artist', 'title', 'uri', 'isauthorizedwithspotify'), 'values' => array('save', rawurlencode($profile['username']), rawurlencode($profile['name']), $user_uri, is_authorized_with_spotify));
-	}
+	$activity['actions'][] = array('action' => array($library_action, $library_icon), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($profile['username']), rawurlencode($profile['name']), $user_uri));
 
 	$style = (empty($profile['image'])) ? '' : 'background-size: cover; background-image: url(\'' . $profile['image'] . '\')';
 	$text = ($profile['followers'] == 1) ? 'follower' : 'followers';
@@ -95,7 +92,7 @@ else
 
 			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-image: url(\'' . $cover_art_cache[$uri] . '\')';
 
-			echo '<div class="card_vertical_div"><div title="' . hsc($name) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($name) . '" data-isauthorizedwithspotify="' . boolean_to_string(is_authorized_with_spotify) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" data-coverarturi="' . $uri . '" style="' . $style . '"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">' . $user . '</div></div></div>';
+			echo '<div class="card_vertical_div"><div title="' . hsc($name) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($name) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" data-coverarturi="' . $uri . '" style="' . $style . '"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">' . $user . '</div></div></div>';
 		}
 
 		echo '<div class="clear_float_div"></div></div>';

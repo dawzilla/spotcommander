@@ -31,6 +31,7 @@ function setGlobalVariables(global_variables)
 	project_website_https = global_variables.project_website_https;
 	project_developer = global_variables.project_developer;
 	project_android_app_minimum_version = parseFloat(global_variables.project_android_app_minimum_version);
+	project_is_authorized_with_spotify = global_variables.project_is_authorized_with_spotify;
 	project_error_code = parseInt(global_variables.project_error_code);
 	project_spotify_is_unsupported = global_variables.project_spotify_is_unsupported;
 
@@ -766,10 +767,6 @@ $(window).load(function()
 				{
 					showCoverArtFabActionAnimation();
 				}
-				else if(action == 'start_track_radio')
-				{
-					startTrackRadio(data.uri, data.playfirst);
-				}
 				else if(action == 'clear_recently_played')
 				{
 					clearRecentlyPlayed();
@@ -800,7 +797,7 @@ $(window).load(function()
 				}
 				else if(action == 'add_to_playlist')
 				{
-					addToPlaylist(data.title, data.uri, data.isauthorizedwithspotify);
+					addToPlaylist(data.title, data.uri);
 				}
 				else if(action == 'add_uris_to_playlist')
 				{
@@ -812,7 +809,7 @@ $(window).load(function()
 				}
 				else if(action == 'browse_playlist')
 				{
-					browsePlaylist(data.uri, data.description, data.isauthorizedwithspotify);
+					browsePlaylist(data.uri, data.description);
 				}
 				else if(action == 'refresh_playlist')
 				{
@@ -844,15 +841,15 @@ $(window).load(function()
 				}
 				else if(action == 'save')
 				{
-					save(data.artist, data.title, data.uri, data.isauthorizedwithspotify, element);
+					save(data.artist, data.title, data.uri, element);
 				}
 				else if(action == 'remove')
 				{
-					remove(data.uri, data.isauthorizedwithspotify);
+					remove(data.uri);
 				}
 				else if(action == 'confirm_refresh_library')
 				{
-					confirmRefreshLibrary(data.isauthorizedwithspotify);
+					confirmRefreshLibrary();
 				}
 				else if(action == 'refresh_library')
 				{
@@ -880,11 +877,11 @@ $(window).load(function()
 				}
 				else if(action == 'get_recommendations')
 				{
-					getRecommendations(data.uri, data.isauthorizedwithspotify);
+					getRecommendations(data.uri);
 				}
 				else if(action == 'browse_uri')
 				{
-					browseUri(data.uri, data.isauthorizedwithspotify);
+					browseUri(data.uri);
 				}
 				else if(action == 'share_uri')
 				{
@@ -1057,20 +1054,12 @@ $(window).load(function()
 			showActivity();
 		});
 
-		// Load activity
+		// Installed
 		var cookie = { id: 'installed_'+project_version, value: getCurrentTime(), expires: 3650 };
 
 		if(!isCookie(cookie.id)) $.cookie(cookie.id, cookie.value, { expires: cookie.expires });
 
-		if(!ua_supports_inputtype_range || ua_is_ios && shc(ua, 'OS 5_') || ua_is_msie)
-		{
-			$('div#nowplaying_volume_buttons_div').show();
-		}
-		else
-		{
-			$('div#nowplaying_volume_slider_div').show();
-		}
-
+		// Show activity 
 		var cookie = { id: 'current_activity_'+project_version };
 
 		if(ua_is_ios && ua_is_standalone && isCookie(cookie.id))
@@ -1085,10 +1074,13 @@ $(window).load(function()
 			showActivity();
 		}
 
+		// Keyboard shortcuts
 		if(settings_keyboard_shortcuts) enableKeyboardShortcuts();
 
+		// MSIE integration
 		if(ua_is_pinnable_msie) integrateInMSIE();
 
+		// Now playing
 		setTimeout(function()
 		{
 			nativeAppLoad(false);

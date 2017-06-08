@@ -38,6 +38,122 @@ function spotify_is_unsupported()
 	return (trim(file_get_contents(__DIR__ . '/run/spotify.version')) == 'new');
 }
 
+function get_spotify_username()
+{
+	return trim(file_get_contents(__DIR__ . '/run/spotify.username'));
+}
+
+function get_spotify_country()
+{
+	$country = trim(file_get_contents(__DIR__ . '/run/spotify.country'));
+	return (empty($country)) ? 'US' : $country;
+}
+
+function get_spotify_token()
+{
+	$return = '';
+
+	$token = file_get_contents(__DIR__ . '/run/spotify.token');
+
+	if(!empty($token))
+	{
+		$token = json_decode($token, true);
+
+		if(!empty($token['access_token']) && !empty($token['refresh_token']) && !empty($token['expires']))
+		{
+			$return = $token['access_token'];
+
+			$time = time();
+			$expires = intval($token['expires']);
+
+			if($time > $expires)
+			{
+				$files = get_external_files(array(project_website . 'api/1/spotify/token/?refresh_token=' . $token['refresh_token']), null, null);
+				$new_token = $files[0];
+
+				if(!empty($new_token))
+				{
+					$new_token = json_decode($new_token, true);
+
+					$write = array();
+					$write['access_token'] = $new_token['access_token'];
+					$write['refresh_token'] = $token['refresh_token'];
+					$write['expires'] = time() + intval($new_token['expires_in']);
+
+					file_write(__DIR__ . '/run/spotify.token', json_encode($write));
+
+					$return = $new_token['access_token'];
+				}
+			}
+		}
+	}
+
+	return $return;
+}
+
+function save_spotify_token($token)
+{
+	if(!empty($token))
+	{
+		$token = json_decode(base64_decode($token), true);
+
+		$write = array();
+		$write['access_token'] = $token['access_token'];
+		$write['refresh_token'] = $token['refresh_token'];
+		$write['expires'] = time() + intval($token['expires_in']);
+
+		file_write(__DIR__ . '/run/spotify.token', json_encode($write));
+
+		$profile = get_profile();
+
+		if(empty($profile))
+		{
+			deauthorize_from_spotify();
+		}
+		else
+		{
+			file_write(__DIR__ . '/run/spotify.username', trim($profile['username']));
+			file_write(__DIR__ . '/run/spotify.country', trim($profile['country']));
+			file_write(__DIR__ . '/run/spotify.subscription', trim($profile['subscription']));
+		}
+	}
+}
+
+function deauthorize_from_spotify()
+{
+	file_write(__DIR__ . '/run/spotify.token', '');
+	file_write(__DIR__ . '/run/spotify.username', '');
+	file_write(__DIR__ . '/run/spotify.country', '');
+
+	clean_library('track');
+	clean_library('artist');
+
+	clear_cache();
+
+	$time = time();
+
+	if(!empty($_COOKIE['last_refresh_playlists'])) setcookie('last_refresh_playlists', '', $time - 3600);
+	if(!empty($_COOKIE['last_refresh_library'])) setcookie('last_refresh_library', '', $time - 3600);
+}
+
+function is_authorized_with_spotify()
+{
+	$token = file_get_contents(__DIR__ . '/run/spotify.token');
+
+	if(!empty($token))
+	{
+		$token = json_decode($token, true);
+		if(!empty($token['access_token']) && !empty($token['refresh_token']) && !empty($token['expires'])) return true;
+	}
+
+	return false;
+}
+
+function is_spotify_subscription_premium()
+{
+	return (trim(file_get_contents(__DIR__ . '/run/spotify.subscription')) == 'premium');
+}
+
 // Daemon
 
 function daemon_start($user)
@@ -176,6 +292,11 @@ function remote_control($action, $data)
 	}
 }
 
+function remote_control_spotify($api_uri, $action, $data)
+{
+	get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token()), array($action, $data));
+}
+
 function get_volume_control()
 {
 	return (empty($_COOKIE['settings_volume_control'])) ? 'spotify' : $_COOKIE['settings_volume_control'];
@@ -221,7 +342,7 @@ function track_is_playing($uri, $div)
 
 function get_cover_art($uri, $size)
 {
-	$files = get_external_files(array('http://www.olejon.net/code/spotcommander/api/1/cover-art-spotify/?uri=' . $uri), null, null);
+	$files = get_external_files(array('http://www.olejon.net/code/spotcommander/api/1/cover-art-spotify/?uri=' . $uri . '&token=' . get_spotify_token()), null, null);
 	$metadata = json_decode($files[0], true);
 
 	if(!empty($metadata['cover_art'][$size]))
@@ -1354,7 +1475,7 @@ function get_search($string)
 	{
 		$country = get_spotify_country();
 
-		$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=track&market=' . $country . '&limit=50&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=album&market=' . $country . '&limit=24&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=artist&market=' . $country . '&limit=12&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=playlist&market=' . $country . '&limit=50&q=' . rawurlencode($string)), null, null);
+		$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=track&market=' . $country . '&limit=50&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=album&market=' . $country . '&limit=24&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=artist&market=' . $country . '&limit=12&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=playlist&market=' . $country . '&limit=50&q=' . rawurlencode($string)), array('Authorization: Bearer ' . get_spotify_token()), null);
 
 		$user = json_decode($files[0], true);
 		$tracks = json_decode($files[1], true);
@@ -1565,7 +1686,7 @@ function get_artist($uri)
 		$albums_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri) . '/albums?limit=50&album_type=album,single&country=' . $country;
 		$related_artists_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri) . '/related-artists';
 
-		$files = get_external_files(array($artist_api_uri, $tracks_api_uri, $albums_api_uri, $related_artists_api_uri), null, null);
+		$files = get_external_files(array($artist_api_uri, $tracks_api_uri, $albums_api_uri, $related_artists_api_uri), array('Authorization: Bearer ' . get_spotify_token()), null);
 
 		$artist_metadata = json_decode($files[0], true);
 		$artist_tracks = json_decode($files[1], true);
@@ -1652,7 +1773,7 @@ function get_artist($uri)
 						$get_files[$n] = $albums_api_uri . '&offset=' . $offset;
 					}
 
-					$files = get_external_files($get_files, null, null);
+					$files = get_external_files($get_files, array('Authorization: Bearer ' . get_spotify_token()), null);
 
 					foreach($files as $file)
 					{
@@ -1748,7 +1869,7 @@ function get_album($uri)
 	{
 		$api_uri = 'https://api.spotify.com/v1/albums/' . uri_to_id($uri);
 
-		$files = get_external_files(array($api_uri), null, null);
+		$files = get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token()), null);
 		$metadata = json_decode($files[0], true);
 
 		if(!empty($metadata['name']) && !empty($metadata['tracks']['items']))
@@ -1805,7 +1926,7 @@ function get_album($uri)
 					$get_files[$n] = $api_uri . '/tracks?offset=' . $offset . '&limit=' . $tracks_limit;
 				}
 
-				$files = get_external_files($get_files, null, null);
+				$files = get_external_files($get_files, array('Authorization: Bearer ' . get_spotify_token()), null);
 
 				foreach($files as $file)
 				{
@@ -1879,7 +2000,7 @@ function get_tracks($uris)
 		$i++;
 	}
 
-	$files = get_external_files($urls, null, null);
+	$files = get_external_files($urls, array('Authorization: Bearer ' . get_spotify_token()), null);
 	$tracks = $files;
 
 	$return = array();
@@ -1945,116 +2066,6 @@ function save_track_artist($track_uri, $artist_uri)
 }
 
 // Profile
-
-function get_spotify_username()
-{
-	return trim(file_get_contents(__DIR__ . '/run/spotify.username'));
-}
-
-function get_spotify_country()
-{
-	$country = trim(file_get_contents(__DIR__ . '/run/spotify.country'));
-	return (empty($country)) ? 'US' : $country;
-}
-
-function get_spotify_token()
-{
-	$return = '';
-
-	$token = file_get_contents(__DIR__ . '/run/spotify.token');
-
-	if(!empty($token))
-	{
-		$token = json_decode($token, true);
-
-		if(!empty($token['access_token']) && !empty($token['refresh_token']) && !empty($token['expires']))
-		{
-			$return = $token['access_token'];
-
-			$time = time();
-			$expires = intval($token['expires']);
-
-			if($time > $expires)
-			{
-				$files = get_external_files(array(project_website . 'api/1/spotify/token/?refresh_token=' . $token['refresh_token']), null, null);
-				$new_token = $files[0];
-
-				if(!empty($new_token))
-				{
-					$new_token = json_decode($new_token, true);
-
-					$write = array();
-					$write['access_token'] = $new_token['access_token'];
-					$write['refresh_token'] = $token['refresh_token'];
-					$write['expires'] = time() + intval($new_token['expires_in']);
-
-					file_write(__DIR__ . '/run/spotify.token', json_encode($write));
-
-					$return = $new_token['access_token'];
-				}
-			}
-		}
-	}
-
-	return $return;
-}
-
-function save_spotify_token($token)
-{
-	if(!empty($token))
-	{
-		$token = json_decode(base64_decode($token), true);
-
-		$write = array();
-		$write['access_token'] = $token['access_token'];
-		$write['refresh_token'] = $token['refresh_token'];
-		$write['expires'] = time() + intval($token['expires_in']);
-
-		file_write(__DIR__ . '/run/spotify.token', json_encode($write));
-
-		$profile = get_profile();
-
-		if(empty($profile))
-		{
-			deauthorize_from_spotify();
-		}
-		else
-		{
-			file_write(__DIR__ . '/run/spotify.username', trim($profile['username']));
-			file_write(__DIR__ . '/run/spotify.country', trim($profile['country']));
-		}
-	}
-}
-
-function deauthorize_from_spotify()
-{
-	file_write(__DIR__ . '/run/spotify.token', '');
-	file_write(__DIR__ . '/run/spotify.username', '');
-	file_write(__DIR__ . '/run/spotify.country', '');
-
-	clean_library('track');
-	clean_library('artist');
-
-	clear_cache();
-
-	$time = time();
-
-	if(!empty($_COOKIE['last_refresh_playlists'])) setcookie('last_refresh_playlists', '', $time - 3600);
-	if(!empty($_COOKIE['last_refresh_library'])) setcookie('last_refresh_library', '', $time - 3600);
-}
-
-function is_authorized_with_spotify()
-{
-	$token = file_get_contents(__DIR__ . '/run/spotify.token');
-
-	if(!empty($token))
-	{
-		$token = json_decode($token, true);
-		if(!empty($token['access_token']) && !empty($token['refresh_token']) && !empty($token['expires'])) return true;
-	}
-
-	return false;
-}
 
 function get_profile()
 {

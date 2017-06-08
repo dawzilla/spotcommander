@@ -59,7 +59,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 
 	$return = null;
 
-	if($action == 'play_pause' || $action == 'pause' || $action == 'previous' || $action == 'next' || $action == 'play_uri' || $action == 'shuffle_play_uri' || $action == 'start_track_radio')
+	if($action == 'play_pause' || $action == 'pause' || $action == 'previous' || $action == 'next' || $action == 'play_uri' || $action == 'shuffle_play_uri')
 	{
 		$nowplaying = daemon_get_nowplaying();
 	}
@@ -190,40 +190,6 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 		exec('xte \'keydown Control_R\' \'key s\' \'keyup Control_R\' && sleep 0.25 && xte \'keydown Control_R\' \'key s\' \'keyup Control_R\'');
 		usleep(250000);
 		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next');
-	}
-	elseif($action == 'start_track_radio')
-	{
-		$data = json_decode($data, true);
-
-		$uri = $data[0];
-		$play_first = $data[1];
-
-		$geometry = shell_exec('xdotool search "^Spotify.*Linux Preview$" windowmap windowraise windowfocus getwindowgeometry');
-		preg_match('/Geometry: \d+x(\d+)/s', $geometry, $height);
-
-		if(!empty($height[1]))
-		{
-			$height = intval($height[1]) - 80;
-
-			exec('xdotool search "^Spotify.*Linux Preview$" mousemove --window %1 --clearmodifiers 10 ' . $height);
-
-			if(string_to_boolean($play_first))
-			{
-				exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $uri);
-				sleep(2);
-			}
-
-			$exec = 'xdotool search "^Spotify.*Linux Preview$" click --window %1 --clearmodifiers 3 sleep 0.5 ';
-
-			for($i = 0; $i < 5; $i++)
-			{
-				$exec .= 'key --window %1 --clearmodifiers Up sleep 0.25 ';
-			}
-
-			$exec .= 'key Return';
-
-			exec($exec);
-		}
 	}
 	elseif($action == 'get_nowplaying')
 	{
