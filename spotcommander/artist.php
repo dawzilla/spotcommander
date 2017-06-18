@@ -57,9 +57,8 @@ if(empty($metadata))
 }
 else
 {
-	if($browse_uri_type == 'track') save_track_artist($browse_uri, $artist_uri);
-
 	$artist = $metadata['artist'];
+	$artist_biography = $artist;
 	$artist_uri = $metadata['uri'];
 	$popularity = $metadata['popularity'];
 	$followers = $metadata['followers'];
@@ -71,7 +70,7 @@ else
 	$related_artists = $metadata['related_artists'];
 	$albums_count = $metadata['albums_count'];
 
-	$activity['title'] = hsc($artist);
+	$activity['title'] = $artist;
 
 	if(empty($tracks) && empty($albums) && empty($related_artists))
 	{
@@ -87,14 +86,10 @@ else
 	{
 		$library_action = (is_saved($artist_uri)) ? 'Remove from Library' : 'Save to Library';
 
-		$activity['cover_art_uri'] = '';
-		$activity['actions'][] = array('action' => array('Play'), 'keys' => array('actions', 'uri'), 'values' => array('play_uri', $artist_uri));
 		$activity['actions'][] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), '', $artist_uri));
 		$activity['actions'][] = array('action' => array('Add to Playlist', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('add_to_playlist', $artist, $artist_uri));
 		$activity['actions'][] = array('action' => array('Search Artist', ''), 'keys' => array('actions', 'string'), 'values' => array('get_search', rawurlencode('artist:"' . $artist . '"')));
 		$activity['actions'][] = array('action' => array('Share'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', hsc($artist), rawurlencode(uri_to_url($artist_uri))));
-		$activity['actions'][] = array('action' => array('Queue Tracks', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $artist_uri, 'false'));
-		$activity['actions'][] = array('action' => array('Queue Tracks Randomly', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $artist_uri, 'true'));
 
 		$albums_count = ($albums_count == 1) ? $albums_count . ' album' : $albums_count . ' albums';
 
@@ -102,7 +97,7 @@ else
 			<div id="cover_art_div">
 			<div id="cover_art_art_div" class="actions_div" data-actions="resize_cover_art" data-imageuri="' . $cover_art_uri . '" data-resized="false" data-width="' . $cover_art_width . '" data-height="' . $cover_art_height . '" style="background-image: url(\'' . $cover_art_uri . '\')" onclick="void(0)"></div>
 			<div id="cover_art_information_div" class="shadow_up_black_48_img_div"><div>' . $albums_count . ' / ' . $followers . ' followers / ' . $popularity . '</div></div>
-			<div title="Shuffle Play" id="cover_art_fab_div" class="actions_div shuffle_white_24_img_div" data-actions="show_cover_art_fab_animation shuffle_play_uri" data-uri="' . $artist_uri . '" data-highlightclass="light_green_highlight" onclick="void(0)"></div>
+			<div title="Play" id="cover_art_fab_div" class="actions_div play_white_24_img_div" data-actions="show_cover_art_fab_animation play_uri" data-uri="' . $artist_uri . '" data-highlightclass="light_green_highlight" onclick="void(0)"></div>
 			</div>
 
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
@@ -110,6 +105,18 @@ else
 
 		if(!empty($tracks))
 		{
+			$queue_uris = array();
+			$n = 0;
+
+			foreach($tracks as $track)
+			{
+				$queue_uris[$n] = $track['uri'];
+
+				$n++;
+			}
+
+			$queue_uris = base64_encode(json_encode($queue_uris));
+
 			echo '
 				<div class="list_header_div list_header_below_cover_art_div"><div>Top Tracks</div><div></div></div>
 
@@ -155,7 +162,7 @@ else
 					</div>
 					<div class="list_item_actions_div">
 					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 					<div title="Go to Album" class="actions_div" data-actions="browse_album" data-uri="' . $album_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div album_grey_24_img_div"></div></div>
@@ -169,7 +176,7 @@ else
 			echo '
 				</div>
 
-				<div id="artist_biography_div"><div id="artist_biography_title_div">Biography</div><div id="artist_biography_body_div" data-artist="' . rawurlencode($artist) . '">Getting biography&hellip;</div><div id="artist_biography_buttons_div"><div class="actions_div" data-actions="open_external_activity" data-uri="http://www.last.fm/music/' . urlencode($artist) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">LAST.FM</div><div class="actions_div" data-actions="open_external_activity" data-uri="https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">WIKIPEDIA</div></div></div>
+				<div id="artist_biography_div"><div id="artist_biography_title_div">Biography</div><div id="artist_biography_body_div" data-artist="' . rawurlencode($artist_biography) . '">Getting biography&hellip;</div><div id="artist_biography_buttons_div"><div class="actions_div" data-actions="open_external_activity" data-uri="http://www.last.fm/music/' . urlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">LAST.FM</div><div class="actions_div" data-actions="open_external_activity" data-uri="https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">WIKIPEDIA</div></div></div>
 			';
 		}
 

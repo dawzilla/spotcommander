@@ -35,9 +35,8 @@ if(!$daemon_server)
 
 chmod(daemon_socket, 0666);
 
-$spotify_is_unsupported = spotify_is_unsupported();
+$spotify_is_new = spotify_is_new();
 $qdbus = daemon_qdbus_select();
-$pulseaudio = daemon_pulseaudio_check();
 $logind = daemon_logind_check($qdbus);
 
 $nowplaying = null;
@@ -59,7 +58,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 
 	$return = null;
 
-	if($action == 'play_pause' || $action == 'pause' || $action == 'previous' || $action == 'next' || $action == 'play_uri' || $action == 'shuffle_play_uri')
+	if($action == 'play_pause' || $action == 'play' || $action == 'pause' || $action == 'previous' || $action == 'next' || $action == 'play_uri' || $action == 'play_uris')
 	{
 		$nowplaying = daemon_get_nowplaying();
 	}
@@ -81,7 +80,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'spotify_quit')
 	{
-		if($spotify_is_unsupported)
+		if($spotify_is_new)
 		{
 			exec('killall spotify');
 		}
@@ -120,76 +119,40 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	{
 		exec('xte \'keydown Control_R\' \'key r\' \'keyup Control_R\'');
 	}
-	elseif($action == 'adjust_spotify_volume' || $action == 'adjust_system_volume')
+	elseif($action == 'adjust_volume')
 	{
 		$volume = intval($data);
 
-		if($pulseaudio)
+		$volume = $volume / 100;
+		$volume = $volume * 65537;
+		$volume = round($volume);
+
+		if($volume < 0)
 		{
-			$volume = $volume / 100;
-			$volume = $volume * 65537;
-			$volume = round($volume);
+			$volume = 0;
+		}
+		elseif($volume > 65537)
+		{
+			$volume = 65537;
+		}
 
-			if($volume < 0)
+		$inputs = explode('index: ', shell_exec('pacmd list-sink-inputs'));
+
+		foreach($inputs as $input)
+		{
+			if(stristr($input, 'application.name = "Spotify"'))
 			{
-				$volume = 0;
-			}
-			elseif($volume > 65537)
-			{
-				$volume = 65537;
-			}
-
-			if($action == 'adjust_spotify_volume')
-			{
-				$inputs = explode('index: ', shell_exec('pacmd list-sink-inputs'));
-
-				foreach($inputs as $input)
-				{
-					if(stristr($input, 'application.name = "Spotify"'))
-					{
-						preg_match('/^(\d+)\n/', $input, $index);
-						break;
-					}
-				}
-
-				$index = (isset($index[1])) ? intval($index[1]) : 0;
-				exec('pacmd set-sink-input-volume ' . $index . ' ' . $volume);
-			}
-			else
-			{
-				$sinks = shell_exec('pacmd list-sinks');
-				preg_match('/\* index: (\d+)\n/', $sinks, $index);
-
-				$index = (isset($index[1])) ? intval($index[1]) : 0;
-				exec('pacmd set-sink-volume ' . $index . ' ' . $volume);
+				preg_match('/^(\d+)\n/', $input, $index);
+				break;
 			}
 		}
-		else
-		{
-			exec('amixer set PCM ' . $volume . '%');
-		}
+
+		$index = (isset($index[1])) ? intval($index[1]) : 0;
+		exec('pacmd set-sink-input-volume ' . $index . ' ' . $volume);
 	}
-	elseif($action == 'play_uri')
+	elseif($action == 'play_uri' || $action == 'play_uris')
 	{
 		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $data);
-	}
-	elseif($action == 'play_uri_from_playlist')
-	{
-		$data = json_decode($data, true);
-
-		$playlist_uri = $data[0];
-		$uri = $data[1];
-
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $playlist_uri);
-		usleep(250000);
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $uri);
-	}
-	elseif($action == 'shuffle_play_uri')
-	{
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $data);
-		exec('xte \'keydown Control_R\' \'key s\' \'keyup Control_R\' && sleep 0.25 && xte \'keydown Control_R\' \'key s\' \'keyup Control_R\'');
-		usleep(250000);
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next');
 	}
 	elseif($action == 'get_nowplaying')
 	{
@@ -199,35 +162,6 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 			if($return != $nowplaying) break;
 			usleep(250000);
 		}
-	}
-	elseif($action == 'get_current_volume')
-	{
-		if($pulseaudio)
-		{
-			if($data == 'spotify')
-			{
-				$inputs = explode('index: ', shell_exec('pacmd list-sink-inputs'));
-
-				foreach($inputs as $input)
-				{
-					if(stristr($input, 'application.name = "Spotify"'))
-					{
-						preg_match('/volume:.*?(\d+)%/', $input, $volume);
-						break;
-					}
-				}
-			}
-			else
-			{
-				preg_match('/\* index:.*?volume:.*?(\d+)%/s', shell_exec('pacmd list-sinks'), $volume);
-			}
-		}
-		else
-		{
-			preg_match('/\[(\d+)%\]/', shell_exec('amixer get PCM'), $volume);
-		}
-
-		$return = (isset($volume[1])) ? intval($volume[1]) : 50;
 	}
 	elseif($action == 'suspend_computer')
 	{
@@ -242,7 +176,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'shut_down_computer')
 	{
-		if($spotify_is_unsupported)
+		if($spotify_is_new)
 		{
 			exec('killall spotify');
 		}

@@ -72,10 +72,6 @@ elseif(isset($_GET['get_playlists_with_access_as_json']))
 {
 	echo get_playlists_as_json(true);
 }
-elseif(isset($_GET['save_recent_playlists']))
-{
-	echo save_recent_playlists($_POST['uri']);
-}
 elseif(isset($_GET['create']))
 {
 	$activity['title'] = 'Create Playlist';
@@ -186,7 +182,7 @@ elseif(isset($_GET['browse']))
 		$total_length = $metadata['total_length'];
 		$cover_art_uri = $metadata['cover_art_uri'];
 
-		$activity['title'] = hsc($name);
+		$activity['title'] = $name;
 
 		if(empty($tracks))
 		{
@@ -202,6 +198,18 @@ elseif(isset($_GET['browse']))
 		}
 		else
 		{
+			$queue_uris = array();
+			$n = 0;
+
+			foreach($tracks as $track)
+			{
+				$queue_uris[$n] = $track['uri'];
+
+				$n++;
+			}
+
+			$queue_uris = base64_encode(json_encode($queue_uris));
+
 			$is_saved = playlist_is_saved(null, $playlist_uri);
 
 			$details_dialog = array();
@@ -212,44 +220,20 @@ elseif(isset($_GET['browse']))
 			$details_dialog['details'][] = array('detail' => 'Public', 'value' => $public);
 
 			$activity['actions'][] = array('action' => array('Refresh', ''), 'keys' => array('actions', 'uri'), 'values' => array('refresh_playlist', $playlist_uri));
-			$activity['actions'][] = array('action' => array('Play'), 'keys' => array('actions', 'uri'), 'values' => array('play_uri', $playlist_uri));
-			$activity['actions'][] = array('action' => array('Details', ''), 'keys' => array('actions', 'dialogdetails'), 'values' => array('show_details_dialog', base64_encode(json_encode($details_dialog))));
-			$activity['actions'][] = array('action' => array('Go to User', ''), 'keys' => array('actions', 'username'), 'values' => array('get_user', $user));
 
 			if($is_saved) $activity['actions'][] = array('action' => array('Edit', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'playlists', 'edit', 'uri=' . $playlist_uri));
 
+			$activity['actions'][] = array('action' => array('Go to User', ''), 'keys' => array('actions', 'username'), 'values' => array('get_user', $user));
+			$activity['actions'][] = array('action' => array('Details', ''), 'keys' => array('actions', 'dialogdetails'), 'values' => array('show_details_dialog', base64_encode(json_encode($details_dialog))));
 			$activity['actions'][] = array('action' => array('Share', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', hsc($name), rawurlencode(uri_to_url($playlist_uri))));
-			$activity['actions'][] = array('action' => array('Queue Tracks', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $playlist_uri, 'false'));
-			$activity['actions'][] = array('action' => array('Queue Tracks Randomly', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $playlist_uri, 'true'));
-
-			if(empty($cover_art_uri))
-			{
-				$cover_art_cache = get_cover_art_cache('large');
-
-				if(empty($cover_art_cache[$playlist_uri]))
-				{
-					$style = 'color: initial';
-					$image_uri = '';
-				}
-				else
-				{
-					$style = 'background-image: url(\'' . $cover_art_cache[$playlist_uri] . '\')';
-					$image_uri = $cover_art_cache[$playlist_uri];
-				}
-			}
-			else
-			{
-				$style = 'background-image: url(\'' . $cover_art_uri . '\')';
-				$image_uri = $cover_art_uri;
-			}
 
 			$tracks_count = ($tracks_count == 1) ? '<span id="playlist_tracks_count_span">' . $tracks_count . '</span> track' : '<span id="playlist_tracks_count_span">' . $tracks_count . '</span> tracks';
 
 			echo '
 				<div id="cover_art_div">
-				<div id="cover_art_art_div" class="actions_div" data-actions="resize_cover_art" data-imageuri="' . $image_uri . '" data-resized="false" data-width="640" data-height="640" data-uri="' . $playlist_uri . '" style="' . $style . '" onclick="void(0)"></div>
+				<div id="cover_art_art_div" class="actions_div" data-actions="resize_cover_art" data-imageuri="' . $cover_art_uri . '" data-resized="false" data-width="640" data-height="640" data-uri="' . $playlist_uri . '" style="background-image: url(\'' . $cover_art_uri . '\')" onclick="void(0)"></div>
 				<div id="cover_art_information_div" class="shadow_up_black_48_img_div"><div>' . $tracks_count . ' / Playlist by ' . hsc(is_facebook_user($user)) . '</div></div>
-				<div title="Shuffle Play" id="cover_art_fab_div" class="actions_div shuffle_white_24_img_div" data-actions="show_cover_art_fab_animation shuffle_play_uri" data-uri="' . $playlist_uri . '" data-highlightclass="light_green_highlight" onclick="void(0)"></div>
+				<div title="Play" id="cover_art_fab_div" class="actions_div play_white_24_img_div" data-actions="show_cover_art_fab_animation play_uri" data-uri="' . $playlist_uri . '" data-highlightclass="light_green_highlight" onclick="void(0)"></div>
 				</div>
 			';
 
@@ -336,9 +320,9 @@ elseif(isset($_GET['browse']))
 				$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 				$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 				$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
+				$actions_dialog['actions'][] = array('text' => 'Delete from Playlist', 'keys' => array('actions', 'uri', 'uris', 'positions', 'snapshotid', 'div'), 'values' => array('hide_dialog delete_uris_from_playlist', $playlist_uri, $uri, $position, $snapshot_id, $list_item_div));
 				$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
 				$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
-				$actions_dialog['actions'][] = array('text' => 'Delete from Playlist', 'keys' => array('actions', 'uri', 'uris', 'positions', 'snapshotid', 'div'), 'values' => array('hide_dialog delete_uris_from_playlist', $playlist_uri, $uri, $position, $snapshot_id, $list_item_div));
 
 				echo '
 					<div id="' . $list_item_div . '" class="list_item_div">
@@ -351,7 +335,7 @@ elseif(isset($_GET['browse']))
 					</div>
 					<div class="list_item_actions_div">
 					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uri_from_playlist" data-playlisturi="' . $playlist_uri . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 					<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
@@ -374,7 +358,7 @@ else
 
 	$activity['actions'][] = array('action' => array('Refresh from Spotify', ''), 'keys' => array('actions'), 'values' => array('confirm_refresh_spotify_playlists'));
 	$activity['actions'][] = array('action' => array('Import Manually', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'playlists', 'import-manually', ''));
-	$activity['actions'][] = array('action' => array('Recent Playlists', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'recently-played', '', ''));
+	$activity['actions'][] = array('action' => array('Recently Played', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'recently-played', '', ''));
 	$activity['fab'] = array('label' => 'Create', 'icon' => 'plus_white_24_img_div', 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'playlists', 'create', ''));
 
 	echo '<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">';
@@ -386,7 +370,7 @@ else
 	$actions_dialog['actions'][] = array('text' => 'User', 'keys' => array('actions', 'cookieid', 'cookievalue', 'cookieexpires'), 'values' => array('hide_dialog set_cookie refresh_activity', 'settings_sort_playlists', 'user', 3650));
 
 	echo '
-		<div class="list_header_div"><div>All</div><div title="Sort" class="actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_18_div sort_grey_18_img_div"></div></div></div>
+		<div class="list_header_div"><div>Playlists</div><div title="Sort" class="actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_18_div sort_grey_18_img_div"></div></div></div>
 
 		<div class="list_div">
 	';
@@ -425,8 +409,6 @@ else
 			$actions_dialog = array();
 			$actions_dialog['title'] = hsc($name);
 			$actions_dialog['actions'][] = array('text' => 'Go to User', 'keys' => array('actions', 'username'), 'values' => array('hide_dialog get_user', $user));
-			$actions_dialog['actions'][] = array('text' => 'Queue Tracks', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $uri, 'false'));
-			$actions_dialog['actions'][] = array('text' => 'Queue Tracks Randomly', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $uri, 'true'));
 			$actions_dialog['actions'][] = array('text' => 'Edit', 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('hide_dialog change_activity', 'playlists', 'edit', 'uri=' . $uri));
 			$actions_dialog['actions'][] = array('text' => 'Delete', 'keys' => array('actions', 'id', 'uri'), 'values' => array('hide_dialog confirm_remove_playlist', $id, $uri));
 
@@ -444,7 +426,6 @@ else
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
 				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
-				<div title="Shuffle Play" class="actions_div" data-actions="shuffle_play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_grey_24_img_div"></div></div>
 				<div title="Browse" class="actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div playlist_grey_24_img_div"></div></div>
 				<div title="Share" class="actions_div" data-actions="share_uri" data-title="' . hsc($name) . '" data-uri="' . rawurlencode(uri_to_url($uri)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div share_grey_24_img_div"></div></div>
 				<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>

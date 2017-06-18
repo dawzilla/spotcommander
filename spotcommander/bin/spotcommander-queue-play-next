@@ -25,28 +25,35 @@ chdir(__DIR__);
 
 require_once('../main.php');
 
-$spotify_is_unsupported = spotify_is_unsupported();
+$spotify_is_new = spotify_is_new();
 $qdbus = daemon_qdbus_select();
 
-$track = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT 1", array('id', 'uri', 'sortorder'));
+$tracks = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id", array('id', 'uri', 'sortorder'));
 
-if(!empty($track))
+if(!empty($tracks))
 {
-	$id = $track[1]['id'];
-	$uri = $track[1]['uri'];
-	$sortorder = $track[1]['sortorder'];
+	$id = $tracks[1]['id'];
+	$uri = $tracks[1]['uri'];
+	$sortorder = $tracks[1]['sortorder'];
 
 	remove_from_queue($id, $sortorder);
 
 	if($uri == 'pause')
 	{
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause');
+		if(is_spotify_subscription_premium())
+		{
+			remote_control_spotify('https://api.spotify.com/v1/me/player/pause', 'PUT', null);
+		}
+		else
+		{
+			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause');
+		}
 	}
 	elseif($uri == 'stop')
 	{
 		clear_queue();
 
-		if($spotify_is_unsupported)
+		if($spotify_is_new)
 		{
 			exec('killall spotify');
 		}
@@ -61,7 +68,7 @@ if(!empty($track))
 
 		clear_queue();
 
-		if($spotify_is_unsupported)
+		if($spotify_is_new)
 		{
 			exec('killall spotify');
 		}
@@ -69,6 +76,8 @@ if(!empty($track))
 		{
 			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Quit');
 		}
+
+		sleep(1);
 
 		if($logind)
 		{
@@ -85,7 +94,7 @@ if(!empty($track))
 		
 		clear_queue();
 
-		if($spotify_is_unsupported)
+		if($spotify_is_new)
 		{
 			exec('killall spotify');
 		}
@@ -93,6 +102,8 @@ if(!empty($track))
 		{
 			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Quit');
 		}
+
+		sleep(1);
 
 		if($logind)
 		{
@@ -105,7 +116,24 @@ if(!empty($track))
 	}
 	else
 	{
-		exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $uri);
+		if(is_spotify_subscription_premium())
+		{
+			$uris = array();
+			$i = 0;
+
+			foreach($tracks as $track)
+			{
+				$uris[$i] = $track['uri'];
+
+				$i++;
+			}
+
+			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array("uris" => $uris, "offset" => array("position" => 0))));
+		}
+		else
+		{
+			exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.OpenUri ' . $uri);
+		}
 	}
 }
 

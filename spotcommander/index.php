@@ -35,19 +35,18 @@ require_once('main.php');
 
 <noscript><meta http-equiv="refresh" content="0; url=error.php?code=6"></noscript>
 
-<meta name="application-name" content="<?php echo project_name ?>">
 <meta name="viewport" content="user-scalable=no, initial-scale=1.0">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="<?php echo project_name ?>">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#212121">
 <meta name="msapplication-tap-highlight" content="no">
 <meta name="msapplication-TileImage" content="img/favicon-144.png?<?php echo project_serial; ?>">
 <meta name="msapplication-TileColor" content="#212121">
 
+<script src="js/base64.js?<?php echo project_serial; ?>"></script>
+<script src="js/cookies.js?<?php echo project_serial; ?>"></script>
 <script src="js/jquery.js?<?php echo project_serial; ?>"></script>
-<script src="js/jquery-cookie.js?<?php echo project_serial; ?>"></script>
-<script src="js/jquery-base64.js?<?php echo project_serial; ?>"></script>
-<script src="js/jquery-easing.js?<?php echo project_serial; ?>"></script>
 <script src="js/modernizr.js?<?php echo project_serial; ?>"></script>
 <script src="js/functions.js?<?php echo project_serial; ?>"></script>
 <script src="js/main.js?<?php echo project_serial; ?>"></script>
@@ -112,8 +111,8 @@ require_once('main.php');
 <div class="menu_item_div menu_big_item_div actions_div" data-actions="change_activity" data-activity="search" data-subactivity="" data-args="" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="menu_big_item_indicator_div"></div><div class="menu_big_item_icon_div"><div class="img_div img_36_div search_grey_36_img_div"></div></div><div class="menu_big_item_text_div">Search</div></div>
 <div id="menu_first_small_item_div" class="menu_item_div menu_small_item_div actions_div" data-actions="change_activity" data-activity="queue" data-subactivity="" data-args="" data-highlightclass="light_grey_highlight" onclick="void(0)">Queue</div>
 <div class="menu_item_div menu_small_item_div actions_div" data-actions="change_activity" data-activity="profile" data-subactivity="" data-args="" data-highlightclass="light_grey_highlight" onclick="void(0)">Profile</div>
+<div class="menu_item_div menu_small_item_div actions_div" data-actions="change_activity" data-activity="devices" data-subactivity="" data-args="" data-highlightclass="light_grey_highlight" onclick="void(0)">Devices</div>
 <div id="update_available_indicator_div" class="menu_item_div menu_small_item_div actions_div" data-actions="change_activity" data-activity="settings" data-subactivity="" data-args="" data-highlightclass="light_grey_highlight" onclick="void(0)">Settings</div>
-<div class="menu_item_div menu_small_item_div actions_div" data-actions="open_external_activity" data-uri="<?php echo project_website; ?>?use" data-highlightclass="light_grey_highlight" onclick="void(0)">Help</div>
 </div>
 
 <div id="top_actionbar_overflow_actions_div">
@@ -144,15 +143,18 @@ require_once('main.php');
 <div id="nowplaying_volume_div">
 <div id="nowplaying_volume_adjust_div">
 <div id="nowplaying_volume_slider_div"><input id="nowplaying_volume_slider" type="range" min="0" max="100" step="1" value="50"></div>
-<div id="nowplaying_volume_buttons_div"><div id="nowplaying_volume_buttons_inner_div"><div title="Mute" class="actions_div" data-actions="adjust_volume" data-volume="mute" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_36_div volume_mute_white_36_img_div"></div></div><div title="Volume Down" class="actions_div" data-actions="adjust_volume" data-volume="down" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_36_div volume_down_white_36_img_div"></div></div><div title="Volume Up" class="actions_div" data-actions="adjust_volume" data-volume="up" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_36_div volume_up_white_36_img_div"></div></div></div></div>
 </div>
 <div id="nowplaying_volume_level_div"><span id="nowplaying_volume_level_span">50</span> %</div>
 </div>
-<div id="nowplaying_remote_div">
-<div title="Toggle Shuffle" class="actions_div" data-actions="toggle_shuffle_repeat" data-remotecontrol="toggle_shuffle" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_white_24_img_div"></div></div>
+<div id="nowplaying_remote_upper_div">
 <div title="Previous" class="actions_div" data-actions="remote_control" data-remotecontrol="previous" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div previous_white_48_img_div"></div></div>
 <div title="Play/Pause" class="actions_div" data-actions="remote_control" data-remotecontrol="play_pause" data-highlightclass="dark_highlight" onclick="void(0)"><div id="nowplaying_play_pause_div" class="img_div img_72_div play_circle_white_72_img_div"></div></div>
 <div title="Next" class="actions_div" data-actions="remote_control" data-remotecontrol="next" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div next_white_48_img_div"></div></div>
+</div>
+<div id="nowplaying_remote_lower_div">
+<div title="Toggle Shuffle" class="actions_div" data-actions="toggle_shuffle_repeat" data-remotecontrol="toggle_shuffle" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_white_24_img_div"></div></div>
+<div title="Seek back 30 seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_back" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_back_white_48_img_div"></div></div>
+<div title="Seek forward 30 seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_forward" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_forward_white_48_img_div"></div></div>
 <div title="Toggle Repeat" class="actions_div" data-actions="toggle_shuffle_repeat" data-remotecontrol="toggle_repeat" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_24_div repeat_white_24_img_div"></div></div>
 </div>
 </div>

@@ -25,10 +25,6 @@ if(isset($_GET['queue_uri']))
 {
 	echo queue_uri(rawurldecode($_POST['artist']), rawurldecode($_POST['title']), $_POST['uri']);
 }
-elseif(isset($_GET['queue_uris']))
-{
-	echo queue_uris($_POST['uris'], $_POST['randomly']);
-}
 elseif(isset($_GET['move']))
 {
 	echo move_queued_uri($_POST['id'], $_POST['sortorder'], $_POST['direction']);

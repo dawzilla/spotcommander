@@ -59,9 +59,17 @@ else
 
 </div>
 
-<div class="list_header_div"><div>Donate</div><div></div></div>
+<div class="list_header_div"><div>Links</div><div></div></div>
 
 <div class="list_div">
+
+<div class="setting_div actions_div" data-actions="open_external_activity" data-uri="<?php echo project_website; ?>?use" onclick="void(0)">
+<div class="setting_text_div"><div>Help</div><div>Tap here to get usage help, like keyboard gestures and shortcuts</div></div>
+</div>
+
+<div class="setting_div actions_div" data-actions="open_external_activity" data-uri="<?php echo project_website; ?>?issues" onclick="void(0)">
+<div class="setting_text_div"><div>Report Issue</div><div>Tap here to report an issue</div></div>
+</div>
 
 <div class="setting_div actions_div" data-actions="make_donation" onclick="void(0)">
 <div class="setting_text_div"><div>Make a Donation</div><div>Tap here to support the development of <?php echo project_name; ?></div></div>
@@ -134,38 +142,6 @@ echo get_setting_dropdown($setting, $options);
 <div class="list_div">
 
 <div class="setting_div">
-<div class="setting_text_div"><div>Now Playing Refresh</div><div>How often to automatically refresh what's playing</div></div>
-<div class="setting_edit_div">
-
-<?php
-
-$setting = 'settings_nowplaying_refresh_interval';
-$options = array(5 => '5 s', 10 => '10 s', 30 => '30 s', 60 => '60 s', 0 => 'Never');
-
-echo get_setting_dropdown($setting, $options);
-
-?>
-
-</div>
-</div>
-
-<div class="setting_div">
-<div class="setting_text_div"><div>Playlists Cache</div><div>How long to cache playlists. You can increase this if you rarely add tracks to playlists outside of <?php echo project_name; ?>. Playlists can be manually refreshed from the overflow menu</div></div>
-<div class="setting_edit_div">
-
-<?php
-
-$setting = 'settings_playlists_cache_time';
-$options = array(900 => '15 minutes', 1800 => '30 minutes', 3600 => '1 hour', 7200 => '2 hours', 21600 => '6 hours', 43200 => '12 hours', 86400 => '1 day', 0 => 'Forever');
-
-echo get_setting_dropdown($setting, $options);
-
-?>
-
-</div>
-</div>
-
-<div class="setting_div">
 <div class="setting_text_div"><div><label for="settings_hide_local_files">Hide Local Files</label></div><div>Hide local files from playlists</div></div>
 <div class="setting_edit_div"><input type="checkbox" class="setting_checkbox" id="settings_hide_local_files" name="settings_hide_local_files"<?php echo setting_checkbox_status('settings_hide_local_files'); ?>></div>
 </div>
@@ -196,25 +172,11 @@ echo get_setting_dropdown($setting, $options);
 </div>
 
 <div class="setting_div actions_div" data-actions="confirm_clear_cache" onclick="void(0)">
-<div class="setting_text_div"><div>Clear Cache</div><div>Tap here to clear the cache for playlists, albums, etc</div></div>
+<div class="setting_text_div"><div>Clear Cache</div><div>Tap here to clear various cache files</div></div>
 </div>
 
 <div class="setting_div actions_div" data-actions="confirm_restore_to_default" onclick="void(0)">
 <div class="setting_text_div"><div>Restore</div><div>Tap here to restore settings, messages, etc</div></div>
-</div>
-
-</div>
-
-<div class="list_header_div"><div>Web</div><div></div></div>
-
-<div class="list_div">
-
-<div class="setting_div actions_div" data-actions="open_external_activity" data-uri="<?php echo project_website; ?>?issues" onclick="void(0)">
-<div class="setting_text_div"><div>Report Issue</div><div>Tap here to report an issue</div></div>
-</div>
-
-<div class="setting_div actions_div" data-actions="open_external_activity" data-uri="<?php echo project_website; ?>" onclick="void(0)">
-<div class="setting_text_div"><div>Visit Website</div><div>Tap here to visit <?php echo project_name; ?>'s website</div></div>
 </div>
 
 </div>

@@ -21,19 +21,21 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 function setGlobalVariables(global_variables)
 {
-	global_variables = $.parseJSON(global_variables);
+	global_variables = JSON.parse(global_variables);
 
 	// Project
 	project_name = global_variables.project_name;
 	project_version = parseFloat(global_variables.project_version);
 	project_serial = parseInt(global_variables.project_serial);
+	project_path = window.location.pathname;
 	project_website = global_variables.project_website;
 	project_website_https = global_variables.project_website_https;
 	project_developer = global_variables.project_developer;
 	project_android_app_minimum_version = parseFloat(global_variables.project_android_app_minimum_version);
-	project_is_authorized_with_spotify = global_variables.project_is_authorized_with_spotify;
 	project_error_code = parseInt(global_variables.project_error_code);
-	project_spotify_is_unsupported = global_variables.project_spotify_is_unsupported;
+	project_is_authorized_with_spotify = global_variables.project_is_authorized_with_spotify;
+	project_is_spotify_subscription_premium = global_variables.project_is_spotify_subscription_premium;
+	project_spotify_is_new = global_variables.project_spotify_is_new;
 
 	// User agent
 	ua = window.navigator.userAgent;
@@ -41,7 +43,6 @@ function setGlobalVariables(global_variables)
 	// Feature detection
 	ua_supports_csstransitions = (Modernizr.csstransitions && !shc(ua, 'DISABLE_CSSTRANSITIONS'));
 	ua_supports_csstransforms3d = (Modernizr.csstransforms3d && !shc(ua, 'DISABLE_CSSTRANSFORMS3D'));
-	ua_supports_inputtype_range = (Modernizr.inputtypes.range);
 	ua_supports_notifications = (Modernizr.notification);
 	ua_supports_touch = (Modernizr.touchevents && !shc(ua, 'CrOS'));
 
@@ -68,9 +69,6 @@ function setGlobalVariables(global_variables)
 	ua_is_os_x = (shc(ua, 'Macintosh; Intel Mac OS X'));
 	ua_is_standalone = (ua_is_android && shc(ua, project_name) || ua_is_ios && ('standalone' in window.navigator) && window.navigator.standalone || ua_is_os_x && shc(ua, 'FluidApp'));
 	ua_is_android_app = (ua_is_android && ua_is_standalone);
-	ua_is_msie = (getMSIEVersion() >= 11);
-	ua_is_pinnable_msie = (ua_is_msie && window.external && ('msIsSiteMode' in window.external));
-	ua_is_integrated_msie = false;
 
 	// Scrolling
 	scrolling = false;
@@ -138,18 +136,16 @@ function setGlobalVariables(global_variables)
 
 	// Now playing
 	nowplaying_refreshing = false;
+	nowplaying_cover_art_moving = false;
+	nowplaying_play_pause = 'play';
 	nowplaying_last_data = '';
 	nowplaying_last_uri = '';
-	nowplaying_cover_art_moving = false;
 
 	// Cover art
 	cover_art_rgb = '104, 159, 56';
 
 	// Settings
 	var settings = [
-		{ setting: 'settings_nowplaying_refresh_interval' , value: '5' },
-		{ setting: 'settings_volume_control' , value: 'spotify' },
-		{ setting: 'settings_playlists_cache_time' , value: '3600' },
 		{ setting: 'settings_hide_local_files' , value: 'false' },
 		{ setting: 'settings_keyboard_shortcuts' , value: (ua_supports_touch) ? 'false' : 'true' },
 		{ setting: 'settings_notifications' , value: 'false' },
@@ -173,34 +169,28 @@ function setGlobalVariables(global_variables)
 	for(var i = 0; i < settings.length; i++)
 	{
 		var cookie = { id: settings[i].setting, value: settings[i].value, expires: 3650 };
-		if(!isCookie(cookie.id)) $.cookie(cookie.id, cookie.value, { expires: cookie.expires });
+		if(!isCookie(cookie.id)) Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
 	}
 
-	settings_nowplaying_refresh_interval = parseInt($.cookie('settings_nowplaying_refresh_interval'));
-	settings_volume_control = $.cookie('settings_volume_control');
-	settings_playlists_cache_time = $.cookie('settings_playlists_cache_time');
-	settings_hide_local_files = stringToBoolean($.cookie('settings_hide_local_files'));
-	settings_notifications = stringToBoolean($.cookie('settings_notifications'));
-	settings_update_lyrics = stringToBoolean($.cookie('settings_update_lyrics'));
-	settings_keyboard_shortcuts = stringToBoolean($.cookie('settings_keyboard_shortcuts'));
-	settings_keep_screen_on = stringToBoolean($.cookie('settings_keep_screen_on'));
-	settings_pause_on_incoming_call = stringToBoolean($.cookie('settings_pause_on_incoming_call'));
-	settings_pause_on_outgoing_call = stringToBoolean($.cookie('settings_pause_on_outgoing_call'));
-	settings_flip_to_pause = stringToBoolean($.cookie('settings_flip_to_pause'));
-	settings_shake_to_skip = stringToBoolean($.cookie('settings_shake_to_skip'));
-	settings_shake_sensitivity = $.cookie('settings_shake_sensitivity');
-	settings_persistent_notification = stringToBoolean($.cookie('settings_persistent_notification'));
+	settings_hide_local_files = stringToBoolean(Cookies.get('settings_hide_local_files'));
+	settings_notifications = stringToBoolean(Cookies.get('settings_notifications'));
+	settings_update_lyrics = stringToBoolean(Cookies.get('settings_update_lyrics'));
+	settings_keyboard_shortcuts = stringToBoolean(Cookies.get('settings_keyboard_shortcuts'));
+	settings_keep_screen_on = stringToBoolean(Cookies.get('settings_keep_screen_on'));
+	settings_pause_on_incoming_call = stringToBoolean(Cookies.get('settings_pause_on_incoming_call'));
+	settings_pause_on_outgoing_call = stringToBoolean(Cookies.get('settings_pause_on_outgoing_call'));
+	settings_flip_to_pause = stringToBoolean(Cookies.get('settings_flip_to_pause'));
+	settings_shake_to_skip = stringToBoolean(Cookies.get('settings_shake_to_skip'));
+	settings_shake_sensitivity = Cookies.get('settings_shake_sensitivity');
+	settings_persistent_notification = stringToBoolean(Cookies.get('settings_persistent_notification'));
 }
 
 // Window load
 
-$(window).load(function()
+$(window).on('load', function()
 {
 	// Settings
 	$.ajaxSetup({ cache: false, timeout: 30000 });
-	
-	$.base64.utf8encode = true;
-	$.base64.utf8decode = true;
 
 	// Load
 	$.get('main.php?global_variables', function(xhr_data)
@@ -477,7 +467,7 @@ $(window).load(function()
 					}
 					else
 					{
-						$(this).stop().animate({ 'left': '0' }, 250, 'easeOutExpo');
+						$(this).stop().animate({ 'left': '0' }, 250);
 					}
 				}
 			});
@@ -499,7 +489,7 @@ $(window).load(function()
 				var parent = $(element).parent().parent();
 				var data = $('div.show_actions_dialog_div', parent).data();
 
-				if(typeof data != 'undefined') showActionsDialog($.parseJSON($.base64.decode(data.dialogactions)));
+				if(typeof data != 'undefined') showActionsDialog(JSON.parse(base64Decode(data.dialogactions)));
 			});
 		}
 
@@ -603,11 +593,11 @@ $(window).load(function()
 				}
 				else if(action == 'show_actions_dialog')
 				{
-					showActionsDialog($.parseJSON($.base64.decode(data.dialogactions)));
+					showActionsDialog(JSON.parse(base64Decode(data.dialogactions)));
 				}
 				else if(action == 'show_details_dialog')
 				{
-					showDetailsDialog($.parseJSON($.base64.decode(data.dialogdetails)));
+					showDetailsDialog(JSON.parse(base64Decode(data.dialogdetails)));
 				}
 				else if(action == 'hide_dialog')
 				{
@@ -635,8 +625,6 @@ $(window).load(function()
 				{
 					$(data.showitems).show();
 					$(data.hideitem).hide();
-
-					saveScrollPosition({ action: action, showitems: data.showitems, hideitem: data.hideitem });
 				}
 				else if(action == 'submit_form')
 				{
@@ -739,45 +727,37 @@ $(window).load(function()
 				{
 					remoteControl(data.remotecontrol);
 				}
-				else if(action == 'adjust_volume')
+				else if(action == 'seek')
 				{
-					adjustVolume(data.volume);
-				}
-				else if(action == 'adjust_volume_control')
-				{
-					adjustVolumeControl(data.volumecontrol);
+					seekPosition(data.remotecontrol);
 				}
 				else if(action == 'toggle_shuffle_repeat')
 				{
 					toggleShuffleRepeat(data.remotecontrol);
 				}
+				else if(action == 'adjust_volume')
+				{
+					adjustVolume(data.volume);
+				}
 				else if(action == 'play_uri')
 				{
 					playUri(data.uri);
 				}
-				else if(action == 'play_uri_from_playlist')
+				else if(action == 'play_uris')
 				{
-					playUriFromPlaylist(data.playlisturi, data.uri);
+					playUris(data.uri, data.uris);
 				}
-				else if(action == 'shuffle_play_uri')
+				else if(action == 'transfer_device')
 				{
-					shufflePlayUri(data.uri);
+					transferDevice(data.devicename, data.deviceid);
 				}
 				else if(action == 'show_cover_art_fab_animation')
 				{
 					showCoverArtFabActionAnimation();
 				}
-				else if(action == 'clear_recently_played')
-				{
-					clearRecentlyPlayed();
-				}
 				else if(action == 'queue_uri')
 				{
 					queueUri(data.artist, data.title, data.uri);
-				}
-				else if(action == 'queue_uris')
-				{
-					queueUris(data.uris, data.randomly);
 				}
 				else if(action == 'move_queued_uri')
 				{
@@ -928,7 +908,7 @@ $(window).load(function()
 				}
 				else if(action == 'set_cookie')
 				{
-					$.cookie(data.cookieid, data.cookievalue, { expires: parseInt(data.cookieexpires) });
+					Cookies.set(data.cookieid, data.cookievalue, { expires: data.cookieexpires, path: project_path });
 				}
 				else if(action == 'reload_app')
 				{
@@ -1002,8 +982,6 @@ $(window).load(function()
 		// Volume slider
 		$(document).on('input change', 'input#nowplaying_volume_slider', function(event)
 		{
-			if(event.type == 'input' && ua_is_msie || event.type == 'change' && !ua_is_msie) return;
-
 			var element = $(this);
 			var value = element.val();
 
@@ -1057,14 +1035,14 @@ $(window).load(function()
 		// Installed
 		var cookie = { id: 'installed_'+project_version, value: getCurrentTime(), expires: 3650 };
 
-		if(!isCookie(cookie.id)) $.cookie(cookie.id, cookie.value, { expires: cookie.expires });
+		if(!isCookie(cookie.id)) Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
 
 		// Show activity 
 		var cookie = { id: 'current_activity_'+project_version };
 
 		if(ua_is_ios && ua_is_standalone && isCookie(cookie.id))
 		{
-			var a = $.parseJSON($.cookie(cookie.id));
+			var a = JSON.parse($.cookie(cookie.id));
 
 			activityLoading();
 			changeActivity(a.activity, a.subactivity, a.args);
@@ -1076,9 +1054,6 @@ $(window).load(function()
 
 		// Keyboard shortcuts
 		if(settings_keyboard_shortcuts) enableKeyboardShortcuts();
-
-		// MSIE integration
-		if(ua_is_pinnable_msie) integrateInMSIE();
 
 		// Now playing
 		setTimeout(function()

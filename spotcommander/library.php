@@ -62,22 +62,7 @@ else
 
 	$tracks = get_db_rows('library', "SELECT artist, title, uri FROM library WHERE type = 'track' ORDER BY " . sqlite_escape($order1) . " COLLATE NOCASE " . sqlite_escape($order) . ", " . sqlite_escape($order2) . " COLLATE NOCASE " . sqlite_escape($order), array('artist', 'title', 'uri'));
 
-	$queue_uris = array();
-	$i = 0;
-
-	foreach($tracks as $track)
-	{
-		$queue_uris[$i]['artist'] = $track['artist'];
-		$queue_uris[$i]['title'] = $track['title'];
-		$queue_uris[$i]['uri'] = $track['uri'];
-
-		$i++;
-	}
-
-	$queue_uris = base64_encode(json_encode($queue_uris));
-
-	$activity['actions'][] = array('action' => array('Refresh Library', ''), 'keys' => array('actions'), 'values' => array('confirm_refresh_library'));
-	$activity['actions'][] = array('action' => array('Queue Tracks Randomly', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $queue_uris, 'true'));
+	$activity['actions'][] = array('action' => array('Refresh Library', 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('confirm_refresh_library'));
 	$activity['fab'] = array('label' => 'Go to Next Category', 'icon' => 'down_white_24_img_div', 'keys' => array('actions'), 'values' => array('scroll_to_next_list_header'));
 
 	$actions_dialog = array();
@@ -100,6 +85,18 @@ else
 	}
 	else
 	{
+		$queue_uris = array();
+		$n = 0;
+
+		foreach($tracks as $track)
+		{
+			$queue_uris[$n] = $track['uri'];
+
+			$n++;
+		}
+
+		$queue_uris = base64_encode(json_encode($queue_uris));
+
 		foreach($tracks as $track)
 		{
 			$artist = $track['artist'];
@@ -126,7 +123,7 @@ else
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
 				<div title="Remove" class="actions_div" data-actions="remove" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div trash_grey_24_img_div"></div></div>
@@ -189,8 +186,6 @@ else
 			$actions_dialog['title'] = hsc($title);
 			$actions_dialog['actions'][] = array('text' => 'Go to Artist', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_artist', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
-			$actions_dialog['actions'][] = array('text' => 'Queue Tracks', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $uri, 'false'));
-			$actions_dialog['actions'][] = array('text' => 'Queue Tracks Randomly', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $uri, 'true'));
 			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
 
 			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache[$uri] . '\')';
@@ -207,7 +202,6 @@ else
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
 				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
-				<div title="Shuffle Play" class="actions_div" data-actions="shuffle_play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_grey_24_img_div"></div></div>
 				<div title="Browse" class="actions_div" data-actions="change_activity" data-activity="album" data-subactivity="" data-args="uri=' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div album_grey_24_img_div"></div></div>
 				<div title="Remove" class="actions_div" data-actions="remove" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div trash_grey_24_img_div"></div></div>
 				<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>
@@ -271,7 +265,6 @@ else
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
 				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
-				<div title="Shuffle Play" class="actions_div" data-actions="shuffle_play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_grey_24_img_div"></div></div>
 				<div title="Browse" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
 				<div title="Share" class="actions_div" data-actions="share_uri" data-title="' . hsc($name) . '" data-uri="' . rawurlencode(uri_to_url($uri)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div share_grey_24_img_div"></div></div>
 				<div title="Remove" class="actions_div" data-actions="remove" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div trash_grey_24_img_div"></div></div>

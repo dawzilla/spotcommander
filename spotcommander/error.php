@@ -53,9 +53,11 @@ elseif($code == 6)
 	$message = 'You must enable JavaScript in your browser.';
 }
 
+$project_version = number_format(project_version, 1);
+$error_code = $code;
 $system_information = get_system_information();
 
-$files = get_external_files(array(project_website . 'api/1/error/?version=' . rawurlencode(number_format(project_version, 1)) . '&error_code=' . rawurlencode($code) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
+get_external_files(array(project_website . 'api/1/error/?version=' . rawurlencode($project_version) . '&error_code=' . rawurlencode($error_code) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
 
 ?>
 
@@ -68,7 +70,6 @@ $files = get_external_files(array(project_website . 'api/1/error/?version=' . ra
 <title><?php echo project_name; ?></title>
 
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta http-equiv="x-ua-compatible" content="IE=edge">
 
 <meta name="viewport" content="user-scalable=no, initial-scale=1.0">
 

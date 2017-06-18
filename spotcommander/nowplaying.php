@@ -58,8 +58,6 @@ if(spotify_is_running())
 		$cover_art = (empty($nowplaying['artUrl'])) ? 'img/no-cover-art-640.png?' . project_serial : str_replace(array('http:', 'open.spotify.com', '/thumb/'), array('https:', 'i.scdn.co', '/image/'), $nowplaying['artUrl']);
 		$popularity = (empty($nowplaying['autoRating'])) ? 'Unknown' : convert_popularity($nowplaying['autoRating']);
 
-		if($playbackstatus == 'Playing') save_recently_played($artist, $title, $uri);
-
 		$details_dialog = array();
 		$details_dialog['title'] = hsc($title);
 		$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
@@ -88,9 +86,6 @@ if(spotify_is_running())
 		$actions = array();
 		$actions[] = array('action' => array('Recently Played', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'recently-played', '', ''));
 		$actions[] = array('action' => array('Show Queue', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'queue', '', ''));
-
-		if(daemon_pulseaudio_check()) $actions[] = (get_volume_control() == 'spotify') ? array('action' => array('System Volume', ''), 'keys' => array('actions', 'volumecontrol'), 'values' => array('adjust_volume_control', 'system')) : array('action' => array('Spotify\'s Volume', ''), 'keys' => array('actions', 'volumecontrol'), 'values' => array('adjust_volume_control', 'spotify'));
-
 		$actions[] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), rawurlencode($title), $uri));
 		$actions[] = array('action' => array('Lyrics', ''), 'keys' => array('actions', 'artist', 'title'), 'values' => array('get_lyrics', rawurlencode($artist), rawurlencode($title)));
 		$actions[] = array('action' => array('Queue', ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('queue_uri', rawurlencode($artist), rawurlencode($title), $uri));

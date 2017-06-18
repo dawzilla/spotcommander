@@ -46,7 +46,7 @@ function showActivity()
 		if(ua_is_ios && ua_is_standalone)
 		{
 			var cookie = { id: 'current_activity_'+project_version, value: JSON.stringify({ activity: a.activity, subactivity: a.subactivity, args: a.args, scroll_position: 0 }), expires: 1 };
-			$.cookie(cookie.id, cookie.value, { expires: cookie.expires });
+			Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
 		}
 	}).fail(function()
 	{
@@ -220,7 +220,7 @@ function activityLoaded()
 
 		if(isCookie(cookie.id))
 		{
-			var last_refresh_library = parseInt($.cookie(cookie.id));
+			var last_refresh_library = parseInt(Cookies.get(cookie.id));
 
 			if(getCurrentTime() - last_refresh_library > 1000 * 300) refreshLibrary();
 		}
@@ -237,7 +237,7 @@ function activityLoaded()
 
 		if(isCookie(cookie.id))
 		{
-			var last_refresh_playlists = parseInt($.cookie(cookie.id));
+			var last_refresh_playlists = parseInt(Cookies.get(cookie.id));
 
 			if(getCurrentTime() - last_refresh_playlists > 1000 * 300) refreshSpotifyPlaylists(true);
 		}
@@ -286,7 +286,10 @@ function changeActivity(activity, subactivity, args)
 	if(!project_is_authorized_with_spotify)
 	{
 		window.location.replace('.');
+		return;
 	}
+
+	scrolling_last_list_header = null;
 
 	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
 	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
@@ -299,7 +302,10 @@ function replaceActivity(activity, subactivity, args)
 	if(!project_is_authorized_with_spotify)
 	{
 		window.location.replace('.');
+		return;
 	}
+
+	scrolling_last_list_header = null;
 
 	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
 	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
@@ -349,7 +355,7 @@ function getActivity()
 
 function getActivityData()
 {
-	return ($('div#activity_inner_div').length && $('div#activity_inner_div').attr('data-activitydata')) ? $.parseJSON($.base64.decode($('div#activity_inner_div').data('activitydata'))) : '';
+	return ($('div#activity_inner_div').length && $('div#activity_inner_div').attr('data-activitydata')) ? JSON.parse(base64Decode($('div#activity_inner_div').data('activitydata'))) : '';
 }
 
 function setActivityTitle(title)
@@ -497,9 +503,9 @@ function showMenu()
 		}
 		else
 		{
-			menu_div.stop().animate({ 'left': '0' }, 375, 'easeOutExpo');
+			menu_div.stop().animate({ 'left': '0' }, 375);
 
-			cover_div.stop().animate({ 'opacity': '0.5' }, 375, 'easeOutExpo', function()
+			cover_div.stop().animate({ 'opacity': '0.5' }, 375, function()
 			{
 				img_div.removeClass('menu_white_24_img_div').addClass('back_white_24_img_div');
 			});
@@ -545,7 +551,7 @@ function hideMenu()
 	}
 	else
 	{
-		menu_div.stop().animate({ 'left': menu_div.data('cssleft') }, 375, 'easeOutExpo', function()
+		menu_div.stop().animate({ 'left': menu_div.data('cssleft') }, 375, function()
 		{
 			menu_div.css('visibility', '').css('left', '');
 
@@ -554,7 +560,7 @@ function hideMenu()
 			nativeAppCanCloseCover();
 		});
 
-		cover_div.stop().animate({ 'opacity': '0' }, 375, 'easeOutExpo', function()
+		cover_div.stop().animate({ 'opacity': '0' }, 375, function()
 		{
 			cover_div.hide().css('opacity', '');
 		});
@@ -681,7 +687,14 @@ function remoteControl(action)
 
 	clearTimeout(timeout_remote_control);
 
-	if(action == 'launch_quit' || action == 'next' || action == 'previous') startRefreshNowplaying();
+	if(project_spotify_is_new && project_is_spotify_subscription_premium && action == 'play_pause')
+	{
+		action = nowplaying_play_pause;
+	}
+	else if(action == 'launch_quit' || action == 'next' || action == 'previous')
+	{
+		startRefreshNowplaying();
+	}
 
 	xhr_remote_control = $.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
 	{
@@ -689,7 +702,7 @@ function remoteControl(action)
 		{
 			refreshNowplaying('manual');
 		}
-		else if(action == 'play_pause' || action == 'pause')
+		else if(action == 'play_pause' || action == 'play' || action == 'pause')
 		{
 			refreshNowplaying('silent');
 		}
@@ -705,17 +718,77 @@ function remoteControl(action)
 	});
 }
 
+function seekPosition(action)
+{
+	if(project_is_spotify_subscription_premium)
+	{
+		xhr_remote_control = $.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
+		{
+			if(xhr_data == 'spotify_is_not_running')
+			{
+				showToast('Spotify is not running', 2);
+			}
+			else
+			{
+				var toast = (action == 'seek_back') ? 'Seeking 30 seconds back' : 'Seeking 30 seconds forward';
+				showToast(toast, 2);
+			}
+		});
+	}
+	else
+	{
+		showToast('Spotify Premium only', 4);
+	}
+}
+
+function toggleShuffleRepeat(action)
+{
+	if(project_is_spotify_subscription_premium && action == 'toggle_shuffle')
+	{
+		var actions = [];
+
+		actions[0] = { text: 'On', keys: ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', 'toggle_shuffle_on'] };
+		actions[1] = { text: 'Off', keys: ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', 'toggle_shuffle_off'] };
+
+		showActionsDialog({ title: 'Toggle Shuffle', actions: actions });
+	}
+	else if(project_is_spotify_subscription_premium && action == 'toggle_repeat')
+	{
+		var actions = [];
+
+		actions[0] = { text: 'All', keys: ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', 'toggle_repeat_all'] };
+		actions[1] = { text: 'Track', keys: ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', 'toggle_repeat_track'] };
+		actions[2] = { text: 'Off', keys: ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', 'toggle_repeat_off'] };
+
+		showActionsDialog({ title: 'Toggle Repeat', actions: actions });
+	}
+	else
+	{
+		$.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
+		{
+			if(xhr_data == 'spotify_is_not_running')
+			{
+				showToast('Spotify is not running', 2);
+			}
+			else if(shc(action, 'toggle_shuffle'))
+			{
+				showToast('Shuffle toggled', 2);
+			}
+			else if(shc(action, 'toggle_repeat'))
+			{
+				showToast('Repeat toggled', 2);
+			}		
+		});
+	}
+}
+
 function adjustVolume(volume)
 {
 	xhr_adjust_volume.abort();
 
 	autoRefreshNowplaying('reset');
 
-	var cookie = { id: 'settings_volume_control' };
-	var control = $.cookie(cookie.id);
-	var action = (control == 'spotify') ? 'adjust_spotify_volume' : 'adjust_system_volume';
-
-	xhr_adjust_volume = $.post('main.php?'+getCurrentTime(), { action: action, data: volume }, function(xhr_data)
+	xhr_adjust_volume = $.post('main.php?'+getCurrentTime(), { action: 'adjust_volume', data: volume }, function(xhr_data)
 	{
 		$('input#nowplaying_volume_slider').val(xhr_data);
 		$('span#nowplaying_volume_level_span').html(xhr_data);
@@ -734,117 +807,36 @@ function adjustVolume(volume)
 	});
 }
 
-function adjustVolumeControl(control)
-{
-	var cookie = { id: 'hide_adjust_volume_control_dialog', value: 'true', expires: 3650 };
-
-	if(!isCookie(cookie.id))
-	{
-		showDialog({ title: 'Adjust Volume', body_class: 'dialog_message_div', body_content: 'With this action you can toggle between adjusting Spotify\'s volume and the system volume.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions', 'volumecontrol'], values: ['hide_dialog adjust_volume_control', control] }, cookie: cookie });
-	}
-	else
-	{
-		var cookie = { id: 'settings_volume_control', value: control, expires: 3650 };
-		$.cookie(cookie.id, cookie.value, { expires: cookie.expires });
-
-		if(control == 'spotify')
-		{
-			showToast('Controlling Spotify\'s volume', 2);
-		}
-		else
-		{
-			showToast('Controlling the system volume', 2);
-		}
-
-		refreshNowplaying('silent');
-	}
-}
-
-function toggleShuffleRepeat(action)
-{
-	var cookie = { id: 'hide_shuffle_repeat_dialog', value: 'true', expires: 3650 };
-
-	if(!isCookie(cookie.id))
-	{
-		showDialog({ title: 'Shuffle &amp; Repeat', body_class: 'dialog_message_div', body_content: 'Shuffle and repeat can be toggled, but it is not possible to get the current status.<br><br>Spotify must be the active window. Advertisements may stop this from working.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions', 'remotecontrol'], values: ['hide_dialog toggle_shuffle_repeat', action] }, cookie: cookie });
-	}
-	else
-	{
-		$.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
-		{
-			if(xhr_data == 'spotify_is_not_running')
-			{
-				showToast('Spotify is not running', 2);
-			}
-			else if(action == 'toggle_shuffle')
-			{
-				showToast('Shuffle toggled', 2);
-			}
-			else if(action == 'toggle_repeat')
-			{
-				showToast('Repeat toggled', 2);
-			}		
-		});
-	}
-}
-
 function playUri(uri)
 {
-	var type = getUriType(uri);
-
 	startRefreshNowplaying();
 
 	$.post('main.php?'+getCurrentTime(), { action: 'play_uri', data: uri }, function()
 	{
 		refreshNowplaying('manual');
 	});
-
-	if(type == 'playlist') saveRecentPlaylist(uri);
 }
 
-function playUriFromPlaylist(playlist_uri, uri)
+function playUris(uri, uris)
 {
-	startRefreshNowplaying();
-
-	var data = JSON.stringify([playlist_uri, uri]);
-
-	$.post('main.php?'+getCurrentTime(), { action: 'play_uri_from_playlist', data: data }, function()
+	if(getUriType(uri) == 'local')
 	{
-		refreshNowplaying('manual');
-	});
-
-	saveRecentPlaylist(playlist_uri);
-}
-
-function shufflePlayUri(uri)
-{
-	if(project_spotify_is_unsupported)
-	{
-		showToast('Shuffle must already be enabled', 2);
-
-		playUri(uri);
-
-		return;
-	}
-
-	var type = getUriType(uri);
-
-	var cookie = { id: 'hide_shuffle_play_uri_dialog', value: 'true', expires: 3650 };
-
-	if(!isCookie(cookie.id))
-	{
-		showDialog({ title: 'Shuffle Play', body_class: 'dialog_message_div', body_content: 'This action plays the media, toggles shuffle off/on and skips one track to ensure random playback.<br><br>Shuffle must already be enabled. Spotify must be the active window. Advertisements may stop this from working.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions', 'uri'], values: ['hide_dialog shuffle_play_uri', uri] }, cookie: cookie });
+		showToast('Local file. Play the playlist instead', 4);
 	}
 	else
 	{
+		uris = JSON.parse(base64Decode(uris));
+
+		uris.unshift(uri);
+
+		uris = JSON.stringify(uris).replace(/,"spotify:local[^"]+"/g, '');
+
 		startRefreshNowplaying();
 
-		$.post('main.php?'+getCurrentTime(), { action: 'shuffle_play_uri', data: uri }, function()
+		$.post('main.php?'+getCurrentTime(), { action: 'play_uris', data: uris }, function()
 		{
 			refreshNowplaying('manual');
 		});
-
-		if(type == 'playlist') saveRecentPlaylist(uri);
 	}
 }
 
@@ -902,7 +894,7 @@ function showNowplaying()
 	}
 	else
 	{
-		$('div#nowplaying_div').stop().animate({ 'bottom': '0' }, 500, 'easeOutExpo');
+		$('div#nowplaying_div').stop().animate({ 'bottom': '0' }, 500);
 	}
 
 	setNativeAppStatusBarColor('#212121');
@@ -924,7 +916,7 @@ function hideNowplaying()
 	}
 	else
 	{
-		$('div#nowplaying_div').stop().animate({ 'bottom': $('div#nowplaying_div').data('cssbottom') }, 500, 'easeOutExpo', function()
+		$('div#nowplaying_div').stop().animate({ 'bottom': $('div#nowplaying_div').data('cssbottom') }, 500, function()
 		{
 			$('div#nowplaying_div').css('visibility', '');
 			nativeAppCanCloseCover();
@@ -981,7 +973,7 @@ function showNowplayingOverflowActions()
 		showDiv('div#nowplaying_actionbar_overflow_actions_inner_div > div');
 	}
 
-	$('input#nowplaying_volume_slider').attr('disabled', 'disabled');
+	$('input#nowplaying_volume_slider').prop('disabled', true);
 
 	nativeAppCanCloseCover();
 }
@@ -1012,7 +1004,7 @@ function hideNowplayingOverflowActions()
 
 	setTimeout(function()
 	{
-		$('input#nowplaying_volume_slider').removeAttr('disabled');
+		$('input#nowplaying_volume_slider').prop('disabled', false);
 	}, 250);
 
 	nativeAppCanCloseCover();
@@ -1040,7 +1032,7 @@ function startRefreshNowplaying()
 	}
 	else
 	{
-		$('div#nowplaying_cover_art_div').stop().animate({ 'left': '-'+window_width+'px' }, 500, 'easeOutExpo');
+		$('div#nowplaying_cover_art_div').stop().animate({ 'left': '-'+window_width+'px' }, 500);
 	}
 }
 
@@ -1064,7 +1056,9 @@ function refreshNowplaying(type)
 		{
 			nowplaying_last_data = xhr_data;
 
-			var nowplaying = $.parseJSON(xhr_data);
+			var nowplaying = JSON.parse(xhr_data);
+
+			nowplaying_play_pause = nowplaying.play_pause;
 
 			checkIfNewVersionIsInstalled(nowplaying.project_version);
 
@@ -1095,7 +1089,7 @@ function refreshNowplaying(type)
 			{
 				nowplaying_last_uri = nowplaying.uri;
 
-				$.cookie('nowplaying_uri', nowplaying.uri.toLowerCase(), { expires: 3650 });
+				Cookies.set('nowplaying_uri', nowplaying.uri.toLowerCase(), { expires: 3650, path: project_path });
 
 				var cover_art_div = $('div#nowplaying_cover_art_div');
 
@@ -1116,7 +1110,7 @@ function refreshNowplaying(type)
 
 							if(type == 'manual') endRefreshNowplaying();
 
-							showNotification(nowplaying.title, nowplaying.artist+' (click to skip)', cover_art, 'remote_control_next', 4);
+							if(nowplaying.uri != '') showNotification(nowplaying.title, nowplaying.artist+' (click to skip)', cover_art, 'remote_control_next', 4);
 						});
 					});
 				}
@@ -1152,18 +1146,6 @@ function refreshNowplaying(type)
 				{
 					Android.JSsetSharedString('NOWPLAYING_ARTIST', nowplaying.artist);
 					Android.JSsetSharedString('NOWPLAYING_TITLE', nowplaying.title);
-				}
-			}
-
-			if(ua_is_integrated_msie)
-			{
-				if(nowplaying.play_pause == 'play')
-				{
-					window.external.msSiteModeShowButtonStyle(ie_thumbnail_button_play_pause, ie_thumbnail_button_style_play);
-				}
-				else
-				{
-					window.external.msSiteModeShowButtonStyle(ie_thumbnail_button_play_pause, ie_thumbnail_button_style_pause);
 				}
 			}
 		}
@@ -1208,7 +1190,7 @@ function endRefreshNowplaying()
 		if(isVisible('div#nowplaying_div'))
 		{
 			var changeside = parseInt(window_width * 2);
-			cover_art_div.stop().css('left', changeside+'px').animate({ 'left': '0' }, 500, 'easeOutExpo');
+			cover_art_div.stop().css('left', changeside+'px').animate({ 'left': '0' }, 500);
 		}
 		else
 		{
@@ -1219,19 +1201,19 @@ function endRefreshNowplaying()
 
 function autoRefreshNowplaying(action)
 {
-	if(action == 'start' && settings_nowplaying_refresh_interval >= 5)
+	if(action == 'start')
 	{
 		var cookie = { id: 'nowplaying_last_update', expires: 3650 };
-		$.cookie(cookie.id, getCurrentTime(), { expires: cookie.expires });
+		Cookies.set(cookie.id, getCurrentTime(), { expires: cookie.expires, path: project_path });
 
 		interval_nowplaying_auto_refresh = setInterval(function()
 		{
 			var current_time = getCurrentTime();
-			var last_update_time = parseInt($.cookie(cookie.id));
+			var last_update_time = parseInt(Cookies.get(cookie.id));
 
-			if(current_time - last_update_time > settings_nowplaying_refresh_interval * 1000)
+			if(current_time - last_update_time > 2 * 1000)
 			{
-				$.cookie(cookie.id, current_time, { expires: cookie.expires });
+				Cookies.set(cookie.id, current_time, { expires: cookie.expires, path: project_path });
 
 				timeout_nowplaying_auto_refresh = setTimeout(function()
 				{
@@ -1255,7 +1237,7 @@ function highlightNowplayingListItem()
 
 	if(!$('div.list_item_main_div').length || !isCookie(cookie.id)) return;
 
-	var nowplaying_uri = $.cookie(cookie.id);
+	var nowplaying_uri = Cookies.get(cookie.id);
 
 	$('div.list_item_main_div').each(function()
 	{
@@ -1280,6 +1262,21 @@ function highlightNowplayingListItem()
 				text.addClass('bold_text');
 			}
 		}
+	});
+}
+
+// Devices
+
+function transferDevice(devicename, deviceid)
+{
+	$.post('devices.php?transfer_device&'+getCurrentTime(), { devicename: devicename, deviceid: deviceid }, function(xhr_data)
+	{
+		showToast('Connecting to device&hellip;', 2);
+
+		setTimeout(function()
+		{
+			refreshActivity();
+		}, 2000);
 	});
 }
 
@@ -1464,14 +1461,6 @@ function refreshRecentlyPlayedActivity()
 	if(isActivity('recently-played', '')) refreshActivity();
 }
 
-function clearRecentlyPlayed()
-{
-	$.get('recently-played.php?clear', function()
-	{
-		refreshRecentlyPlayedActivity();
-	});
-}
-
 // Queue
 
 function queueUri(artist, title, uri)
@@ -1487,29 +1476,6 @@ function queueUri(artist, title, uri)
 		else
 		{
 			showToast('Track queued', 2);
-			refreshQueueActivity();
-		}
-	});
-}
-
-function queueUris(uris, randomly)
-{
-	$.post('queue.php?queue_uris&'+getCurrentTime(), { uris: uris, randomly: randomly }, function(xhr_data)
-	{
-		if(xhr_data == 'spotify_is_not_running')
-		{
-			showToast('Spotify is not running', 2);
-		}
-		else if(xhr_data == 'error')
-		{
-			showToast('Could not queue tracks', 2);
-		}
-		else
-		{
-			var number = parseInt(xhr_data);
-			var toast = (number == 1) ? 'track' : 'tracks';
-
-			showToast(number+' '+toast+' queued', 2);
 			refreshQueueActivity();
 		}
 	});
@@ -1578,7 +1544,7 @@ function addToPlaylist(title, uri)
 	{
 		$.get('playlists.php?get_playlists_with_access_as_json', function(xhr_data)
 		{
-			var playlists = $.parseJSON(xhr_data);
+			var playlists = JSON.parse(xhr_data);
 
 			var actions = [];
 
@@ -1701,7 +1667,7 @@ function refreshSpotifyPlaylists(refresh)
 		}
 	});
 
-	$.cookie('last_refresh_playlists', getCurrentTime(), { expires: 3650 });
+	Cookies.set('last_refresh_playlists', getCurrentTime(), { expires: 3650, path: project_path });
 }
 
 function importPlaylists(uris)
@@ -1872,14 +1838,6 @@ function removePlaylist(id, uri)
 	});
 }
 
-function saveRecentPlaylist(uri)
-{
-	$.post('playlists.php?save_recent_playlists&'+getCurrentTime(), { uri: uri }, function()
-	{
-		cachePlaylist(uri);
-	});
-}
-
 function refreshPlaylist(uri)
 {
 	$.post('playlists.php?refresh_playlist&'+getCurrentTime(), { uri: uri }, function()
@@ -1992,7 +1950,7 @@ function refreshLibrary()
 		}
 	});
 
-	$.cookie('last_refresh_library', getCurrentTime(), { expires: 3650 });
+	Cookies.set('last_refresh_library', getCurrentTime(), { expires: 3650, path: project_path });
 }
 
 function refreshLibraryActivity()
@@ -2058,7 +2016,7 @@ function getSearch(string)
 	{
 		blurTextInput();
 
-		$.cookie('settings_sort_search_tracks', 'default', { expires: 3650 });
+		Cookies.set('settings_sort_search_tracks', 'default', { expires: 3650, path: project_path });
 
 		changeActivity('search', 'search', 'string='+string);
 	}
@@ -2127,10 +2085,9 @@ function browseAlbum(uri)
 
 function authorizeWithSpotify()
 {
-	if(ua_is_ios && ua_is_standalone) $.removeCookie('current_activity_'+project_version);
+	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 
 	var uri = window.location.href.replace(window.location.hash, '')+'#profile//spotify_token=';
-	var installed = parseInt($.cookie('installed_'+project_version));
 
 	window.location.href = project_website+'api/1/spotify/authorize/?redirect_uri='+encodeURIComponent(uri);
 }
@@ -2165,13 +2122,13 @@ function getUser(username)
 function saveSetting(setting, value)
 {
 	var cookie = { id: setting, value: value, expires: 3650 };
-	$.cookie(cookie.id, cookie.value, { expires: cookie.expires });
+	Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
 	showToast('Tap top right icon to apply', 4);
 }
 
 function applySettings()
 {
-	if(ua_is_ios && ua_is_standalone) $.removeCookie('current_activity_'+project_version);
+	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 	window.location.replace('.');
 }
 
@@ -2205,13 +2162,13 @@ function removeAllPlaylists()
 	{
 		showToast('All playlists removed', 2);
 
-		$.removeCookie('last_refresh_playlists');
+		Cookies.remove('last_refresh_playlists', { path: project_path });
 	});
 }
 
 function confirmClearCache()
 {
-	showDialog({ title: 'Clear Cache', body_class: 'dialog_message_div', body_content: 'This will clear the cache for playlists, albums, etc.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog clear_cache'] }, cookie: null });
+	showDialog({ title: 'Clear Cache', body_class: 'dialog_message_div', body_content: 'Clear various cache files.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog clear_cache'] }, cookie: null });
 }
 
 function clearCache()
@@ -2229,13 +2186,12 @@ function confirmRestoreToDefault()
 
 function restoreToDefault()
 {
-	activityLoading();
+	removeAllCookies();
 
 	setTimeout(function()
 	{
-		removeAllCookies();
 		window.location.replace('.');
-	}, 2000);
+	}, 250);
 }
 
 // Lyrics
@@ -2328,7 +2284,7 @@ function fadeInDiv(div)
 		}
 		else
 		{
-			$(div).stop().animate({ 'opacity': '1' }, 250, 'easeInCubic');
+			$(div).stop().animate({ 'opacity': '1' }, 250);
 		}
 	}, 25);
 }
@@ -2343,7 +2299,7 @@ function fadeOutDiv(div)
 		}
 		else
 		{
-			$(div).stop().animate({ 'opacity': '0' }, 250, 'easeInCubic');
+			$(div).stop().animate({ 'opacity': '0' }, 250);
 		}
 	}, 25);
 }
@@ -2457,11 +2413,11 @@ function showActivityFab(button)
 		{
 			if(isDisplayed('div#toast_div') && !isWidescreen())
 			{
-				div.stop().animate({ 'bottom': '128px' }, 250, 'easeOutExpo');
+				div.stop().animate({ 'bottom': '128px' }, 250);
 			}
 			else
 			{
-				div.stop().animate({ 'bottom': '68px' }, 250, 'easeOutExpo');
+				div.stop().animate({ 'bottom': '68px' }, 250);
 			}				
 		}
 	}, timeout);
@@ -2479,7 +2435,7 @@ function hideActivityFab()
 	}
 	else
 	{
-		div.stop().animate({ 'bottom': div.data('cssbottom') }, 250, 'easeOutQuad');
+		div.stop().animate({ 'bottom': div.data('cssbottom') }, 250);
 	}
 }
 
@@ -2550,7 +2506,7 @@ function showToast(text, duration)
 			}
 			else
 			{
-				if(fab_div.css('bottom') != fab_div.data('cssbottom')) fab_div.animate({ 'bottom': '128px' }, 250, 'easeOutExpo');
+				if(fab_div.css('bottom') != fab_div.data('cssbottom')) fab_div.animate({ 'bottom': '128px' }, 250);
 			}
 		}
 	}
@@ -2564,7 +2520,7 @@ function showToast(text, duration)
 	}
 	else
 	{
-		toast_div.animate({ 'bottom': '64px', 'opacity': '1' }, 250, 'easeOutExpo');
+		toast_div.animate({ 'bottom': '64px', 'opacity': '1' }, 250);
 	}
 
 	var duration = parseInt(duration * 1000);
@@ -2582,7 +2538,7 @@ function showToast(text, duration)
 			}
 			else
 			{
-				toast_div.animate({ 'opacity': '0' }, 250, 'easeOutExpo');
+				toast_div.animate({ 'opacity': '0' }, 250);
 			}
 
 			timeout_hide_toast_2 = setTimeout(function()
@@ -2595,7 +2551,7 @@ function showToast(text, duration)
 				}
 				else
 				{
-					if(fab_div.css('bottom') != fab_div.data('cssbottom')) fab_div.animate({ 'bottom': '68px' }, 250, 'easeOutQuad');
+					if(fab_div.css('bottom') != fab_div.data('cssbottom')) fab_div.animate({ 'bottom': '68px' }, 250);
 				}
 			}, 250);
 		}, duration);
@@ -2618,7 +2574,7 @@ function showDialog(dialog)
 		}
 		else
 		{
-			$('div#black_cover_div').stop().animate({ 'opacity': '0.5' }, 125, 'easeOutQuad');
+			$('div#black_cover_div').stop().animate({ 'opacity': '0.5' }, 125);
 		}
 	}, 25);
 
@@ -2674,7 +2630,7 @@ function showDialog(dialog)
 			fadeInDiv('div#dialog_div');
 		}
 
-		if(dialog.cookie != null) $.cookie(dialog.cookie.id, dialog.cookie.value, { expires: dialog.cookie.expires });
+		if(dialog.cookie != null) Cookies.set(dialog.cookie.id, dialog.cookie.value, { expires: dialog.cookie.expires, path: project_path });
 
 		setNativeAppStatusBarColor('#000000');
 
@@ -2752,7 +2708,7 @@ function hideDialog()
 		}
 		else
 		{
-			$('div#black_cover_div').stop().animate({ 'opacity': '0' }, 250, 'easeOutQuad', function()
+			$('div#black_cover_div').stop().animate({ 'opacity': '0' }, 250, function()
 			{
 				if(!isDisplayed('div#dialog_div'))
 				{
@@ -2784,108 +2740,78 @@ function checkForDialogs()
 {
 	if(isDisplayed('div#dialog_div')) return;
 
-	if(!ua_supports_csstransitions || !ua_supports_csstransforms3d)
+	var cookie = { id: 'hide_information_dialog_'+project_version, value: 'true', expires: 7 };
+
+	if(!isCookie(cookie.id) && project_is_spotify_subscription_premium && project_spotify_is_new)
 	{
-		var cookie = { id: 'hide_software_accelerated_animations_dialog_'+project_version, value: 'true', expires: 3650 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'Browser Warning', body_class: 'dialog_message_div', body_content: 'Your browser does not fully support hardware accelerated animations. Simple animations will be used instead, which may result in a less elegant experience.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?requirements'] }, cookie: cookie });
+		showDialog({ title: 'Information', body_class: 'dialog_message_div', body_content: 'Without Spotify Premium, Queue does not work properly. A workaround is to create a playlist as queue and toggle shuffle off if you want linear playback.<br><br>Queue should work if playing a playlist, artist or album before queuing tracks.<br><br>Manually playing local files does not work, but play when you play a playlists.', button1: null, button2: null, cookie: cookie });
 	}
-
-	var latest_version = $.cookie('latest_version');
-
-	if(parseFloat(latest_version) > project_version)
+	else
 	{
-		var cookie = { id: 'hide_update_available_dialog_'+project_version, value: 'true', expires: 7 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'Update Available', body_class: 'dialog_message_div', body_content: project_name+' '+latest_version+' has been released!', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?download'] }, cookie: cookie });
-	}
+		var latest_version = Cookies.get('latest_version');
 
-	if(ua_is_android)
-	{
-		if(ua_is_android_app)
+		if(parseFloat(latest_version) > project_version)
 		{
-			var cookie = { id: 'hide_android_app_versions_mismatch_dialog_'+project_version, value: 'true', expires: 1 };
-
-			if(!isCookie(cookie.id))
-			{
-				var versions = $.parseJSON(Android.JSgetVersions());
-
-				var app_version = project_version;
-				var app_minimum_version = parseFloat(versions[1]);
-
-				var android_app_version = parseFloat(versions[0]);
-				var android_app_minimum_version = project_android_app_minimum_version;
-
-				if(app_version < app_minimum_version || android_app_version < android_app_minimum_version) showDialog({ title: 'App Versions Mismatch', body_class: 'dialog_message_div', body_content: 'The '+project_name+' version you are running is not compatible with this Android app version. Make sure you are running the latest version of both '+project_name+' and the Android app.', button1: null, button2: null, cookie: cookie });
-			}
-
-			var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'Android App Tip', body_class: 'dialog_message_div', body_content: 'You can use the hardware volume buttons on your device to control Spotify\'s volume.<br><br>There are also some extra features that can be enabled in Settings.', button1: null, button2: null, cookie: cookie });
-
-			var installed = parseInt($.cookie('installed_'+project_version));
-			var current_time = getCurrentTime();
-
-			var cookie = { id: 'hide_rate_on_google_play_dialog_'+project_version, value: 'true', expires: 3650 };
-
-			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 24)
-			{
-				var package_name = Android.JSgetPackageName();
-				
-				showDialog({ title: 'Like this App?', body_class: 'dialog_message_div', body_content: 'Please rate '+project_name+' on Google Play.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'RATE', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', 'market://details?id='+package_name] }, cookie: cookie });
-			}
-
-			var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
-
-			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48)
-			{
-				var package_name = Android.JSgetPackageName();
-
-				showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
-			}
+			var cookie = { id: 'hide_update_available_dialog_'+project_version, value: 'true', expires: 7 };
+			if(!isCookie(cookie.id)) showDialog({ title: 'Update Available', body_class: 'dialog_message_div', body_content: project_name+' '+latest_version+' has been released!', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?download'] }, cookie: cookie });
 		}
-		else
-		{
-			var cookie = { id: 'hide_android_app_dialog', value: 'true', expires: 1 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id='+package_name] }, cookie: cookie });
-		}
-	}
-	else if(ua_is_ios)
-	{
-		if(ua_is_standalone)
-		{
-			var cookie = { id: 'hide_ios_back_gesture_dialog', value: 'true', expires: 3650 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'iOS Tip', body_class: 'dialog_message_div', body_content: 'Since you are running fullscreen and your device has no back button, you can swipe in from the right to go back.<br><br>Avoid the multitasking button at the center right of the screen on devices that run iOS 9 or newer that support it.', button1: null, button2: null, cookie: cookie });
-		}
-		else
-		{
-			var cookie = { id: 'hide_ios_home_screen_dialog', value: 'true' };
 
-			if(!isCookie(cookie.id))
+		if(ua_is_android)
+		{
+			if(ua_is_android_app)
 			{
-				if(shc(ua, 'iPad'))
+				var cookie = { id: 'hide_android_app_versions_mismatch_dialog_'+project_version, value: 'true', expires: 1 };
+
+				if(!isCookie(cookie.id))
 				{
-					cookie.expires = 28;
-					showDialog({ title: 'iPad Tip', body_class: 'dialog_message_div', body_content: 'Add '+project_name+' to your home screen to get fullscreen like a native app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
+					var versions = JSON.parse(Android.JSgetVersions());
+
+					var app_version = project_version;
+					var app_minimum_version = parseFloat(versions[1]);
+
+					var android_app_version = parseFloat(versions[0]);
+					var android_app_minimum_version = project_android_app_minimum_version;
+
+					if(app_version < app_minimum_version || android_app_version < android_app_minimum_version) showDialog({ title: 'App Versions Mismatch', body_class: 'dialog_message_div', body_content: 'The '+project_name+' version you are running is not compatible with this Android app version. Make sure you are running the latest version of both '+project_name+' and the Android app.', button1: null, button2: null, cookie: cookie });
 				}
-				else
-				{
-					cookie.expires = 1;
-					showDialog({ title: 'iPhone/iPod Warning', body_class: 'dialog_message_div', body_content: 'To function correctly, '+project_name+' should be added to your home screen.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
-				}
+
+				var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
+				if(!isCookie(cookie.id)) showDialog({ title: 'Android App Tip', body_class: 'dialog_message_div', body_content: 'You can use the hardware volume buttons on your device to control Spotify\'s volume.<br><br>There are also some extra features that can be enabled in Settings.', button1: null, button2: null, cookie: cookie });
+
+				var installed = parseInt(Cookies.get('installed_'+project_version));
+				var current_time = getCurrentTime();
+
+				var cookie = { id: 'hide_rate_on_google_play_dialog_'+project_version, value: 'true', expires: 3650 };
+				if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 24) showDialog({ title: 'Like this App?', body_class: 'dialog_message_div', body_content: 'Please rate '+project_name+' on Google Play.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'RATE', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
+
+				var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
+				if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48) showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
+			}
+			else
+			{
+				var cookie = { id: 'hide_android_app_dialog', value: 'true', expires: 1 };
+				if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
 			}
 		}
+		else if(ua_is_ios)
+		{
+			if(ua_is_standalone)
+			{
+				var cookie = { id: 'hide_ios_back_gesture_dialog', value: 'true', expires: 3650 };
+				if(!isCookie(cookie.id)) showDialog({ title: 'iOS Tip', body_class: 'dialog_message_div', body_content: 'Since you are running fullscreen and your device has no back button, you can swipe in from the right to go back.<br><br>Avoid the multitasking button at the center right of the screen on devices that run iOS 9 or newer that support it.', button1: null, button2: null, cookie: cookie });
+			}
+			else
+			{
+				var cookie = { id: 'hide_ios_home_screen_dialog', value: 'true', expires: 1 };
+				if(!isCookie(cookie.id)) showDialog({ title: 'iOS Warning', body_class: 'dialog_message_div', body_content: 'To function correctly, '+project_name+' should be added to your home screen.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
+			}
+		}
+		else if(ua_is_os_x && !ua_is_standalone)
+		{
+			var cookie = { id: 'hide_ox_x_integration_dialog', value: 'true', expires: 3650 };
+			if(!isCookie(cookie.id)) showDialog({ title: 'OS X Tip', body_class: 'dialog_message_div', body_content: 'Install Fluid to run '+project_name+' as a standalone app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?os_x_integration'] }, cookie: cookie });
+		}
 	}
-	else if(ua_is_os_x && !ua_is_standalone)
-	{
-		var cookie = { id: 'hide_ox_x_integration_dialog', value: 'true', expires: 3650 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'OS X Tip', body_class: 'dialog_message_div', body_content: 'Install Fluid to run '+project_name+' as a standalone app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?os_x_integration'] }, cookie: cookie });
-	}
-	else if(ua_is_msie && ua_is_pinnable_msie && !window.external.msIsSiteMode())
-	{
-		var cookie = { id: 'hide_windows_desktop_integration_dialog', value: 'true', expires: 3650 };
-		if(!isCookie(cookie.id)) showDialog({ title: 'Windows Desktop Tip', body_class: 'dialog_message_div', body_content: 'Pin '+project_name+' to the taskbar to get additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?windows_desktop_integration'] }, cookie: cookie });
-	}
-
-	var cookie = { id: 'hide_spotify_is_unsupported_dialog_'+project_version, value: 'true', expires: 7 };
-	if(!isCookie(cookie.id) && project_spotify_is_unsupported) showDialog({ title: 'Unsupported Spotify', body_class: 'dialog_message_div', body_content: '&bull; Playing a single track will repeat it over and over<br>&bull; Manually skipping to the next track will in many cases not play queued tracks, because of the above problem<br>&bull; Starting track radios does not work<br>&bull; Manually playing local files does not work, but plays in playlists<br><br>Click the button below to download the recommended version.', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?downgrade_spotify'] }, cookie: cookie });
 }
 
 // Notifications
@@ -2943,9 +2869,8 @@ function saveScrollPosition(action)
 	var time = a.time;
 
 	var position = getScrollPosition();
-	var action = (typeof scroll_position[time] != 'undefined' && scroll_position[time].action != null) ? scroll_position[time].action : action;
 
-	scroll_position[time] = { position: position, action: action };
+	scroll_position[time] = { position: position };
 
 	if(ua_is_ios && ua_is_standalone)
 	{
@@ -2953,10 +2878,10 @@ function saveScrollPosition(action)
 
 		if(isCookie(cookie.id))
 		{
-			var cookie_a = $.parseJSON($.cookie(cookie.id));
+			var cookie_a = Cookies.getJSON(cookie.id);
 			cookie_a.scroll_position = position;
 
-			$.cookie(cookie.id, JSON.stringify(cookie_a), { expires: cookie.expires });
+			Cookies.set(cookie.id, JSON.stringify(cookie_a), { expires: cookie.expires, path: project_path });
 		}
 	}
 
@@ -2983,7 +2908,7 @@ function restoreScrollPosition()
 
 		if(isCookie(cookie.id))
 		{
-			var cookie_a = $.parseJSON($.cookie(cookie.id));
+			var cookie_a = Cookies.getJSON(cookie.id);
 
 			setScrollPosition(cookie_a.scroll_position);
 		}
@@ -2996,16 +2921,6 @@ function restoreScrollPosition()
 	}
 	
 	var position = scroll_position[time].position;
-	var action = scroll_position[time].action;
-
-	if(action != null)
-	{
-		if(action.action == 'show_all_list_items')
-		{
-			$(action.showitems).show();
-			$(action.hideitem).hide();
-		}
-	}
 
 	setScrollPosition(position);
 }
@@ -3039,7 +2954,7 @@ function scrollToNextListHeader()
 	setScrollPosition(offset.top - 64);
 }
 
-// Native apps
+// System integration
 
 function nativeAppLoad(is_paused)
 {
@@ -3210,62 +3125,6 @@ function nativeAppCanCloseCover()
 	}
 }
 
-// Desktop integration
-
-function integrateInMSIE()
-{
-	try
-	{
-		ie_thumbnail_button_previous = window.external.msSiteModeAddThumbBarButton('img/previous.ico?'+project_serial, 'Previous');
-		ie_thumbnail_button_play_pause = window.external.msSiteModeAddThumbBarButton('img/play.ico?'+project_serial, 'Play');
-		ie_thumbnail_button_next = window.external.msSiteModeAddThumbBarButton('img/next.ico?'+project_serial, 'Next');
-		ie_thumbnail_button_volume_mute = window.external.msSiteModeAddThumbBarButton('img/volume-mute.ico?'+project_serial, 'Mute');
-		ie_thumbnail_button_volume_down = window.external.msSiteModeAddThumbBarButton('img/volume-down.ico?'+project_serial, 'Volume Down');
-		ie_thumbnail_button_volume_up = window.external.msSiteModeAddThumbBarButton('img/volume-up.ico?'+project_serial, 'Volume Up');
-
-		ie_thumbnail_button_style_play = 0;
-		ie_thumbnail_button_style_pause = window.external.msSiteModeAddButtonStyle(ie_thumbnail_button_play_pause, 'img/pause.ico?'+project_serial, 'Pause');
-
-		window.external.msSiteModeShowThumbBar();
-
-		document.addEventListener('msthumbnailclick', onClickMSIEthumbnailButton, false);
-
-		ua_is_integrated_msie = true;
-	}
-	catch(exception)
-	{
-
-	}
-}
-
-function onClickMSIEthumbnailButton(button)
-{
-	if(button.buttonID == ie_thumbnail_button_previous)
-	{
-		remoteControl('previous');
-	}
-	else if(button.buttonID == ie_thumbnail_button_play_pause)
-	{
-		remoteControl('play_pause');
-	}
-	else if(button.buttonID == ie_thumbnail_button_next)
-	{
-		remoteControl('next');
-	}
-	else if(button.buttonID == ie_thumbnail_button_volume_mute)
-	{
-		adjustVolume('mute');
-	}
-	else if(button.buttonID == ie_thumbnail_button_volume_down)
-	{
-		adjustVolume('down');
-	}
-	else if(button.buttonID == ie_thumbnail_button_volume_up)
-	{
-		adjustVolume('up');
-	}
-}
-
 // Keyboard shortcuts
 
 function enableKeyboardShortcuts()
@@ -3319,11 +3178,11 @@ function isWidescreen()
 function checkForErrors()
 {
 	var cookie = { id: 'test', value: 'true' };
-	$.cookie(cookie.id, cookie.value);
+	Cookies.set(cookie.id, cookie.value, { path: project_path });
 
 	var error_code = (!isCookie(cookie.id)) ? 5 : project_error_code;
 
-	$.removeCookie(cookie.id);
+	Cookies.remove(cookie.id, { path: project_path });
 
 	return error_code;
 }
@@ -3331,10 +3190,10 @@ function checkForErrors()
 function checkForUpdates(type)
 {
 	var latest_version_cookie = { id: 'latest_version', expires: 3650 };
-	var latest_version = parseFloat($.cookie(latest_version_cookie.id));
+	var latest_version = parseFloat(Cookies.get(latest_version_cookie.id));
 
 	var last_update_check_cookie = { id: 'last_update_check', value: getCurrentTime(), expires: 3650 };
-	var last_update_check = $.cookie(last_update_check_cookie.id);
+	var last_update_check = Cookies.get(last_update_check_cookie.id);
 
 	if(type == 'manual')
 	{
@@ -3344,35 +3203,35 @@ function checkForUpdates(type)
 		{
 			if(xhr_data == 'error')
 			{
-				$.removeCookie(latest_version_cookie.id);
+				Cookies.remove(latest_version_cookie.id, { path: project_path });
 			}
 			else
 			{
-				$.cookie(latest_version_cookie.id, xhr_data, { expires: latest_version_cookie.expires });
+				Cookies.set(latest_version_cookie.id, xhr_data, { expires: latest_version_cookie.expires, path: project_path });
 			}
 
 			changeActivity('settings', '', '');
 		});
 
-		$.cookie(last_update_check_cookie.id, last_update_check_cookie.value, { expires: last_update_check_cookie.expires });
+		Cookies.set(last_update_check_cookie.id, last_update_check_cookie.value, { expires: last_update_check_cookie.expires, path: project_path });
 	}
 	else if(type == 'auto')
 	{
-		if(!isCookie(last_update_check_cookie.id) || !isNaN(last_update_check) && getCurrentTime() - last_update_check > 1000 * 3600 * 24)
+		if(!isCookie(last_update_check_cookie.id) || !isNaN(last_update_check) && getCurrentTime() - last_update_check > 1000 * 3600 * 4)
 		{
 			$.get('main.php?check_for_updates', function(xhr_data)
 			{
 				if(xhr_data == 'error')
 				{
-					$.removeCookie(latest_version_cookie.id);
+					Cookies.remove(latest_version_cookie.id, { path: project_path });
 				}
 				else
 				{
-					$.cookie(latest_version_cookie.id, xhr_data, { expires: latest_version_cookie.expires });
+					Cookies.set(latest_version_cookie.id, xhr_data, { expires: latest_version_cookie.expires, path: project_path });
 				}
 			});
 
-			$.cookie(last_update_check_cookie.id, last_update_check_cookie.value, { expires: last_update_check_cookie.expires });
+			Cookies.set(last_update_check_cookie.id, last_update_check_cookie.value, { expires: last_update_check_cookie.expires, path: project_path });
 		}
 
 		if(latest_version > project_version) $('div#update_available_indicator_div').addClass('menu_small_item_update_available_indicator_div');
@@ -3412,13 +3271,12 @@ function getCurrentTime()
 	return new Date().getTime();
 }
 
-function getMSIEVersion()
-{
-	var re = ua.match(/Mozilla\/\d+\.\d+ \(Windows NT \d+\.\d+;.*?Trident\/\d+\.\d+;.*?rv:(\d+)\.\d+\)/);
-	return (re) ? parseInt(re[1]) : 0;
-}
-
 // Manipulate stuff
+
+function base64Decode(string)
+{
+	return Base64.decode(string);
+}
 
 function booleanToString(bool)
 {
@@ -3587,15 +3445,13 @@ function urlToUri(uri)
 
 function isCookie(id)
 {
-	return (typeof $.cookie(id) != 'undefined');
+	return (typeof Cookies.get(id) != 'undefined');
 }
 
 function removeAllCookies()
 {
-	var cookies = $.cookie();
-
-	for(var cookie in cookies)
+	Object.keys(Cookies.get()).forEach(function(cookie)
 	{
-		if(cookies.hasOwnProperty(cookie)) $.removeCookie(cookie);
-	}
+		Cookies.remove(cookie, { path: project_path });
+	});
 }

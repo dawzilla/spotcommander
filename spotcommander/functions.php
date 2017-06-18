@@ -33,7 +33,7 @@ function spotify_is_running()
 	return false;
 }
 
-function spotify_is_unsupported()
+function spotify_is_new()
 {
 	return (trim(file_get_contents(__DIR__ . '/run/spotify.version')) == 'new');
 }
@@ -121,6 +121,11 @@ function save_spotify_token($token)
 
 function deauthorize_from_spotify()
 {
+	$time = time();
+
+	if(!empty($_COOKIE['last_refresh_playlists'])) setcookie('last_refresh_playlists', '', $time - 3600);
+	if(!empty($_COOKIE['last_refresh_library'])) setcookie('last_refresh_library', '', $time - 3600);
+
 	file_write(__DIR__ . '/run/spotify.token', '');
 	file_write(__DIR__ . '/run/spotify.username', '');
 	file_write(__DIR__ . '/run/spotify.country', '');
@@ -129,11 +134,6 @@ function deauthorize_from_spotify()
 	clean_library('artist');
 
 	clear_cache();
-
-	$time = time();
-
-	if(!empty($_COOKIE['last_refresh_playlists'])) setcookie('last_refresh_playlists', '', $time - 3600);
-	if(!empty($_COOKIE['last_refresh_library'])) setcookie('last_refresh_library', '', $time - 3600);
 }
 
 function is_authorized_with_spotify()
@@ -151,7 +151,7 @@ function is_authorized_with_spotify()
 
 function is_spotify_subscription_premium()
 {
-	return (trim(file_get_contents(__DIR__ . '/run/spotify.subscription')) == 'premium');
+	return (config_enable_spotify_premium_features) ? (trim(file_get_contents(__DIR__ . '/run/spotify.subscription')) == 'premium') : false;
 }
 
 // Daemon
@@ -169,7 +169,7 @@ function daemon_start($user)
 
 	file_write($user_file, $user);
 
-	$log = (daemon_spotify_is_unsupported()) ? "\nSpotify is unsupported version.\n\n" : "\nSpotify is supported version.\n\n";
+	$log = (daemon_spotify_is_new()) ? "\nSpotify is a new version.\n\n" : "\nSpotify is an old version.\n\n";
 
 	file_write($log_file, $log);
 
@@ -206,10 +206,10 @@ function daemon_inotifywait($action)
 	file_write(__DIR__ . '/run/daemon.inotify', $action);
 }
 
-function daemon_spotify_is_unsupported()
+function daemon_spotify_is_new()
 {
 	$version_file = __DIR__ . '/run/spotify.version';
-	$version = (trim(shell_exec('grep -c autologin\.saved_credentials /home/' . daemon_user() . '/.config/spotify/prefs')) == 1) ? 'new' : 'stable';
+	$version = (trim(shell_exec('grep -c autologin\.saved_credentials /home/' . daemon_user() . '/.config/spotify/prefs')) == 1) ? 'new' : 'old';
 
 	file_write($version_file, $version);
 
@@ -223,7 +223,7 @@ function daemon_user()
 
 function daemon_qdbus_select()
 {
-	$commands = array('/usr/lib/i386-linux-gnu/qt4/bin/qdbus', '/usr/lib/x86_64-linux-gnu/qt4/bin/qdbus', 'qdbus-qt4', 'qdbus');
+	$commands = array('qdbus', 'qdbus-qt4', '/usr/lib/x86_64-linux-gnu/qt4/bin/qdbus', '/usr/lib/i386-linux-gnu/qt4/bin/qdbus');
 
 	foreach($commands as $command)
 	{
@@ -231,11 +231,6 @@ function daemon_qdbus_select()
 	}
 
 	return '';
-}
-
-function daemon_pulseaudio_check()
-{
-	return (trim(shell_exec('command -v pacmd 1>/dev/null 2>&1 && echo 1')) == 1);
 }
 
 function daemon_logind_check($qdbus)
@@ -294,27 +289,26 @@ function remote_control($action, $data)
 
 function remote_control_spotify($api_uri, $action, $data)
 {
-	get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token()), array($action, $data));
+	get_external_files(array($api_uri), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), array($action, $data));
+	usleep(250000);
 }
 
-function get_volume_control()
+function get_current_seek_position()
 {
-	return (empty($_COOKIE['settings_volume_control'])) ? 'spotify' : $_COOKIE['settings_volume_control'];
+	$files = get_external_files(array('https://api.spotify.com/v1/me/player'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
+	$metadata = json_decode($files[0], true);
+
+	return (empty($metadata)) ? 0 : intval($metadata['progress_ms']);
 }
 
 function get_current_volume()
 {
-	return intval(remote_control('get_current_volume', get_volume_control()));
+	return intval(trim(file_get_contents(__DIR__ . '/run/volume.save')));
 }
 
-function set_volume_before_mute($volume)
+function set_current_volume($volume)
 {
-	file_write(__DIR__ . '/run/volume.save', $volume);
-}
-
-function get_volume_before_mute()
-{
-	return intval(trim(file_get_contents('run/volume.save')));
+	file_write(__DIR__ . '/run/volume.save', intval($volume));
 }
 
 // Now playing
@@ -371,25 +365,6 @@ function save_cover_art_cache($size, $cache)
 	file_write(__DIR__ . '/run/cover-art-' . $size . '.cache', json_encode($cache));
 }
 
-// Recently played
-
-function save_recently_played($artist, $title, $uri)
-{
-	$count = get_db_count('recently-played', "SELECT COUNT(id) as count FROM recently_played WHERE uri = '" . sqlite_escape($uri) . "'");
-	if($count > 0) db_exec('recently-played', "DELETE FROM recently_played WHERE uri = '" . sqlite_escape($uri) . "'");
-
-	$count = get_db_count('recently-played', "SELECT COUNT(id) as count FROM recently_played");
-	if($count >= 10) db_exec('recently-played', "DELETE FROM recently_played WHERE id = (SELECT id FROM recently_played ORDER BY id LIMIT 1)");
-
-	db_exec('recently-played', "INSERT INTO recently_played (artist, title, uri) VALUES ('" . sqlite_escape($artist) . "', '" . sqlite_escape($title) . "', '" . sqlite_escape($uri) . "')");
-}
-
-function clear_recently_played()
-{
-	db_exec('recently-played', "DELETE FROM recently_played");
-	db_exec('recent-playlists', "DELETE FROM recent_playlists");
-}
-
 // Queue
 
 function queue_uri($artist, $title, $uri)
@@ -400,134 +375,6 @@ function queue_uri($artist, $title, $uri)
 	$sortorder = $count + 1;
 
 	db_exec('queue', "INSERT INTO queue (artist, title, uri, sortorder) VALUES ('" . sqlite_escape($artist) . "', '" . sqlite_escape($title) . "', '" . sqlite_escape($uri) . "', '" . sqlite_escape($sortorder) . "')");
-}
-
-function queue_uris($uris, $randomly)
-{
-	if(!spotify_is_running()) return 'spotify_is_not_running';
-
-	$type = get_uri_type($uris);
-	$randomly = string_to_boolean($randomly);
-
-	$insert = array();
-	$last_id = get_db_rows('queue', "SELECT id FROM queue ORDER BY id DESC LIMIT 1", array('id'));
-	$last_id = (empty($last_id[1]['id'])) ? 0 : intval($last_id[1]['id']);
-
-	if($type == 'playlist')
-	{
-		$spotify_is_unsupported = spotify_is_unsupported();
-
-		$playlist = get_playlist($uris);
-
-		if(empty($playlist['tracks'])) return 'error';
-
-		$tracks = $playlist['tracks'];
-
-		if($randomly) shuffle($tracks);
-
-		$i = 0;
-
-		foreach($tracks as $track)
-		{
-			if($spotify_is_unsupported)
-			{
-				$type = get_uri_type($track['uri']);
-
-				if($type == 'local') continue;
-			}
-
-			$insert[$i] = array('artist' => $track['artist'], 'title' => $track['title'], 'uri' => $track['uri']);
-
-			$i++;
-		}
-	}
-	elseif($type == 'artist')
-	{
-		$artist = get_artist($uris);
-
-		if(empty($artist['tracks'])) return 'error';
-
-		$tracks = $artist['tracks'];
-
-		if($randomly) shuffle($tracks);
-
-		$i = 0;
-
-		foreach($tracks as $track)
-		{
-			$insert[$i] = array('artist' => $track['artist'], 'title' => $track['title'], 'uri' => $track['uri']);
-
-			$i++;
-		}
-	}
-	elseif($type == 'album')
-	{
-		$album = get_album($uris);
-
-		if(empty($album['discs'])) return 'error';
-
-		$discs = $album['discs'];
-
-		if($randomly) shuffle($discs);
-
-		$i = 0;
-
-		foreach($discs as $disc)
-		{
-			$tracks = $disc;
-
-			if($randomly) shuffle($tracks);
-
-			foreach($tracks as $track)
-			{
-				$insert[$i] = array('artist' => $track['artist'], 'title' => $track['title'], 'uri' => $track['uri']);
-
-				$i++;
-			}		
-		}
-	}
-	else
-	{
-		$tracks = json_decode(base64_decode($uris), true);
-
-		if(empty($tracks[0]['uri'])) return 'error';
-
-		if($randomly) shuffle($tracks);
-
-		$i = 0;
-
-		foreach($tracks as $track)
-		{
-			$insert[$i] = array('artist' => $track['artist'], 'title' => $track['title'], 'uri' => $track['uri']);
-
-			$i++;
-		}
-	}
-
-	if(!empty($insert))
-	{
-		$insert_count = count($insert);
-		$insert_limit = 500;
-
-		$insert_id = $last_id + 1;
-
-		$exec = "INSERT INTO queue SELECT " . $insert_id . " AS id, '" . sqlite_escape($insert[0]['artist']) . "' AS artist, '" . sqlite_escape($insert[0]['title']) . "' AS title, '" . sqlite_escape($insert[0]['uri']) . "' AS uri, '" . sqlite_escape($insert_id) . "' AS sortorder ";
-
-		for($f = 1; $f < $insert_count; $f++)
-		{
-			$insert_id++;
-
-			if($f < $insert_limit) $exec .= "UNION SELECT " . $insert_id . ", '" . sqlite_escape($insert[$f]['artist']) . "', '" . sqlite_escape($insert[$f]['title']) . "', '" . sqlite_escape($insert[$f]['uri']) . "', '" . sqlite_escape($insert_id) . "' ";
-		}
-
-		if($insert_count > $insert_limit) $i = $insert_limit;
-
-		$exec = rtrim($exec);
-
-		db_exec('queue', $exec);
-	}
-
-	return $i;
 }
 
 function move_queued_uri($id, $sortorder, $direction)
@@ -650,142 +497,120 @@ function get_playlist($playlist_uri)
 	$return = null;
 	$error = false;
 
-	$count = get_db_count('playlists-cache', "SELECT COUNT(id) as count FROM playlists WHERE uri = '" . sqlite_escape($playlist_uri) . "'");
+	$user = get_playlist_user($playlist_uri);
 
-	if($count == 1)
+	$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '?fields=images,name,owner(id),public,snapshot_id,tracks(items,total,limit)';
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
+
+	$files = get_external_files(array($api_uri), $api_headers, null);
+	$metadata = json_decode($files[0], true);
+
+	if(empty($metadata['name']))
 	{
-		$rows = get_db_rows('playlists-cache', "SELECT metadata, time FROM playlists WHERE uri = '" . sqlite_escape($playlist_uri) . "'", array('metadata', 'time'));
-
-		$current_time = time();
-		$cache_time = intval($rows[1]['time']);
-		$cache_expire = intval($_COOKIE['settings_playlists_cache_time']);
-
-		if($cache_expire == 0 || $current_time - $cache_time < $cache_expire)
-		{
-			$return = json_decode($rows[1]['metadata'], true);
-		}
-		else
-		{
-			refresh_playlist($playlist_uri);
-		}
+		$error = true;
 	}
-
-	if(empty($return))
+	else
 	{
-		$user = get_playlist_user($playlist_uri);
+		$return = array();
 
-		$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '?fields=images,name,owner(id),public,snapshot_id,tracks(items,total,limit)';
-		$api_headers = array('Authorization: Bearer ' . get_spotify_token());
+		$return['name'] = $metadata['name'];
+		$return['user'] = $metadata['owner']['id'];
+		$return['public'] = ($metadata['public']) ? 'Yes' : 'No';
+		$return['snapshot_id'] = $metadata['snapshot_id'];
+		$return['cover_art_uri'] = (empty($metadata['images'][0]['url'])) ? '' : $metadata['images'][0]['url'];
 
-		$files = get_external_files(array($api_uri), $api_headers, null);
-		$metadata = json_decode($files[0], true);
+		$return['tracks'] = array();
 
-		if(!empty($metadata['name']))
+		$tracks = $metadata['tracks']['items'];
+		$tracks_limit = $metadata['tracks']['limit'];
+		$tracks_count = $metadata['tracks']['total'];
+
+		$return['tracks_count'] = $tracks_count;
+
+		$total_length = 0;
+		$i = 0;
+
+		foreach($tracks as $track)
 		{
-			$return = array();
-
-			$return['name'] = $metadata['name'];
-			$return['user'] = $metadata['owner']['id'];
-			$return['public'] = ($metadata['public']) ? 'Yes' : 'No';
-			$return['snapshot_id'] = $metadata['snapshot_id'];
-			$return['cover_art_uri'] = (empty($metadata['images'][0]['url'])) ? '' : $metadata['images'][0]['url'];
-
-			$return['tracks'] = array();
-
-			$tracks = $metadata['tracks']['items'];
-			$tracks_limit = $metadata['tracks']['limit'];
-			$tracks_count = $metadata['tracks']['total'];
-
-			$return['tracks_count'] = $tracks_count;
-
-			$total_length = 0;
-			$i = 0;
-
-			foreach($tracks as $track)
+			if(!empty($track['track']))
 			{
-				if(!empty($track['track']))
-				{
-					$return['tracks'][$i]['artist'] = (empty($track['track']['artists'][0]['name'])) ? 'Unknown' : get_artists($track['track']['artists']);
-					$return['tracks'][$i]['title'] = (empty($track['track']['name'])) ? 'Unknown' : $track['track']['name'];
-					$return['tracks'][$i]['album'] = (empty($track['track']['album']['name'])) ? 'Unknown' : $track['track']['album']['name'];
-					$return['tracks'][$i]['length'] = convert_length(intval($track['track']['duration_ms']), 'ms');
-					$return['tracks'][$i]['uri'] = ($track['track']['uri'] == 'spotify:track:null') ? 'spotify:local:' . urlencode($return['tracks'][$i]['artist']) . ':' . urlencode($return['tracks'][$i]['album']) . ':' . urlencode($return['tracks'][$i]['title']) . ':' : $track['track']['uri'];
-					$return['tracks'][$i]['position'] = $i;
-					$return['tracks'][$i]['added'] = (empty($track['added_at'])) ? '1970-01-01' : $track['added_at'];
-					$return['tracks'][$i]['added_by'] = (empty($track['added_by']['id'])) ? 'Unknown' : $track['added_by']['id'];
+				$return['tracks'][$i]['artist'] = (empty($track['track']['artists'][0]['name'])) ? 'Unknown' : get_artists($track['track']['artists']);
+				$return['tracks'][$i]['title'] = (empty($track['track']['name'])) ? 'Unknown' : $track['track']['name'];
+				$return['tracks'][$i]['album'] = (empty($track['track']['album']['name'])) ? 'Unknown' : $track['track']['album']['name'];
+				$return['tracks'][$i]['length'] = convert_length(intval($track['track']['duration_ms']), 'ms');
+				$return['tracks'][$i]['uri'] = ($track['track']['uri'] == 'spotify:track:null') ? 'spotify:local:' . urlencode($return['tracks'][$i]['artist']) . ':' . urlencode($return['tracks'][$i]['album']) . ':' . urlencode($return['tracks'][$i]['title']) . ':' : $track['track']['uri'];
+				$return['tracks'][$i]['position'] = $i;
+				$return['tracks'][$i]['added'] = (empty($track['added_at'])) ? '1970-01-01' : $track['added_at'];
+				$return['tracks'][$i]['added_by'] = (empty($track['added_by']['id'])) ? 'Unknown' : $track['added_by']['id'];
 
-					$total_length = $total_length + intval($track['track']['duration_ms']);
-				}
-
-				$i++;
+				$total_length = $total_length + intval($track['track']['duration_ms']);
 			}
 
-			if($tracks_count > $tracks_limit)
+			$i++;
+		}
+
+		if($tracks_count > $tracks_limit)
+		{
+			$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '/tracks?fields=items';
+
+			$pages = $tracks_count / $tracks_limit;
+			$pages = ceil($pages - 1);
+
+			$get_files = array();
+			$offset = 0;
+			
+			for($n = 0; $n < $pages; $n++)
 			{
-				$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '/tracks?fields=items';
+				$offset = $offset + $tracks_limit;
+				$get_files[$n] = $api_uri . '&offset=' . $offset . '&limit=' . $tracks_limit;
+			}
 
-				$pages = $tracks_count / $tracks_limit;
-				$pages = ceil($pages - 1);
+			$files = get_external_files($get_files, $api_headers, null);
 
-				$get_files = array();
-				$offset = 0;
-				
-				for($n = 0; $n < $pages; $n++)
+			foreach($files as $file)
+			{
+				$metadata = json_decode($file, true);
+
+				if(empty($metadata['items']))
 				{
-					$offset = $offset + $tracks_limit;
-					$get_files[$n] = $api_uri . '&offset=' . $offset . '&limit=' . $tracks_limit;
+					$error = true;
 				}
-
-				$files = get_external_files($get_files, $api_headers, null);
-
-				foreach($files as $file)
+				else
 				{
-					$metadata = json_decode($file, true);
+					$tracks = $metadata['items'];
 
-					if(empty($metadata['items']))
+					foreach($tracks as $track)
 					{
-						$error = true;
-					}
-					else
-					{
-						$tracks = $metadata['items'];
-
-						foreach($tracks as $track)
+						if(!empty($track['track']))
 						{
-							if(!empty($track['track']))
-							{
-								$return['tracks'][$i]['artist'] = (empty($track['track']['artists'][0]['name'])) ? 'Unknown' : get_artists($track['track']['artists']);
-								$return['tracks'][$i]['title'] = (empty($track['track']['name'])) ? 'Unknown' : $track['track']['name'];
-								$return['tracks'][$i]['album'] = (empty($track['track']['album']['name'])) ? 'Unknown' : $track['track']['album']['name'];
-								$return['tracks'][$i]['length'] = convert_length(intval($track['track']['duration_ms']), 'ms');
-								$return['tracks'][$i]['uri'] = ($track['track']['uri'] == 'spotify:track:null') ? 'spotify:local:' . urlencode($return['tracks'][$i]['artist']) . ':' . urlencode($return['tracks'][$i]['album']) . ':' . urlencode($return['tracks'][$i]['title']) . ':' : $track['track']['uri'];
-								$return['tracks'][$i]['position'] = $i;
-								$return['tracks'][$i]['added'] = (empty($track['added_at'])) ? '1970-01-01' : $track['added_at'];
-								$return['tracks'][$i]['added_by'] = (empty($track['added_by']['id'])) ? 'Unknown' : $track['added_by']['id'];
+							$return['tracks'][$i]['artist'] = (empty($track['track']['artists'][0]['name'])) ? 'Unknown' : get_artists($track['track']['artists']);
+							$return['tracks'][$i]['title'] = (empty($track['track']['name'])) ? 'Unknown' : $track['track']['name'];
+							$return['tracks'][$i]['album'] = (empty($track['track']['album']['name'])) ? 'Unknown' : $track['track']['album']['name'];
+							$return['tracks'][$i]['length'] = convert_length(intval($track['track']['duration_ms']), 'ms');
+							$return['tracks'][$i]['uri'] = ($track['track']['uri'] == 'spotify:track:null') ? 'spotify:local:' . urlencode($return['tracks'][$i]['artist']) . ':' . urlencode($return['tracks'][$i]['album']) . ':' . urlencode($return['tracks'][$i]['title']) . ':' : $track['track']['uri'];
+							$return['tracks'][$i]['position'] = $i;
+							$return['tracks'][$i]['added'] = (empty($track['added_at'])) ? '1970-01-01' : $track['added_at'];
+							$return['tracks'][$i]['added_by'] = (empty($track['added_by']['id'])) ? 'Unknown' : $track['added_by']['id'];
 
-								$total_length = $total_length + intval($track['track']['duration_ms']);
-							}
-
-							$i++;
+							$total_length = $total_length + intval($track['track']['duration_ms']);
 						}
+
+						$i++;
 					}
 				}
 			}
-
-			$return['total_length'] = convert_length($total_length, 'ms');
-
-			$count = get_db_count('playlists-cache', "SELECT COUNT(id) as count FROM playlists WHERE uri = '" . sqlite_escape($playlist_uri) . "'");
-			if($count == 0 && $tracks_count > 0 && !$error) db_exec('playlists-cache', "INSERT INTO playlists (uri, metadata, time) VALUES ('" . sqlite_escape($playlist_uri) . "', '" . sqlite_escape(json_encode($return)) . "', '" . time() . "')");
 		}
+
+		$return['total_length'] = convert_length($total_length, 'ms');
 	}
 
-	return $return;
+	return ($error) ? null : $return;
 }
 
 function refresh_spotify_playlists()
 {
 	$api_uri = 'https://api.spotify.com/v1/users/' . rawurlencode(get_spotify_username()) . '/playlists?limit=50';
-	$api_headers = array('Authorization: Bearer ' . get_spotify_token());
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
 	$files = get_external_files(array($api_uri), $api_headers, null);
 	$metadata = json_decode($files[0], true);
@@ -917,7 +742,7 @@ function import_playlists($uris)
 
 	if(!empty($get_uris))
 	{
-		$files = get_external_files($get_files, array('Authorization: Bearer ' . get_spotify_token()), null);
+		$files = get_external_files($get_files, array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 
 		foreach($files as $file)
 		{
@@ -937,7 +762,7 @@ function import_playlists($uris)
 
 				db_exec('playlists', "INSERT INTO playlists (name, uri) VALUES ('" . sqlite_escape($name) . "', '" . sqlite_escape($uri) . "')");
 
-				$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/followers'), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('public' => false))));
+				$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/followers'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('public' => false))));
 
 				$i++;
 			}
@@ -949,7 +774,7 @@ function import_playlists($uris)
 
 function create_playlist($name, $make_public)
 {
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode(get_spotify_username()) . '/playlists'), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode(array('name' => $name, 'public' => $make_public))));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode(get_spotify_username()) . '/playlists'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode(array('name' => $name, 'public' => $make_public))));
 	$playlist = json_decode($files[0], true);
 
 	if(!empty($playlist['name']))
@@ -969,7 +794,7 @@ function edit_playlist($name, $uri, $make_public)
 {
 	$user = get_playlist_user($uri);
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('name' => $name, 'public' => $make_public))));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri)), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('name' => $name, 'public' => $make_public))));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -1034,9 +859,7 @@ function add_uris_to_playlist($uri, $uris)
 
 	$uris = explode(' ', $uris);
 
-	$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks';
-
-	$files = get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode($uris)));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode($uris)));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -1054,11 +877,7 @@ function delete_uris_from_playlists($uri, $uris, $positions, $snapshot_id)
 {
 	$user = get_playlist_user($uri);
 
-	$json = json_encode(array('tracks' => array(array('uri' => $uris, 'positions' => array($positions))), 'snapshot_id' => $snapshot_id));
-
-	$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks';
-
-	$files = get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('DELETE', $json));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('DELETE', json_encode(array('tracks' => array(array('uri' => $uris, 'positions' => array($positions))), 'snapshot_id' => $snapshot_id))));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -1071,27 +890,8 @@ function delete_uris_from_playlists($uri, $uris, $positions, $snapshot_id)
 	}
 }
 
-function save_recent_playlists($uri)
-{
-	$playlist = get_playlist($uri);
-
-	if(empty($playlist)) return;
-
-	$name = $playlist['name'];
-
-	$count = get_db_count('recent-playlists', "SELECT COUNT(id) as count FROM recent_playlists WHERE uri = '" . sqlite_escape($uri) . "'");
-	if($count > 0) db_exec('recent-playlists', "DELETE FROM recent_playlists WHERE uri = '" . sqlite_escape($uri) . "'");
-
-	$count = get_db_count('recent-playlists', "SELECT COUNT(id) as count FROM recent_playlists");
-	if($count >= 10) db_exec('recent-playlists', "DELETE FROM recent_playlists WHERE id = (SELECT id FROM recent_playlists ORDER BY id LIMIT 1)");
-
-	db_exec('recent-playlists', "INSERT INTO recent_playlists (name, uri) VALUES ('" . sqlite_escape($name) . "', '" . sqlite_escape($uri) . "')");	
-}
-
 function refresh_playlist($uri)
 {
-	db_exec('playlists-cache', "DELETE FROM playlists WHERE uri = '" . sqlite_escape($uri) . "'");
-
 	$cover_art_cache = get_cover_art_cache('small');
 	
 	if(!empty($cover_art_cache[$uri]))
@@ -1122,7 +922,7 @@ function remove_playlist($id, $uri)
 	$user = explode(':', $uri);
 	$user = $user[2];
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/followers'), array('Authorization: Bearer ' . get_spotify_token()), array('DELETE', null));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/followers'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), array('DELETE', null));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -1159,30 +959,28 @@ function save($artist, $title, $uri)
 
 	if(is_saved($uri)) return remove($uri);
 
+	$uri_id = uri_to_id($uri);
+
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
+
 	if($type == 'track')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/tracks'), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array(uri_to_id($uri)))));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/tracks?ids=' . $uri_id), $api_headers, array('PUT', null));
 	}
 	elseif($type == 'artist')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=artist&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('PUT', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=artist&ids=' . $uri_id), $api_headers, array('PUT', null));
 	}
 	elseif($type == 'album')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/albums?ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('PUT', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/albums?ids=' . $uri_id), $api_headers, array('PUT', null));
 	}
 	elseif($type == 'user')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=user&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('PUT', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=user&ids=' . $uri_id), $api_headers, array('PUT', null));
 	}
+
+	if(is_numeric($files[0])) return 'error';
 
 	db_exec('library', "INSERT INTO library (type, artist, title, uri) VALUES ('" . sqlite_escape($type) . "', '" . sqlite_escape($artist) . "', '" . sqlite_escape($title) . "', '" . sqlite_escape($uri) . "')");
 	return ucfirst($type) . ' saved to library';
@@ -1192,30 +990,28 @@ function remove($uri)
 {
 	$type = get_uri_type($uri);
 
+	$uri_id = uri_to_id($uri);
+
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
+
 	if($type == 'track')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/tracks'), array('Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('DELETE', json_encode(array(uri_to_id($uri)))));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/tracks?ids=' . $uri_id), $api_headers, array('DELETE', null));
 	}
 	elseif($type == 'artist')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=artist&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('DELETE', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=artist&ids=' . $uri_id), $api_headers, array('DELETE', null));
 	}
 	elseif($type == 'album')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/albums?ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('DELETE', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/albums?ids=' . $uri_id), $api_headers, array('DELETE', null));
 	}
 	elseif($type == 'user')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=user&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), array('DELETE', null));
-
-		if(is_numeric($files[0])) return 'error';
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following?type=user&ids=' . $uri_id), $api_headers, array('DELETE', null));
 	}
+
+	if(is_numeric($files[0])) return 'error';
 
 	db_exec('library', "DELETE FROM library WHERE uri = '" . sqlite_escape($uri) . "'");
 	return ucfirst($type) . ' removed from library';
@@ -1225,6 +1021,10 @@ function is_saved($uri)
 {
 	$type = get_uri_type($uri);
 
+	$uri_id = uri_to_id($uri);
+
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
+
 	if($type == 'track')
 	{
 		$count = get_db_count('library', "SELECT COUNT(id) as count FROM library WHERE uri = '" . sqlite_escape($uri) . "'");
@@ -1232,21 +1032,21 @@ function is_saved($uri)
 	}
 	elseif($type == 'artist')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following/contains?type=artist&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), null);
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following/contains?type=artist&ids=' . $uri_id), $api_headers, null);
 		$response = json_decode($files[0], true);
 
 		return ($response[0]);
 	}
 	elseif($type == 'album')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/albums/contains?ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), null);
+		$files = get_external_files(array('https://api.spotify.com/v1/me/albums/contains?ids=' . $uri_id), $api_headers, null);
 		$response = json_decode($files[0], true);
 
 		return ($response[0]);
 	}
 	elseif($type == 'user')
 	{
-		$files = get_external_files(array('https://api.spotify.com/v1/me/following/contains?type=user&ids=' . uri_to_id($uri)), array('Authorization: Bearer ' . get_spotify_token()), null);
+		$files = get_external_files(array('https://api.spotify.com/v1/me/following/contains?type=user&ids=' . $uri_id), $api_headers, null);
 		$response = json_decode($files[0], true);
 
 		return ($response[0]);
@@ -1255,8 +1055,8 @@ function is_saved($uri)
 
 function refresh_library()
 {
-	$api_uris = array('https://api.spotify.com/v1/me/tracks?limit=50', 'https://api.spotify.com/v1/me/following?type=artist&limit=50', 'https://api.spotify.com/v1/me/albums/?limit=50');
-	$api_headers = array('Authorization: Bearer ' . get_spotify_token());
+	$api_uris = array('https://api.spotify.com/v1/me/tracks?limit=50&market=' . get_spotify_country(), 'https://api.spotify.com/v1/me/following?type=artist&limit=50', 'https://api.spotify.com/v1/me/albums?limit=50');
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
 	$files = get_external_files($api_uris, $api_headers, null);
 	$metadata_tracks = json_decode($files[0], true);
@@ -1451,137 +1251,112 @@ function save_remove_icon($uri)
 function get_search($string)
 {
 	$return = null;
-	$count = get_db_count('search-cache', "SELECT COUNT(id) as count FROM strings WHERE string = '" . sqlite_escape($string) . "' COLLATE NOCASE");
 
-	if($count == 1)
+	$country = get_spotify_country();
+
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=track&market=' . $country . '&limit=50&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=album&market=' . $country . '&limit=24&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=artist&market=' . $country . '&limit=12&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=playlist&market=' . $country . '&limit=50&q=' . rawurlencode($string)), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
+
+	$user = json_decode($files[0], true);
+	$tracks = json_decode($files[1], true);
+	$albums = json_decode($files[2], true);
+	$artists = json_decode($files[3], true);
+	$playlists = json_decode($files[4], true);
+
+	if(isset($tracks['tracks']['items']) && isset($albums['albums']['items']) && isset($artists['artists']['items']) && isset($playlists['playlists']['items']))
 	{
-		$rows = get_db_rows('search-cache', "SELECT metadata, time FROM strings WHERE string = '" . sqlite_escape($string) . "' COLLATE NOCASE", array('metadata', 'time'));
+		$tracks = $tracks['tracks']['items'];
+		$albums = $albums['albums']['items'];
+		$artists = $artists['artists']['items'];
+		$playlists = $playlists['playlists']['items'];
 
-		$current_time = time();
-		$cache_time = intval($rows[1]['time']);
-		$cache_expire = 86400;
+		$return = array();
 
-		if($current_time - $cache_time < $cache_expire)
+		$return['user'] = array();
+
+		if(!empty($user['id']))
 		{
-			$return = json_decode($rows[1]['metadata'], true);
+			$return['user']['username'] = $user['id'];
+			$return['user']['name'] = (empty($user['display_name'])) ? 'Unknown' : $user['display_name'];
+			$return['user']['image'] = (empty($user['images'][0]['url'])) ? '' : $user['images'][0]['url'];
+			$return['user']['followers'] = $user['followers']['total'];
 		}
-		else
+
+		$return['tracks'] = array();
+
+		if(!empty($tracks))
 		{
-			db_exec('search-cache', "DELETE FROM strings WHERE string = '" . sqlite_escape($string) . "' COLLATE NOCASE");
+			$i = 0;
+
+			foreach($tracks as $track)
+			{
+				$return['tracks'][$i]['artist'] = get_artists($track['artists']);
+				$return['tracks'][$i]['artist_uri'] = (empty($track['artists'][0]['uri'])) ? '' : $track['artists'][0]['uri'];
+				$return['tracks'][$i]['title'] = $track['name'];
+				$return['tracks'][$i]['length'] = convert_length($track['duration_ms'], 'ms');
+				$return['tracks'][$i]['popularity'] = $track['popularity'] . ' %';
+				$return['tracks'][$i]['uri'] = $track['uri'];
+				$return['tracks'][$i]['album'] = $track['album']['name'];
+				$return['tracks'][$i]['album_uri'] = $track['album']['uri'];
+
+				$i++;
+			}
 		}
-	}
 
-	if(empty($return))
-	{
-		$country = get_spotify_country();
+		$return['albums'] = array();
 
-		$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=track&market=' . $country . '&limit=50&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=album&market=' . $country . '&limit=24&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=artist&market=' . $country . '&limit=12&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=playlist&market=' . $country . '&limit=50&q=' . rawurlencode($string)), array('Authorization: Bearer ' . get_spotify_token()), null);
-
-		$user = json_decode($files[0], true);
-		$tracks = json_decode($files[1], true);
-		$albums = json_decode($files[2], true);
-		$artists = json_decode($files[3], true);
-		$playlists = json_decode($files[4], true);
-
-		if(isset($tracks['tracks']['items']) && isset($albums['albums']['items']) && isset($artists['artists']['items']) && isset($playlists['playlists']['items']))
+		if(!empty($albums))
 		{
-			$tracks = $tracks['tracks']['items'];
-			$albums = $albums['albums']['items'];
-			$artists = $artists['artists']['items'];
-			$playlists = $playlists['playlists']['items'];
+			$i = 0;
 
-			$return = array();
-
-			$return['user'] = array();
-
-			if(!empty($user['id']))
+			foreach($albums as $album)
 			{
-				$return['user']['username'] = $user['id'];
-				$return['user']['name'] = (empty($user['display_name'])) ? 'Unknown' : $user['display_name'];
-				$return['user']['image'] = (empty($user['images'][0]['url'])) ? '' : $user['images'][0]['url'];
-				$return['user']['followers'] = $user['followers']['total'];
+				if(empty($album['images'][1]['url'])) continue;
+
+				$return['albums'][$i]['title'] = $album['name'];
+				$return['albums'][$i]['type'] = ucfirst($album['type']);
+				$return['albums'][$i]['uri'] = $album['uri'];
+				$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
+
+				$i++;
 			}
+		}
 
-			$return['tracks'] = array();
+		$return['artists'] = array();
 
-			if(!empty($tracks))
+		if(!empty($artists))
+		{
+			$i = 0;
+
+			foreach($artists as $artist)
 			{
-				$i = 0;
+				if(empty($artist['images'][1]['url'])) continue;
 
-				foreach($tracks as $track)
-				{
-					$return['tracks'][$i]['artist'] = get_artists($track['artists']);
-					$return['tracks'][$i]['artist_uri'] = (empty($track['artists'][0]['uri'])) ? '' : $track['artists'][0]['uri'];
-					$return['tracks'][$i]['title'] = $track['name'];
-					$return['tracks'][$i]['length'] = convert_length($track['duration_ms'], 'ms');
-					$return['tracks'][$i]['popularity'] = $track['popularity'] . ' %';
-					$return['tracks'][$i]['uri'] = $track['uri'];
-					$return['tracks'][$i]['album'] = $track['album']['name'];
-					$return['tracks'][$i]['album_uri'] = $track['album']['uri'];
+				$return['artists'][$i]['artist'] = $artist['name'];
+				$return['artists'][$i]['popularity'] = $artist['popularity'] . ' %';
+				$return['artists'][$i]['uri'] = $artist['uri'];
+				$return['artists'][$i]['cover_art'] = $artist['images'][1]['url'];
 
-					$i++;
-				}
+				$i++;
 			}
+		}
 
-			$return['albums'] = array();
+		$return['playlists'] = array();
 
-			if(!empty($albums))
+		if(!empty($playlists))
+		{
+			$i = 0;
+
+			foreach($playlists as $playlist)
 			{
-				$i = 0;
+				if(empty($playlist['images'][0]['url'])) continue;
 
-				foreach($albums as $album)
-				{
-					if(empty($album['images'][1]['url'])) continue;
+				$return['playlists'][$i]['name'] = $playlist['name'];
+				$return['playlists'][$i]['user'] = $playlist['owner']['id'];
+				$return['playlists'][$i]['uri'] = $playlist['uri'];
+				$return['playlists'][$i]['cover_art'] = $playlist['images'][0]['url'];
 
-					$return['albums'][$i]['title'] = $album['name'];
-					$return['albums'][$i]['type'] = ucfirst($album['type']);
-					$return['albums'][$i]['uri'] = $album['uri'];
-					$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
-
-					$i++;
-				}
+				$i++;
 			}
-
-			$return['artists'] = array();
-
-			if(!empty($artists))
-			{
-				$i = 0;
-
-				foreach($artists as $artist)
-				{
-					if(empty($artist['images'][1]['url'])) continue;
-
-					$return['artists'][$i]['artist'] = $artist['name'];
-					$return['artists'][$i]['popularity'] = $artist['popularity'] . ' %';
-					$return['artists'][$i]['uri'] = $artist['uri'];
-					$return['artists'][$i]['cover_art'] = $artist['images'][1]['url'];
-
-					$i++;
-				}
-			}
-
-			$return['playlists'] = array();
-
-			if(!empty($playlists))
-			{
-				$i = 0;
-
-				foreach($playlists as $playlist)
-				{
-					if(empty($playlist['images'][0]['url'])) continue;
-
-					$return['playlists'][$i]['name'] = $playlist['name'];
-					$return['playlists'][$i]['user'] = $playlist['owner']['id'];
-					$return['playlists'][$i]['uri'] = $playlist['uri'];
-					$return['playlists'][$i]['cover_art'] = $playlist['images'][0]['url'];
-
-					$i++;
-				}
-			}
-
-			$count = get_db_count('search-cache', "SELECT COUNT(id) as count FROM strings WHERE string = '" . sqlite_escape($string) . "' COLLATE NOCASE");
-			if($count == 0) db_exec('search-cache', "INSERT INTO strings (string, metadata, time) VALUES ('" . sqlite_escape($string) . "', '" . sqlite_escape(json_encode($return)) . "', '" . time() . "')");
 		}
 	}
 
@@ -1657,186 +1432,168 @@ function get_artist($uri)
 	$return = null;
 	$error = false;
 
-	$count = get_db_count('artists-cache', "SELECT COUNT(id) as count FROM artists WHERE uri = '" . sqlite_escape($uri) . "'");
+	$uri_id = uri_to_id($uri);
 
-	if($count == 1)
+	$country = get_spotify_country();
+
+	$artist_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id;
+	$tracks_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/top-tracks?country=' . $country;
+	$albums_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/albums?limit=50&album_type=album,single&country=' . $country;
+	$related_artists_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/related-artists';
+
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
+
+	$files = get_external_files(array($artist_api_uri, $tracks_api_uri, $albums_api_uri, $related_artists_api_uri), $api_headers, null);
+
+	$artist_metadata = json_decode($files[0], true);
+	$artist_tracks = json_decode($files[1], true);
+	$artist_albums = json_decode($files[2], true);
+	$artist_related_artists = json_decode($files[3], true);
+
+	if(empty($artist_metadata['uri']))
 	{
-		$rows = get_db_rows('artists-cache', "SELECT metadata, time FROM artists WHERE uri = '" . sqlite_escape($uri) . "'", array('metadata', 'time'));
+		$error = true;
+	}
+	else
+	{
+		$return = array();
+		$return['artist'] = $artist_metadata['name'];
+		$return['popularity'] = $artist_metadata['popularity'] . ' %';
+		$return['uri'] = $artist_metadata['uri'];
+		$return['followers'] = number_format($artist_metadata['followers']['total'], 0, '.', ',');
+		$return['cover_art_uri'] = (empty($artist_metadata['images'][0]['url'])) ? null : $artist_metadata['images'][0]['url'];
+		$return['cover_art_width'] = (empty($artist_metadata['images'][0]['width'])) ? null : $artist_metadata['images'][0]['width'];
+		$return['cover_art_height'] = (empty($artist_metadata['images'][0]['height'])) ? null : $artist_metadata['images'][0]['height'];
 
-		$current_time = time();
-		$cache_time = intval($rows[1]['time']);
-		$cache_expire = 86400;
+		$return['tracks'] = array();
 
-		if($current_time - $cache_time < $cache_expire)
+		if(empty($artist_tracks['tracks']))
 		{
-			$return = json_decode($rows[1]['metadata'], true);
+			$error = true;
 		}
 		else
 		{
-			db_exec('artists-cache', "DELETE FROM artists WHERE uri = '" . sqlite_escape($uri) . "'");
+			$tracks = $artist_tracks['tracks'];
+
+			$i = 0;
+
+			foreach($tracks as $track)
+			{
+				$return['tracks'][$i]['artist'] = get_artists($track['artists']);
+				$return['tracks'][$i]['title'] = $track['name'];
+				$return['tracks'][$i]['length'] = convert_length($track['duration_ms'], 'ms');
+				$return['tracks'][$i]['popularity'] = $track['popularity'] . ' %';
+				$return['tracks'][$i]['uri'] = $track['uri'];
+				$return['tracks'][$i]['album'] = $track['album']['name'];
+				$return['tracks'][$i]['album_uri'] = $track['album']['uri'];
+
+				$i++;
+			}
 		}
-	}
 
-	if(empty($return))
-	{
-		$country = get_spotify_country();
+		$albums_limit = $artist_albums['limit'];
+		$albums_count = $artist_albums['total'];
 
-		$artist_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri);
-		$tracks_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri) . '/top-tracks?country=' . $country;
-		$albums_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri) . '/albums?limit=50&album_type=album,single&country=' . $country;
-		$related_artists_api_uri = 'https://api.spotify.com/v1/artists/' . uri_to_id($uri) . '/related-artists';
+		$return['albums_count'] = $albums_count;
 
-		$files = get_external_files(array($artist_api_uri, $tracks_api_uri, $albums_api_uri, $related_artists_api_uri), array('Authorization: Bearer ' . get_spotify_token()), null);
+		$return['albums'] = array();
 
-		$artist_metadata = json_decode($files[0], true);
-		$artist_tracks = json_decode($files[1], true);
-		$artist_albums = json_decode($files[2], true);
-		$artist_related_artists = json_decode($files[3], true);
-
-		if(!empty($artist_metadata['uri']))
+		if(empty($artist_albums['items']))
 		{
-			$return = array();
-			$return['artist'] = $artist_metadata['name'];
-			$return['popularity'] = $artist_metadata['popularity'] . ' %';
-			$return['uri'] = $artist_metadata['uri'];
-			$return['followers'] = number_format($artist_metadata['followers']['total'], 0, '.', ',');
-			$return['cover_art_uri'] = (empty($artist_metadata['images'][0]['url'])) ? null : $artist_metadata['images'][0]['url'];
-			$return['cover_art_width'] = (empty($artist_metadata['images'][0]['width'])) ? null : $artist_metadata['images'][0]['width'];
-			$return['cover_art_height'] = (empty($artist_metadata['images'][0]['height'])) ? null : $artist_metadata['images'][0]['height'];
+			$error = true;
+		}
+		else
+		{
+			$albums = $artist_albums['items'];
 
-			$return['tracks'] = array();
+			$i = 0;
 
-			if(empty($artist_tracks['tracks']))
+			foreach($albums as $album)
 			{
-				$error = true;
+				if(empty($album['images'][1]['url'])) continue;
+
+				$return['albums'][$i]['title'] = $album['name'];
+				$return['albums'][$i]['type'] = ucfirst($album['album_type']);
+				$return['albums'][$i]['uri'] = $album['uri'];
+				$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
+
+				$i++;
 			}
-			else
+
+			if($albums_count > $albums_limit)
 			{
-				$tracks = $artist_tracks['tracks'];
+				$pages = $albums_count / $albums_limit;
+				$pages = ceil($pages - 1);
 
-				$i = 0;
-
-				foreach($tracks as $track)
+				$get_files = array();
+				$offset = 0;
+				
+				for($n = 0; $n < $pages; $n++)
 				{
-					$return['tracks'][$i]['artist'] = get_artists($track['artists']);
-					$return['tracks'][$i]['title'] = $track['name'];
-					$return['tracks'][$i]['length'] = convert_length($track['duration_ms'], 'ms');
-					$return['tracks'][$i]['popularity'] = $track['popularity'] . ' %';
-					$return['tracks'][$i]['uri'] = $track['uri'];
-					$return['tracks'][$i]['album'] = $track['album']['name'];
-					$return['tracks'][$i]['album_uri'] = $track['album']['uri'];
-
-					$i++;
-				}
-			}
-
-			$albums_limit = $artist_albums['limit'];
-			$albums_count = $artist_albums['total'];
-
-			$return['albums_count'] = $albums_count;
-
-			$return['albums'] = array();
-
-			if(empty($artist_albums['items']))
-			{
-				$error = true;
-			}
-			else
-			{
-				$albums = $artist_albums['items'];
-
-				$i = 0;
-
-				foreach($albums as $album)
-				{
-					if(empty($album['images'][1]['url'])) continue;
-
-					$return['albums'][$i]['title'] = $album['name'];
-					$return['albums'][$i]['type'] = ucfirst($album['album_type']);
-					$return['albums'][$i]['uri'] = $album['uri'];
-					$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
-
-					$i++;
+					$offset = $offset + $albums_limit;
+					$get_files[$n] = $albums_api_uri . '&offset=' . $offset;
 				}
 
-				if($albums_count > $albums_limit)
-				{
-					$pages = $albums_count / $albums_limit;
-					$pages = ceil($pages - 1);
+				$files = get_external_files($get_files, $api_headers, null);
 
-					$get_files = array();
-					$offset = 0;
-					
-					for($n = 0; $n < $pages; $n++)
+				foreach($files as $file)
+				{
+					$metadata = json_decode($file, true);
+
+					if(empty($metadata['items']))
 					{
-						$offset = $offset + $albums_limit;
-						$get_files[$n] = $albums_api_uri . '&offset=' . $offset;
+						$error = true;
 					}
-
-					$files = get_external_files($get_files, array('Authorization: Bearer ' . get_spotify_token()), null);
-
-					foreach($files as $file)
+					else
 					{
-						$metadata = json_decode($file, true);
+						$albums = $metadata['items'];
 
-						if(empty($metadata['items']))
+						foreach($albums as $album)
 						{
-							$error = true;
-						}
-						else
-						{
-							$albums = $metadata['items'];
+							if(empty($album['images'][1]['url'])) continue;
 
-							foreach($albums as $album)
-							{
-								if(empty($album['images'][1]['url'])) continue;
+							$return['albums'][$i]['title'] = $album['name'];
+							$return['albums'][$i]['type'] = ucfirst($album['album_type']);
+							$return['albums'][$i]['uri'] = $album['uri'];
+							$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
 
-								$return['albums'][$i]['title'] = $album['name'];
-								$return['albums'][$i]['type'] = ucfirst($album['album_type']);
-								$return['albums'][$i]['uri'] = $album['uri'];
-								$return['albums'][$i]['cover_art'] = $album['images'][1]['url'];
-
-								$i++;
-							}
+							$i++;
 						}
 					}
 				}
 			}
+		}
 
-			$return['related_artists'] = array();
+		$return['related_artists'] = array();
 
-			if(empty($artist_related_artists['artists']))
+		if(empty($artist_related_artists['artists']))
+		{
+			$error = true;
+		}
+		else
+		{
+			$related_artists = $artist_related_artists['artists'];
+
+			$total_results = 12;
+			$i = 0;
+
+			foreach($related_artists as $related_artist)
 			{
-				$error = true;
+				if(empty($related_artist['images'][1]['url'])) continue;
+
+				$return['related_artists'][$i]['artist'] = $related_artist['name'];
+				$return['related_artists'][$i]['popularity'] = $related_artist['popularity'] . ' %';
+				$return['related_artists'][$i]['uri'] = $related_artist['uri'];
+				$return['related_artists'][$i]['cover_art'] = $related_artist['images'][1]['url'];
+
+				$i++;
+
+				if($i == $total_results) break;
 			}
-			else
-			{
-				$related_artists = $artist_related_artists['artists'];
-
-				$total_results = 12;
-				$i = 0;
-
-				foreach($related_artists as $related_artist)
-				{
-					if(empty($related_artist['images'][1]['url'])) continue;
-
-					$return['related_artists'][$i]['artist'] = $related_artist['name'];
-					$return['related_artists'][$i]['popularity'] = $related_artist['popularity'] . ' %';
-					$return['related_artists'][$i]['uri'] = $related_artist['uri'];
-					$return['related_artists'][$i]['cover_art'] = $related_artist['images'][1]['url'];
-
-					$i++;
-
-					if($i == $total_results) break;
-				}
-			}
-
-			$count = get_db_count('artists-cache', "SELECT COUNT(id) as count FROM artists WHERE uri = '" . sqlite_escape($uri) . "'");
-			if($count == 0 && !$error) db_exec('artists-cache', "INSERT INTO artists (uri, metadata, time) VALUES ('" . sqlite_escape($uri) . "', '" . sqlite_escape(json_encode($return)) . "', '" . time() . "')");
 		}
 	}
 
-	return $return;
+	return ($error) ? null : $return;
 }
 
 function get_artists($artists)
@@ -1858,124 +1615,109 @@ function get_album($uri)
 	$return = null;
 	$error = false;
 
-	$count = get_db_count('albums-cache', "SELECT COUNT(id) as count FROM albums WHERE uri = '" . sqlite_escape($uri) . "'");
+	$api_uri = 'https://api.spotify.com/v1/albums/' . uri_to_id($uri);
+	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
-	if($count == 1)
+	$files = get_external_files(array($api_uri), $api_headers, null);
+	$metadata = json_decode($files[0], true);
+
+	if(empty($metadata['name']) || empty($metadata['tracks']['items']))
 	{
-		$rows = get_db_rows('albums-cache', "SELECT metadata FROM albums WHERE uri = '" . sqlite_escape($uri) . "'", array('metadata'));
-		$return = json_decode($rows[1]['metadata'], true);
+		$error = true;
 	}
 	else
 	{
-		$api_uri = 'https://api.spotify.com/v1/albums/' . uri_to_id($uri);
+		$return = array();
+		$return['artist'] = get_artists($metadata['artists']);
+		$return['artist_uri'] = (empty($metadata['artists'][0]['uri'])) ? '' : $metadata['artists'][0]['uri'];
+		$return['title'] = $metadata['name'];
+		$return['type'] = ucfirst($metadata['album_type']);
+		$return['released'] = (empty($metadata['release_date'])) ? 'Unknown' : $metadata['release_date'];
+		$return['popularity'] = $metadata['popularity'] . ' %';
+		$return['cover_art_uri'] = $metadata['images'][0]['url'];
+		$return['cover_art_width'] = $metadata['images'][0]['width'];
+		$return['cover_art_height'] = $metadata['images'][0]['height'];
+		$return['countries'] = $metadata['available_markets'];
 
-		$files = get_external_files(array($api_uri), array('Authorization: Bearer ' . get_spotify_token()), null);
-		$metadata = json_decode($files[0], true);
+		$tracks = $metadata['tracks']['items'];
+		$tracks_limit = $metadata['tracks']['limit'];
+		$tracks_count = $metadata['tracks']['total'];
 
-		if(!empty($metadata['name']) && !empty($metadata['tracks']['items']))
+		$return['tracks_count'] = $tracks_count;
+
+		$total_length = 0;
+		$i = 0;
+
+		foreach($tracks as $track)
 		{
-			$return = array();
-			$return['artist'] = get_artists($metadata['artists']);
-			$return['artist_uri'] = (empty($metadata['artists'][0]['uri'])) ? '' : $metadata['artists'][0]['uri'];
-			$return['title'] = $metadata['name'];
-			$return['type'] = ucfirst($metadata['album_type']);
-			$return['released'] = (empty($metadata['release_date'])) ? 'Unknown' : $metadata['release_date'];
-			$return['popularity'] = $metadata['popularity'] . ' %';
-			$return['cover_art_uri'] = $metadata['images'][0]['url'];
-			$return['cover_art_width'] = $metadata['images'][0]['width'];
-			$return['cover_art_height'] = $metadata['images'][0]['height'];
-			$return['countries'] = $metadata['available_markets'];
+			$disc_number = $track['disc_number'];
 
-			$tracks = $metadata['tracks']['items'];
-			$tracks_limit = $metadata['tracks']['limit'];
-			$tracks_count = $metadata['tracks']['total'];
+			$return['discs'][$disc_number][$i]['artist'] = get_artists($track['artists']);
+			$return['discs'][$disc_number][$i]['artist_uri'] = $track['artists'][0]['uri'];
+			$return['discs'][$disc_number][$i]['title'] = $track['name'];
+			$return['discs'][$disc_number][$i]['track_number'] = $track['track_number'];
+			$return['discs'][$disc_number][$i]['disc_number'] = $disc_number;
+			$return['discs'][$disc_number][$i]['length'] = convert_length($track['duration_ms'], 'ms');
+			$return['discs'][$disc_number][$i]['uri'] = $track['uri'];
 
-			$return['tracks_count'] = $tracks_count;
+			$total_length = $total_length + intval($track['duration_ms']);
 
-			$total_length = 0;
-			$i = 0;
+			$i++;
+		}
 
-			foreach($tracks as $track)
+		if($tracks_count > $tracks_limit)
+		{
+			$pages = $tracks_count / $tracks_limit;
+			$pages = ceil($pages - 1);
+
+			$get_files = array();
+			$offset = 0;
+			
+			for($n = 0; $n < $pages; $n++)
 			{
-				$disc_number = $track['disc_number'];
-
-				$return['discs'][$disc_number][$i]['artist'] = get_artists($track['artists']);
-				$return['discs'][$disc_number][$i]['artist_uri'] = $track['artists'][0]['uri'];
-				$return['discs'][$disc_number][$i]['title'] = $track['name'];
-				$return['discs'][$disc_number][$i]['track_number'] = $track['track_number'];
-				$return['discs'][$disc_number][$i]['disc_number'] = $disc_number;
-				$return['discs'][$disc_number][$i]['length'] = convert_length($track['duration_ms'], 'ms');
-				$return['discs'][$disc_number][$i]['uri'] = $track['uri'];
-
-				$total_length = $total_length + intval($track['duration_ms']);
-
-				$i++;
+				$offset = $offset + $tracks_limit;
+				$get_files[$n] = $api_uri . '/tracks?offset=' . $offset . '&limit=' . $tracks_limit;
 			}
 
-			if($tracks_count > $tracks_limit)
+			$files = get_external_files($get_files, $api_headers, null);
+
+			foreach($files as $file)
 			{
-				$pages = $tracks_count / $tracks_limit;
-				$pages = ceil($pages - 1);
+				$metadata = json_decode($file, true);
 
-				$get_files = array();
-				$offset = 0;
-				
-				for($n = 0; $n < $pages; $n++)
+				if(empty($metadata['items']))
 				{
-					$offset = $offset + $tracks_limit;
-					$get_files[$n] = $api_uri . '/tracks?offset=' . $offset . '&limit=' . $tracks_limit;
+					$error = true;
+					break;
 				}
-
-				$files = get_external_files($get_files, array('Authorization: Bearer ' . get_spotify_token()), null);
-
-				foreach($files as $file)
+				else
 				{
-					$metadata = json_decode($file, true);
+					$tracks = $metadata['items'];
 
-					if(empty($metadata['items']))
+					foreach($tracks as $track)
 					{
-						$error = true;
-						break;
-					}
-					else
-					{
-						$tracks = $metadata['items'];
+						$disc_number = $track['disc_number'];
 
-						foreach($tracks as $track)
-						{
-							$disc_number = $track['disc_number'];
+						$return['discs'][$disc_number][$i]['artist'] = get_artists($track['artists']);
+						$return['discs'][$disc_number][$i]['artist_uri'] = $track['artists'][0]['uri'];
+						$return['discs'][$disc_number][$i]['title'] = $track['name'];
+						$return['discs'][$disc_number][$i]['track_number'] = $track['track_number'];
+						$return['discs'][$disc_number][$i]['disc_number'] = $disc_number;
+						$return['discs'][$disc_number][$i]['length'] = convert_length($track['duration_ms'], 'ms');
+						$return['discs'][$disc_number][$i]['uri'] = $track['uri'];
 
-							$return['discs'][$disc_number][$i]['artist'] = get_artists($track['artists']);
-							$return['discs'][$disc_number][$i]['artist_uri'] = $track['artists'][0]['uri'];
-							$return['discs'][$disc_number][$i]['title'] = $track['name'];
-							$return['discs'][$disc_number][$i]['track_number'] = $track['track_number'];
-							$return['discs'][$disc_number][$i]['disc_number'] = $disc_number;
-							$return['discs'][$disc_number][$i]['length'] = convert_length($track['duration_ms'], 'ms');
-							$return['discs'][$disc_number][$i]['uri'] = $track['uri'];
+						$total_length = $total_length + intval($track['duration_ms']);
 
-							$total_length = $total_length + intval($track['duration_ms']);
-
-							$i++;
-						}
+						$i++;
 					}
 				}
-			}
-
-			$return['total_length'] = convert_length($total_length, 'ms');
-
-			if($error)
-			{
-				$return = null;
-			}
-			else
-			{
-				$count = get_db_count('albums-cache', "SELECT COUNT(id) as count FROM albums WHERE uri = '" . sqlite_escape($uri) . "'");
-				if($count == 0) db_exec('albums-cache', "INSERT INTO albums (uri, metadata) VALUES ('" . sqlite_escape($uri) . "', '" . sqlite_escape(json_encode($return)) . "')");
 			}
 		}
+
+		$return['total_length'] = convert_length($total_length, 'ms');
 	}
 
-	return $return;
+	return ($error) ? null : $return;
 }
 
 function get_album_artist($uri)
@@ -1995,12 +1737,12 @@ function get_tracks($uris)
 
 	foreach($uris as $uri)
 	{
-		$urls[$i] = 'https://api.spotify.com/v1/tracks/' . uri_to_id($uri);
+		$urls[$i] = 'https://api.spotify.com/v1/tracks/' . uri_to_id($uri) . '?market=' . get_spotify_country();
 
 		$i++;
 	}
 
-	$files = get_external_files($urls, array('Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files($urls, array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 	$tracks = $files;
 
 	$return = array();
@@ -2019,50 +1761,14 @@ function get_tracks($uris)
 
 function get_track_album($uri)
 {
-	$count = get_db_count('track-album-cache', "SELECT COUNT(id) as count FROM tracks WHERE track_uri = '" . sqlite_escape($uri) . "'");
-
-	if($count == 1)
-	{
-		$rows = get_db_rows('track-album-cache', "SELECT album_uri FROM tracks WHERE track_uri = '" . sqlite_escape($uri) . "'", array('album_uri'));
-		$return = $rows[1]['album_uri'];
-	}
-	else
-	{
-		$tracks = get_tracks(array($uri));
-		$return = (empty($tracks[0]['album']['uri'])) ? null : $tracks[0]['album']['uri'];
-	}
-
-	return $return;
+	$tracks = get_tracks(array($uri));
+	return (empty($tracks[0]['album']['uri'])) ? null : $tracks[0]['album']['uri'];
 }
 
 function get_track_artist($uri)
 {
-	$count = get_db_count('track-artist-cache', "SELECT COUNT(id) as count FROM tracks WHERE track_uri = '" . sqlite_escape($uri) . "'");
-
-	if($count == 1)
-	{
-		$rows = get_db_rows('track-artist-cache', "SELECT artist_uri FROM tracks WHERE track_uri = '" . sqlite_escape($uri) . "'", array('artist_uri'));
-		$return = $rows[1]['artist_uri'];
-	}
-	else
-	{
-		$tracks = get_tracks(array($uri));
-		$return = (empty($tracks[0]['artists'][0]['uri'])) ? null : $tracks[0]['artists'][0]['uri'];
-	}
-
-	return $return;
-}
-
-function save_track_album($track_uri, $album_uri)
-{
-	$count = get_db_count('track-album-cache', "SELECT COUNT(id) as count FROM tracks WHERE track_uri = '" . sqlite_escape($track_uri) . "'");
-	if($count == 0) db_exec('track-album-cache', "INSERT INTO tracks (track_uri, album_uri) VALUES ('" . sqlite_escape($track_uri) . "', '" . sqlite_escape($album_uri) . "')");	
-}
-
-function save_track_artist($track_uri, $artist_uri)
-{
-	$count = get_db_count('track-artist-cache', "SELECT COUNT(id) as count FROM tracks WHERE track_uri = '" . sqlite_escape($track_uri) . "'");
-	if($count == 0) db_exec('track-artist-cache', "INSERT INTO tracks (track_uri, artist_uri) VALUES ('" . sqlite_escape($track_uri) . "', '" . sqlite_escape($artist_uri) . "')");	
+	$tracks = get_tracks(array($uri));
+	return (empty($tracks[0]['artists'][0]['uri'])) ? null : $tracks[0]['artists'][0]['uri'];
 }
 
 // Profile
@@ -2071,7 +1777,7 @@ function get_profile()
 {
 	$return = null;
 
-	$files = get_external_files(array('https://api.spotify.com/v1/me', 'https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10'), array('Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files(array('https://api.spotify.com/v1/me', 'https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 	$profile = json_decode($files[0], true);
 	$profile_top_tracks = json_decode($files[1], true);
 
@@ -2096,7 +1802,7 @@ function get_user($username)
 {
 	$return = null;
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $username, 'https://api.spotify.com/v1/me/following/contains?type=user&ids=' . $username, 'https://api.spotify.com/v1/users/' . $username . '/playlists?limit=50'), array('Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $username, 'https://api.spotify.com/v1/me/following/contains?type=user&ids=' . $username, 'https://api.spotify.com/v1/users/' . $username . '/playlists?limit=50'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 	$profile = json_decode($files[0], true);
 	$following = json_decode($files[1], true);
 	$playlists = json_decode($files[2], true);
@@ -2160,13 +1866,6 @@ function setting_dropdown_status($cookie, $value)
 
 function clear_cache()
 {
-	db_exec('albums-cache', "DELETE FROM albums");
-	db_exec('artists-cache', "DELETE FROM artists");
-	db_exec('playlists-cache', "DELETE FROM playlists");
-	db_exec('search-cache', "DELETE FROM strings");
-	db_exec('track-album-cache', "DELETE FROM tracks");
-	db_exec('track-artist-cache', "DELETE FROM tracks");
-
 	file_write(__DIR__ . '/run/cover-art-small.cache', '');
 	file_write(__DIR__ . '/run/cover-art-medium.cache', '');
 	file_write(__DIR__ . '/run/cover-art-large.cache', '');
@@ -2203,7 +1902,7 @@ function get_external_files($uris, $headers, $post)
 	for($i = 0; $i < $count; $i++)
 	{
 		$uri = $uris[$i];
-		$ua = (preg_match('/^https?:\/\/open\.spotify\.com\//', $uri)) ? 'Mozilla/5.0 (Android 7.1.1; Mobile; rv:51.0) Gecko/51.0 Firefox/51.0' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:51.0) Gecko/20100101 Firefox/51.0';
+		$ua = (preg_match('/^https?:\/\/open\.spotify\.com\//', $uri)) ? 'Mozilla/5.0 (Android 7.1.2; Mobile; rv:54.0) Gecko/54.0 Firefox/54.0' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0';
 
 		$ch[$i] = curl_init();
 
@@ -2320,7 +2019,7 @@ function check_for_errors()
 {
 	$code = 0;
 
-	if(!defined('config_send_system_information') || !defined('config_proxy') || !defined('config_proxy_address') || !defined('config_proxy_port') || !is_bool(config_send_system_information) || !is_bool(config_proxy) || !is_string(config_proxy_address) || !is_int(config_proxy_port))
+	if(!defined('config_enable_spotify_premium_features') || !defined('config_send_system_information') || !defined('config_proxy') || !defined('config_proxy_address') || !defined('config_proxy_port') || !is_bool(config_enable_spotify_premium_features) || !is_bool(config_send_system_information) || !is_bool(config_proxy) || !is_string(config_proxy_address) || !is_int(config_proxy_port))
 	{
 		$code = 1;
 	}
@@ -2328,7 +2027,7 @@ function check_for_errors()
 	{
 		$code = 2;
 	}
-	elseif(!is_writeable('db/playlists.db') || !is_writeable('run/daemon.inotify'))
+	elseif(!is_writeable(__DIR__ . '/db/playlists.db') || !is_writeable(__DIR__ . '/run/daemon.inotify'))
 	{
 		$code = 3;
 	}
@@ -2342,14 +2041,12 @@ function check_for_errors()
 
 function check_for_updates()
 {
+	$project_version = number_format(project_version, 1);
+	$spotify_is_new = (spotify_is_new()) ? 'New' : 'Old';
+	$is_spotify_subscription_premium = (is_spotify_subscription_premium()) ? 'Yes' : 'No';
 	$system_information = get_system_information();
-	$version = number_format(project_version, 1);
 
-	$cookie_version = str_replace('.', '_', $version);
-	$installed = (isset($_COOKIE['installed_' . $cookie_version]) && is_numeric($_COOKIE['installed_' . $cookie_version])) ? round($_COOKIE['installed_' . $cookie_version] / 1000) : 0;
-	$spotify = (spotify_is_unsupported()) ? 'Unsupported' : 'Supported';
-
-	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode($version) . '&installed=' . rawurlencode($installed) . '&spotify=' . rawurlencode($spotify) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
+	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode($project_version) . '&spotify=' . rawurlencode($spotify_is_new) . '&premium=' . rawurlencode($is_spotify_subscription_premium) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
 	$latest_version = trim($files[0]);
 
 	return (preg_match('/^\d+\.\d+$/', $latest_version)) ? $latest_version : 'error';

@@ -1264,13 +1264,26 @@ div#nowplaying_volume_level_div
 	font-size: 13px;
 }
 
-div#nowplaying_remote_div
+div#nowplaying_remote_upper_div
 {
 	display: table;
 	margin: 0 auto;
 }
 
-div#nowplaying_remote_div > div
+div#nowplaying_remote_upper_div > div
+{
+	display: table-cell;
+	padding: 0 6px;
+	vertical-align: middle;
+}
+
+div#nowplaying_remote_lower_div
+{
+	display: table;
+	margin: 16px auto 0 auto;
+}
+
+div#nowplaying_remote_lower_div > div
 {
 	display: table-cell;
 	padding: 0 6px;

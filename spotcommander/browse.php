@@ -70,49 +70,6 @@ if(isset($_GET['featured-playlists']))
 		echo '<div class="clear_float_div"></div></div></div>';
 	}
 }
-elseif(isset($_GET['top-lists']))
-{
-	$country = get_spotify_country();
-
-	$activity['title'] = 'Top Lists in ' . get_country_name($country);
-
-	$files = get_external_files(array(project_website . 'api/1/browse/top-lists/?country=' . $country . '&token=' . get_spotify_token()), null, null);
-	$playlists = json_decode($files[0], true);
-
-	if(!is_array($playlists))
-	{
-		$activity['actions'][] = array('action' => array('Retry', 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('reload_activity'));
-
-		echo '
-			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
-
-			<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Could not get playlists. Try again.</div></div>
-
-			</div>
-		';
-	}
-	else
-	{
-		echo '
-			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
-
-			<div class="cards_vertical_div">
-		';
-
-		foreach($playlists as $playlist)
-		{
-			$name = $playlist['name'];
-			$description = $playlist['description'];
-			$followers = $playlist['followers_formatted'];
-			$uri = $playlist['uri'];
-			$cover_art = $playlist['cover_art'];
-
-			echo '<div class="card_vertical_div"><div title="' . hsc($description) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($description) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">Followers: ' . $followers . '</div></div></div>';
-		}
-
-		echo '<div class="clear_float_div"></div></div></div>';
-	}
-}
 elseif(isset($_GET['genres']))
 {
 	$country = get_spotify_country();
@@ -148,11 +105,11 @@ elseif(isset($_GET['genres']))
 			{
 				$name = $playlist['name'];
 				$description = $playlist['description'];
-				$followers = $playlist['followers_formatted'];
+				$tracks = $playlist['tracks'];
 				$uri = $playlist['uri'];
 				$cover_art = $playlist['cover_art'];
 
-				echo '<div class="card_vertical_div"><div title="' . hsc($name . ': ' . $description) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($description) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">Followers: ' . $followers . '</div></div></div>';
+				echo '<div class="card_vertical_div"><div title="' . hsc($name . ': ' . $description) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($description) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">Tracks: ' . $tracks . '</div></div></div>';
 			}
 
 			echo '<div class="clear_float_div"></div></div></div>';
@@ -310,8 +267,10 @@ elseif(isset($_GET['charts']))
 		$tracks = $metadata['tracks'];
 
 		$add_to_playlist_uris = '';
+
 		$queue_uris = array();
-		$i = 0;
+
+		$n = 0;
 
 		foreach($tracks as $track)
 		{
@@ -319,19 +278,16 @@ elseif(isset($_GET['charts']))
 
 			$add_to_playlist_uris .= $track_uri . ' ';
 
-			$queue_uris[$i]['artist'] = $track['artist'];
-			$queue_uris[$i]['title'] = $track['title'];
-			$queue_uris[$i]['uri'] = $track_uri;
+			$queue_uris[$n] = $track_uri;
 
-			$i++;
+			$n++;
 		}
 
 		$add_to_playlist_uris = trim($add_to_playlist_uris);
+
 		$queue_uris = base64_encode(json_encode($queue_uris));
 
-		$activity['actions'][] = array('action' => array('Add to Playlist', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
-		$activity['actions'][] = array('action' => array('Queue Tracks', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $queue_uris, 'false'));
-		$activity['fab'] = array('label' => 'Queue Tracks Randomly', 'icon' => 'queue_white_24_img_div', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $queue_uris, 'true'));
+		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
 
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
@@ -373,7 +329,7 @@ elseif(isset($_GET['charts']))
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
@@ -393,7 +349,7 @@ elseif(isset($_GET['recommendations']))
 
 	$activity['title'] = 'Recommendations';
 
-	$files = get_external_files(array('https://api.spotify.com/v1/recommendations?seed_tracks=' . $id . '&min_popularity=50&market=' . get_spotify_country() . '&limit=100'), array('Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files(array('https://api.spotify.com/v1/recommendations?seed_tracks=' . $id . '&min_popularity=50&market=' . get_spotify_country() . '&limit=100'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 	$metadata = json_decode($files[0], true);
 
 	if(empty($metadata['tracks']))
@@ -413,8 +369,10 @@ elseif(isset($_GET['recommendations']))
 		$tracks = $metadata['tracks'];
 
 		$add_to_playlist_uris = '';
+
 		$queue_uris = array();
-		$i = 0;
+
+		$n = 0;
 
 		foreach($tracks as $track)
 		{
@@ -422,19 +380,16 @@ elseif(isset($_GET['recommendations']))
 
 			$add_to_playlist_uris .= $track_uri . ' ';
 
-			$queue_uris[$i]['artist'] = get_artists($track['artists']);
-			$queue_uris[$i]['title'] = $track['name'];
-			$queue_uris[$i]['uri'] = $track_uri;
+			$queue_uris[$n] = $track_uri;
 
-			$i++;
+			$n++;
 		}
 
 		$add_to_playlist_uris = trim($add_to_playlist_uris);
+
 		$queue_uris = base64_encode(json_encode($queue_uris));
 
-		$activity['actions'][] = array('action' => array('Add to Playlist', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
-		$activity['actions'][] = array('action' => array('Queue Tracks', ''), 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('hide_dialog queue_uris', $queue_uris, 'false'));
-		$activity['fab'] = array('label' => 'Queue Tracks Randomly', 'icon' => 'queue_white_24_img_div', 'keys' => array('actions', 'uris', 'randomly'), 'values' => array('queue_uris', $queue_uris, 'true'));
+		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
 
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
@@ -482,7 +437,7 @@ elseif(isset($_GET['recommendations']))
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uri" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
@@ -514,13 +469,14 @@ else
 		<div class="cards_div">
 		<div>
 		<div>
+		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="genres" data-args="name=Top%20Lists&genre=toplists" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div star_grey_24_img_div"></div></div><div class="card_text_div"><div>Top Lists</div><div>Currently in ' . $country . '.</div></div></div>
 		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="genres" data-args="" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div label_grey_24_img_div"></div></div><div class="card_text_div"><div>Genres &amp; Moods</div><div>Playlists based on genres and moods.</div></div></div>
 		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="popular-playlists" data-args="" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div heart_grey_24_img_div"></div></div><div class="card_text_div"><div>Popular Playlists</div><div>Updated weekly.</div></div></div>
-		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="new-releases" data-args="" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div album_grey_24_img_div"></div></div><div class="card_text_div"><div>New Releases</div><div>In ' . $country . '.</div></div></div>
 		</div>
 		<div>
-		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=streamed" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div headphones_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Streamed</div><div>Today in ' . $country . '.</div></div></div>
-		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=viral" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div share_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Viral</div><div>Today in ' . $country . '.</div></div></div>
+		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="new-releases" data-args="" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div album_grey_24_img_div"></div></div><div class="card_text_div"><div>New Releases</div><div>In ' . $country . '.</div></div></div>
+		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=streamed" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div headphones_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Streamed</div><div>Weekly in ' . $country . '.</div></div></div>
+		<div class="card_div actions_div" data-actions="change_activity" data-activity="browse" data-subactivity="charts" data-args="chart=viral" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_icon_div"><div class="img_div img_24_div share_grey_24_img_div"></div></div><div class="card_text_div"><div>Most Viral</div><div>Weekly in ' . $country . '.</div></div></div>
 		</div>
 		</div>
 		</div>
