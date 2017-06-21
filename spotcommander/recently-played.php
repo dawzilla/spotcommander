@@ -30,6 +30,25 @@ $metadata = json_decode($files[0], true);
 
 $items = $metadata['items'];
 
+if(!empty($items))
+{
+	$queue_uris = array();
+	$n = 0;
+
+	foreach($items as $item)
+	{
+		$queue_uris[$n] = $item['track']['uri'];
+
+		$n++;
+	}
+
+	$activity['queueuris'] = json_encode($queue_uris);
+
+	$activity['fab'] = array('label' => 'Play', 'icon' => 'play_white_24_img_div', 'keys' => array('actions', 'uri', 'queueuris'), 'values' => array('play_uris', $queue_uris[0], $activity['queueuris']));
+}
+
+$activity['actions'][] = array('action' => array('Refresh', 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('reload_activity'));
+
 echo '
 	<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
 
@@ -44,18 +63,6 @@ if(empty($items))
 }
 else
 {
-	$queue_uris = array();
-	$n = 0;
-
-	foreach($items as $item)
-	{
-		$queue_uris[$n] = $item['track']['uri'];
-
-		$n++;
-	}
-
-	$queue_uris = base64_encode(json_encode($queue_uris));
-
 	foreach($items as $item)
 	{
 		$artist = get_artists($item['track']['artists']);
@@ -82,7 +89,7 @@ else
 			</div>
 			<div class="list_item_actions_div">
 			<div class="list_item_actions_inner_div">
-			<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+			<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 			<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 			<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 			<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>

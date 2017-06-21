@@ -28,7 +28,7 @@ require_once('../main.php');
 $spotify_is_new = spotify_is_new();
 $qdbus = daemon_qdbus_select();
 
-$tracks = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id", array('id', 'uri', 'sortorder'));
+$tracks = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT 226", array('id', 'uri', 'sortorder'));
 
 if(!empty($tracks))
 {
@@ -91,7 +91,7 @@ if(!empty($tracks))
 	elseif($uri == 'shutdown')
 	{
 		$logind = daemon_logind_check($qdbus);
-		
+
 		clear_queue();
 
 		if($spotify_is_new)

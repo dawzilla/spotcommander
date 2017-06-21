@@ -53,11 +53,10 @@ elseif($code == 6)
 	$message = 'You must enable JavaScript in your browser.';
 }
 
-$project_version = number_format(project_version, 1);
 $error_code = $code;
 $system_information = get_system_information();
 
-get_external_files(array(project_website . 'api/1/error/?version=' . rawurlencode($project_version) . '&error_code=' . rawurlencode($error_code) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
+get_external_files(array(project_website . 'api/1/error/?version=' . rawurlencode(project_version) . '&error_code=' . rawurlencode($error_code) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
 
 ?>
 

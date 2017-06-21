@@ -22,12 +22,12 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 // Project
 
 define('project_name', 'SpotCommander');
-define('project_version', 13.2);
-define('project_serial', 13200);
+define('project_version', 13.3);
+define('project_serial', 13300);
 define('project_website', 'http://www.olejon.net/code/spotcommander/');
 define('project_website_https', 'https://www.olejon.net/code/spotcommander/');
 define('project_developer', 'Ole Jon Bjørkum');
-define('project_android_app_minimum_version', 7.9);
+define('project_android_app_minimum_version', 13.2);
 
 // Configuration
 
@@ -199,7 +199,7 @@ if(isset($_POST['action']))
 
 		if(is_spotify_subscription_premium())
 		{
-			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array("context_uri" => $data)));
+			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array('context_uri' => $data)));
 		}
 		else
 		{
@@ -212,13 +212,16 @@ if(isset($_POST['action']))
 
 		$data = json_decode($data, true);
 
+		$uri = $data['uri'];
+		$uris = $data['uris'];
+
 		if(is_spotify_subscription_premium())
 		{
-			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array("uris" => $data, "offset" => array("position" => 0))));
+			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array('uris' => $uris, 'offset' => array('uri' => $uri))));
 		}
 		else
 		{
-			remote_control($action, $data[0]);
+			remote_control($action, $uri);
 		}
 	}
 	elseif($action == 'clear_cache')

@@ -21,6 +21,9 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 require_once('main.php');
 
+$activity = array();
+$activity['project_version'] = project_version;
+
 $browse_uri = $_GET['uri'];
 $browse_uri_type = get_uri_type($browse_uri);
 
@@ -38,9 +41,6 @@ else
 }
 
 $metadata = (empty($artist_uri)) ? null : get_artist($artist_uri);
-
-$activity = array();
-$activity['project_version'] = project_version;
 
 if(empty($metadata))
 {
@@ -72,18 +72,30 @@ else
 
 	$activity['title'] = $artist;
 
-	if(empty($tracks) && empty($albums) && empty($related_artists))
+	if(empty($tracks) || empty($albums) || empty($related_artists))
 	{
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
 
-			<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Empty artist</div></div>
+			<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Could not get artist</div></div>
 
 			</div>
 		';
 	}
 	else
 	{
+		$queue_uris = array();
+		$n = 0;
+
+		foreach($tracks as $track)
+		{
+			$queue_uris[$n] = $track['uri'];
+
+			$n++;
+		}
+
+		$activity['queueuris'] = json_encode($queue_uris);
+
 		$library_action = (is_saved($artist_uri)) ? 'Remove from Library' : 'Save to Library';
 
 		$activity['actions'][] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), '', $artist_uri));
@@ -103,116 +115,95 @@ else
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
 		';
 
-		if(!empty($tracks))
+		echo '
+			<div class="list_header_div list_header_below_cover_art_div"><div>Top Tracks</div><div></div></div>
+
+			<div class="list_div">
+		';
+
+		$i = 0;
+
+		foreach($tracks as $track)
 		{
-			$queue_uris = array();
-			$n = 0;
+			$i++;
 
-			foreach($tracks as $track)
-			{
-				$queue_uris[$n] = $track['uri'];
+			$artist = $track['artist'];
+			$title = $track['title'];
+			$length = $track['length'];
+			$popularity = $track['popularity'];
+			$uri = $track['uri'];
+			$album = $track['album'];
+			$album_uri = $track['album_uri'];
 
-				$n++;
-			}
+			$details_dialog = array();
+			$details_dialog['title'] = hsc($title);
+			$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
+			$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
+			$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 
-			$queue_uris = base64_encode(json_encode($queue_uris));
-
-			echo '
-				<div class="list_header_div list_header_below_cover_art_div"><div>Top Tracks</div><div></div></div>
-
-				<div class="list_div">
-			';
-
-			$i = 0;
-
-			foreach($tracks as $track)
-			{
-				$i++;
-
-				$artist = $track['artist'];
-				$title = $track['title'];
-				$length = $track['length'];
-				$popularity = $track['popularity'];
-				$uri = $track['uri'];
-				$album = $track['album'];
-				$album_uri = $track['album_uri'];
-
-				$details_dialog = array();
-				$details_dialog['title'] = hsc($title);
-				$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
-				$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
-				$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
-
-				$actions_dialog = array();
-				$actions_dialog['title'] = hsc($title);
-				$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
-				$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
-				$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
-				$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
-				$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
-
-				echo '
-					<div class="list_item_div list_item_track_div">
-					<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
-					<div class="list_item_main_actions_arrow_div"></div>
-					<div class="list_item_main_inner_div">
-					<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-					<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
-					</div>
-					</div>
-					<div class="list_item_actions_div">
-					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
-					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
-					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
-					<div title="Go to Album" class="actions_div" data-actions="browse_album" data-uri="' . $album_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div album_grey_24_img_div"></div></div>
-					<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>
-					</div>
-					</div>
-					</div>
-				';
-			}
+			$actions_dialog = array();
+			$actions_dialog['title'] = hsc($title);
+			$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
+			$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
+			$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
+			$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
+			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
 
 			echo '
+				<div class="list_item_div list_item_track_div">
+				<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
+				<div class="list_item_main_actions_arrow_div"></div>
+				<div class="list_item_main_inner_div">
+				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 				</div>
-
-				<div id="artist_biography_div"><div id="artist_biography_title_div">Biography</div><div id="artist_biography_body_div" data-artist="' . rawurlencode($artist_biography) . '">Getting biography&hellip;</div><div id="artist_biography_buttons_div"><div class="actions_div" data-actions="open_external_activity" data-uri="http://www.last.fm/music/' . urlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">LAST.FM</div><div class="actions_div" data-actions="open_external_activity" data-uri="https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">WIKIPEDIA</div></div></div>
+				</div>
+				<div class="list_item_actions_div">
+				<div class="list_item_actions_inner_div">
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
+				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
+				<div title="Go to Album" class="actions_div" data-actions="browse_album" data-uri="' . $album_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div album_grey_24_img_div"></div></div>
+				<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>
+				</div>
+				</div>
+				</div>
 			';
 		}
 
-		if(!empty($albums))
+		echo '
+			</div>
+
+			<div id="artist_biography_div"><div id="artist_biography_title_div">Biography</div><div id="artist_biography_body_div" data-artist="' . rawurlencode($artist_biography) . '">Getting biography&hellip;</div><div id="artist_biography_buttons_div"><div class="actions_div" data-actions="open_external_activity" data-uri="http://www.last.fm/music/' . urlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">LAST.FM</div><div class="actions_div" data-actions="open_external_activity" data-uri="https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist_biography) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">WIKIPEDIA</div></div></div>
+		';
+
+		echo '<div class="cards_vertical_title_div">Albums</div><div class="cards_vertical_div">';
+
+		foreach($albums as $album)
 		{
-			echo '<div class="cards_vertical_title_div">Albums</div><div class="cards_vertical_div">';
+			$title = $album['title'];
+			$type = $album['type'];
+			$uri = $album['uri'];
+			$cover_art = $album['cover_art'];
 
-			foreach($albums as $album)
-			{
-				$title = $album['title'];
-				$type = $album['type'];
-				$uri = $album['uri'];
-				$cover_art = $album['cover_art'];
-
-				echo '<div class="card_vertical_div"><div title="' . hsc($title) . '" class="card_vertical_inner_div actions_div" data-actions="browse_album" data-uri="' . $uri . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($title) . '</div><div class="card_vertical_lower_div">' . hsc($type) . '</div></div></div>';
-			}
-
-			echo '<div class="clear_float_div"></div></div>';
+			echo '<div class="card_vertical_div"><div title="' . hsc($title) . '" class="card_vertical_inner_div actions_div" data-actions="browse_album" data-uri="' . $uri . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($title) . '</div><div class="card_vertical_lower_div">' . hsc($type) . '</div></div></div>';
 		}
 
-		if(!empty($related_artists))
+		echo '<div class="clear_float_div"></div></div>';
+
+		echo '<div class="cards_vertical_title_div">Related artists</div><div class="cards_vertical_div">';
+
+		foreach($related_artists as $related_artist)
 		{
-			echo '<div class="cards_vertical_title_div">Related artists</div><div class="cards_vertical_div">';
+			$artist = $related_artist['artist'];
+			$popularity = $related_artist['popularity'];
+			$uri = $related_artist['uri'];
+			$cover_art = $related_artist['cover_art'];
 
-			foreach($related_artists as $related_artist)
-			{
-				$artist = $related_artist['artist'];
-				$popularity = $related_artist['popularity'];
-				$uri = $related_artist['uri'];
-				$cover_art = $related_artist['cover_art'];
-
-				echo '<div class="card_vertical_div"><div title="' . hsc($artist) . '" class="card_vertical_inner_div actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($artist) . '</div><div class="card_vertical_lower_div">Popularity: ' . hsc($popularity) . '</div></div></div>';
-			}
-
-			echo '<div class="clear_float_div"></div></div>';
+			echo '<div class="card_vertical_div"><div title="' . hsc($artist) . '" class="card_vertical_inner_div actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($artist) . '</div><div class="card_vertical_lower_div">Popularity: ' . hsc($popularity) . '</div></div></div>';
 		}
+
+		echo '<div class="clear_float_div"></div></div>';
 
 		echo '</div>';
 	}

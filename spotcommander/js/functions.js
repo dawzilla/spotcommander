@@ -17,6 +17,13 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 */
 
+// App
+
+function reloadApp()
+{
+	window.location.replace('.');
+}
+
 // Activities
 
 function showActivity()
@@ -43,7 +50,7 @@ function showActivity()
 
 		activityLoaded();
 
-		if(ua_is_ios && ua_is_standalone)
+		if(ua_is_ios && ua_is_standalone && !isActivity('profile', ''))
 		{
 			var cookie = { id: 'current_activity_'+project_version, value: JSON.stringify({ activity: a.activity, subactivity: a.subactivity, args: a.args, scroll_position: 0 }), expires: 1 };
 			Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
@@ -107,8 +114,8 @@ function activityLoading()
 	{
 		timeout_activity_loading_2 = setTimeout(function()
 		{
-				setActivityActionsVisibility('visible');
-				setActivityActions('<div><div class="img_div img_24_div loading_white_24_img_div"></div></div>');
+			setActivityActionsVisibility('visible');
+			setActivityActions('<div><div class="img_div img_24_div loading_white_24_img_div"></div></div>');
 		}, 1500);
 	}
 }
@@ -220,7 +227,7 @@ function activityLoaded()
 
 		if(isCookie(cookie.id))
 		{
-			var last_refresh_library = parseInt(Cookies.get(cookie.id));
+			var last_refresh_library = Cookies.get(cookie.id);
 
 			if(getCurrentTime() - last_refresh_library > 1000 * 300) refreshLibrary();
 		}
@@ -237,7 +244,7 @@ function activityLoaded()
 
 		if(isCookie(cookie.id))
 		{
-			var last_refresh_playlists = parseInt(Cookies.get(cookie.id));
+			var last_refresh_playlists = Cookies.get(cookie.id);
 
 			if(getCurrentTime() - last_refresh_playlists > 1000 * 300) refreshSpotifyPlaylists(true);
 		}
@@ -247,10 +254,6 @@ function activityLoaded()
 
 			refreshSpotifyPlaylists(true);
 		}
-	}
-	else if(isActivity('profile', ''))
-	{
-		if(data['is_authorized_with_spotify']) window.location.replace('.');
 	}
 	else if(isActivity('settings', ''))
 	{
@@ -283,34 +286,36 @@ function activityLoaded()
 
 function changeActivity(activity, subactivity, args)
 {
-	if(!project_is_authorized_with_spotify)
+	if(project_is_authorized_with_spotify)
 	{
-		window.location.replace('.');
-		return;
+		scrolling_last_list_header = null;
+
+		var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
+		var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
+
+		window.location.assign(hash);
 	}
-
-	scrolling_last_list_header = null;
-
-	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
-	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
-
-	window.location.href=hash;
+	else
+	{
+		showToast('Tap the top right icon', 4);
+	}
 }
 
 function replaceActivity(activity, subactivity, args)
 {
-	if(!project_is_authorized_with_spotify)
+	if(project_is_authorized_with_spotify)
 	{
-		window.location.replace('.');
-		return;
+		scrolling_last_list_header = null;
+
+		var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
+		var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
+
+		window.location.replace(hash);
 	}
-
-	scrolling_last_list_header = null;
-
-	var args = args.replace(/%26/g, '%2526').replace(/&amp;/g, '&').replace(/%2F/g, '%252F').replace(/%5C/g, '%255C');
-	var hash = '#'+activity+'/'+subactivity+'/'+args+'/'+getCurrentTime();
-
-	window.location.replace(hash);
+	else
+	{
+		showToast('Tap the top right icon', 4);
+	}
 }
 
 function reloadActivity()
@@ -571,15 +576,16 @@ function hideMenu()
 
 function showMenuIndicator()
 {
-	var items = $('div.menu_big_item_div');
+	var items_div = 'div.menu_big_item_div';
+	var indicator_div = 'div.menu_big_item_indicator_div';
 
-	items.removeClass('bold_text');
-	$('div.menu_big_item_indicator_div').removeClass('menu_big_item_indicator_active_div');
+	$(items_div).removeClass('bold_text');
+	$(indicator_div).removeClass('menu_big_item_indicator_active_div');
 
 	var a = getActivity();
 	var current_activity = a.activity;
 
-	items.each(function()
+	$(items_div).each(function()
 	{
 		var element = $(this);
 		var activity = element.data('activity');
@@ -587,7 +593,7 @@ function showMenuIndicator()
 		if(activity == current_activity)
 		{
 			element.addClass('bold_text');
-			$('div.menu_big_item_indicator_div', element).addClass('menu_big_item_indicator_active_div');
+			$(indicator_div, element).addClass('menu_big_item_indicator_active_div');
 		}
 	});
 }
@@ -687,7 +693,7 @@ function remoteControl(action)
 
 	clearTimeout(timeout_remote_control);
 
-	if(project_spotify_is_new && project_is_spotify_subscription_premium && action == 'play_pause')
+	if(project_is_spotify_subscription_premium && project_spotify_is_new && action == 'play_pause')
 	{
 		action = nowplaying_play_pause;
 	}
@@ -777,7 +783,7 @@ function toggleShuffleRepeat(action)
 			else if(shc(action, 'toggle_repeat'))
 			{
 				showToast('Repeat toggled', 2);
-			}		
+			}
 		});
 	}
 }
@@ -817,23 +823,38 @@ function playUri(uri)
 	});
 }
 
-function playUris(uri, uris)
+function playUris(uri, queueuris)
 {
 	if(getUriType(uri) == 'local')
 	{
-		showToast('Local file. Play the playlist instead', 4);
+		showToast('Local file, play the playlist instead', 4);
 	}
 	else
 	{
-		uris = JSON.parse(base64Decode(uris));
+		var activity_data = getActivityData();
 
-		uris.unshift(uri);
+		var queueuris = (typeof activity_data['queueuris'] == 'undefined') ? JSON.parse(base64Decode(queueuris)) : JSON.parse(activity_data['queueuris']);
 
-		uris = JSON.stringify(uris).replace(/,"spotify:local[^"]+"/g, '');
+		if(project_is_spotify_subscription_premium && queueuris.length == 226) showDialog({ title: 'Too Many Tracks', body_class: 'dialog_message_div', body_content: 'This track may not play because of the Spotify API tracks limit. You can play the Playlist or Queue this track instead.<br><br>Some tracks have not been added to the Spotify API.', button1: null, button2: null, cookie: null });
+
+		var uris = [];
+		var n = 0;
+
+		for(var i = 0; i < queueuris.length; i++)
+		{
+			if(!queueuris[i].match(/^spotify:local:/))
+			{
+				uris[n] = queueuris[i];
+
+				n++;
+			}
+		}
+
+		var data = JSON.stringify({ uri: uri, uris: uris });
 
 		startRefreshNowplaying();
 
-		$.post('main.php?'+getCurrentTime(), { action: 'play_uris', data: uris }, function()
+		$.post('main.php?'+getCurrentTime(), { action: 'play_uris', data: data }, function(xhr_data)
 		{
 			refreshNowplaying('manual');
 		});
@@ -1046,17 +1067,17 @@ function refreshNowplaying(type)
 
 	clearTimeout(timeout_nowplaying_error);
 
-	xhr_nowplaying = $.get('nowplaying.php', function(xhr_data)
+	xhr_nowplaying = $.getJSON('nowplaying.php', function(nowplaying_metadata)
 	{
 		nowplaying_refreshing = false;
 
 		clearTimeout(timeout_nowplaying_error);
 
-		if(type == 'manual' || nowplaying_last_data != xhr_data)
+		if(type == 'manual' || nowplaying_last_metadata != nowplaying_metadata)
 		{
-			nowplaying_last_data = xhr_data;
+			nowplaying_last_metadata = nowplaying_metadata;
 
-			var nowplaying = JSON.parse(xhr_data);
+			var nowplaying = nowplaying_metadata;
 
 			nowplaying_play_pause = nowplaying.play_pause;
 
@@ -1154,7 +1175,7 @@ function refreshNowplaying(type)
 		timeout_nowplaying_error = setTimeout(function()
 		{
 			nowplaying_refreshing = false;
-			nowplaying_last_data = '';
+			nowplaying_last_metadata = '';
 			nowplaying_last_uri = '';
 
 			$('div#bottom_actionbar_inner_center_div > div').html('Connection failed');
@@ -1189,7 +1210,7 @@ function endRefreshNowplaying()
 	{
 		if(isVisible('div#nowplaying_div'))
 		{
-			var changeside = parseInt(window_width * 2);
+			var changeside = window_width * 2;
 			cover_art_div.stop().css('left', changeside+'px').animate({ 'left': '0' }, 500);
 		}
 		else
@@ -1209,7 +1230,7 @@ function autoRefreshNowplaying(action)
 		interval_nowplaying_auto_refresh = setInterval(function()
 		{
 			var current_time = getCurrentTime();
-			var last_update_time = parseInt(Cookies.get(cookie.id));
+			var last_update_time = Cookies.get(cookie.id);
 
 			if(current_time - last_update_time > 2 * 1000)
 			{
@@ -1343,7 +1364,7 @@ function getCoverArt()
 					});
 				}, timeout);
 			}
-		});	
+		});
 	}
 
 	var divs = $('div.list_item_main_inner_circle_div > div');
@@ -1370,6 +1391,42 @@ function getCoverArt()
 				}, timeout);
 			}
 		});
+	}
+}
+
+function resizeCoverArt(element)
+{
+	if(ua_supports_csstransitions) element.addClass('show_hide_cover_art_animation');
+
+	var container_width = $('div#cover_art_div').width();
+	var width = element.data('width');
+	var height = element.data('height');
+	var minimum_height = element.height();
+	var resized = element.data('resized');
+
+	if(resized)
+	{
+		element.height('').data('resized', false);
+	}
+	else
+	{
+		if(width > container_width)
+		{
+			var ratio = container_width / width;
+			var height = Math.floor(height * ratio);
+
+			if(height > minimum_height) element.height(height);
+		}
+		else if(isWidescreen())
+		{
+			element.height(height);
+		}
+		else
+		{
+			element.height(container_width);
+		}
+
+		element.data('resized', true);
 	}
 }
 
@@ -1576,10 +1633,19 @@ function addUrisToPlaylist(uri, uris)
 		}
 		else
 		{
-			var toast = (parseInt(xhr_data) == 1) ? 'track' : 'tracks';
+			var toast = (xhr_data == 1) ? 'track' : 'tracks';
 			showToast(xhr_data+' '+toast+' added to playlist', 2);
 
-			refreshBrowsePlaylistActivity(uri);
+			var a = getActivity();
+
+			if(isActivity('playlists', 'browse') && shc(a.args, uri))
+			{
+				refreshActivity();
+			}
+			else
+			{
+				cachePlaylist(uri);
+			}
 		}
 	});
 }
@@ -1609,7 +1675,7 @@ function deleteUrisFromPlaylist(uri, uris, positions, snapshot_id, div)
 				showToast('Track deleted from playlist', 2);
 
 				var span = $('span#playlist_tracks_count_span');
-				var count = parseInt(span.html()) - 1;
+				var count = span.html() - 1;
 
 				span.html(count);
 			}
@@ -1628,7 +1694,7 @@ function refreshSpotifyPlaylists(refresh)
 
 	xhr_activity = $.get('playlists.php?refresh_spotify_playlists', function(xhr_data)
 	{
-		var number = parseInt(xhr_data);
+		var number = xhr_data;
 		var toast = (number == 1) ? 'playlist' : 'playlists';
 
 		if(refresh)
@@ -1706,7 +1772,7 @@ function importPlaylists(uris)
 
 		if(div.length)
 		{
-			showToast('Adding playlist...', 2);
+			showToast('Adding playlist&hellip;', 2);
 		}
 		else
 		{
@@ -1739,7 +1805,7 @@ function importPlaylists(uris)
 					}
 				}
 
-				var toast = (parseInt(xhr_data) == 1) ? 'playlist' : 'playlists';
+				var toast = (xhr_data == 1) ? 'playlist' : 'playlists';
 				showToast(xhr_data+' '+toast+' imported', 2);
 			}
 
@@ -1748,7 +1814,7 @@ function importPlaylists(uris)
 	}
 }
 
-function createPlaylist(name, make_public)
+function createPlaylist(name, make_public, make_collaborative)
 {
 	if(name == '')
 	{
@@ -1756,11 +1822,15 @@ function createPlaylist(name, make_public)
 
 		focusTextInput('input:text#create_playlist_name_input');
 	}
+	else if(make_public && make_collaborative)
+	{
+		showToast('A collaborative can not be public', 4);
+	}
 	else
 	{
 		activityLoading();
 
-		$.post('playlists.php?create_playlist&'+getCurrentTime(), { name: name, make_public: make_public }, function(xhr_data)
+		$.post('playlists.php?create_playlist&'+getCurrentTime(), { name: name, make_public: make_public, make_collaborative: make_collaborative }, function(xhr_data)
 		{
 			changeActivity('playlists', '', '');
 
@@ -1770,24 +1840,28 @@ function createPlaylist(name, make_public)
 			}
 			else
 			{
-				showToast('Playlist "'+xhr_data+'" created', 2);
+				showToast('Playlist '+xhr_data+' created', 2);
 			}
 		});
 	}
 }
 
-function editPlaylist(name, uri, make_public)
+function editPlaylist(name, uri, make_public, make_collaborative)
 {
 	if(name == '')
 	{
 		showToast('Playlist name can not be empty', 4);
 		focusTextInput('input:text#edit_playlist_name_input');
 	}
+	else if(make_public && make_collaborative)
+	{
+		showToast('A collaborative can not be public', 4);
+	}
 	else
 	{
 		activityLoading();
 
-		$.post('playlists.php?edit_playlist&'+getCurrentTime(), { name: name, uri: uri, make_public: make_public }, function(xhr_data)
+		$.post('playlists.php?edit_playlist&'+getCurrentTime(), { name: name, uri: uri, make_public: make_public, make_collaborative: make_collaborative }, function(xhr_data)
 		{
 			if(xhr_data == 'no_access')
 			{
@@ -1805,7 +1879,7 @@ function editPlaylist(name, uri, make_public)
 			{
 				changeActivity('playlists', '', '');
 
-				showToast('Playlist "'+xhr_data+'" edited', 2);
+				showToast('Playlist '+xhr_data+' edited', 2);
 
 				cachePlaylist(uri);
 			}
@@ -1818,9 +1892,9 @@ function cachePlaylist(uri)
 	$.post('playlists.php?cache_playlist&'+getCurrentTime(), { uri: uri });
 }
 
-function confirmRemovePlaylist(id, uri)
+function confirmRemovePlaylist(id, name, uri)
 {
-	showDialog({ title: 'Delete Playlist', body_class: 'dialog_message_div', body_content: 'Are you sure you want to delete this playlist?<br><br>This can not be undone. If this is not your playlist, you will simply unfollow it.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DELETE', keys : ['actions', 'id', 'uri'], values: ['hide_dialog remove_playlist', id, uri] }, cookie: null });
+	showDialog({ title: 'Remove '+name, body_class: 'dialog_message_div', body_content: 'Are you sure you want to delete this playlist?<br><br>This can not be undone. If this is not your playlist, you will simply unfollow it.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DELETE', keys : ['actions', 'id', 'uri'], values: ['hide_dialog remove_playlist', id, uri] }, cookie: null });
 }
 
 function removePlaylist(id, uri)
@@ -1851,25 +1925,15 @@ function refreshPlaylistsActivity()
 	if(isActivity('playlists', '')) refreshActivity();
 }
 
-function refreshBrowsePlaylistActivity(uri)
-{
-	var a = getActivity();
-
-	if(isActivity('playlists', 'browse') && shc(a.args, uri))
-	{
-		refreshActivity();
-	}
-	else
-	{
-		cachePlaylist(uri);
-	}
-}
-
 // Library
 
 function save(artist, title, uri, element)
 {
-	if(getUriType(uri) == 'local')
+	var type = getUriType(uri);
+
+	if(type == 'album') Cookies.remove('last_refresh_library', { path: project_path });
+
+	if(type == 'local')
 	{
 		showToast('Not possible for local files', 4);
 	}
@@ -1919,7 +1983,14 @@ function remove(uri)
 {
 	$.post('library.php?remove&'+getCurrentTime(), { uri: uri }, function(xhr_data)
 	{
-		refreshLibraryActivity();
+		if(getUriType(uri) == 'album')
+		{
+			refreshLibrary();
+		}
+		else
+		{
+			refreshLibraryActivity();
+		}
 
 		if(xhr_data == 'error') showToast('Could not remove item from library', 4);
 	});
@@ -1963,15 +2034,16 @@ function refreshLibraryActivity()
 function getFeaturedPlaylists(fade_in_div)
 {
 	var date = new Date();
-	var offset = parseInt(date.getTimezoneOffset() * 60);
-	var time = parseInt(date.getTime() / 1000 - offset);
+	var offset = date.getTimezoneOffset() * 60;
+	var time = date.getTime() / 1000 - offset;
 
 	var div = $('div#browse_featured_playlists_div');
 
 	var country = div.data('country');
+
 	var spotify_token = div.data('spotifytoken');
 
-	$.getJSON(project_website_https+'api/1/browse/featured-playlists/?time='+time+'&country='+country+'&fields='+encodeURIComponent('description,cover_art')+'&token='+spotify_token+'&callback=?', function(data)
+	$.getJSON(project_website_https+'api/1/browse/featured-playlists/?version='+encodeURIComponent(project_version)+'&time='+time+'&country='+country+'&fields='+encodeURIComponent('description,cover_art')+'&token='+spotify_token+'&callback=?', function(data)
 	{
 		if(typeof data.metadata == 'undefined' || data.metadata == '')
 		{
@@ -2009,7 +2081,7 @@ function getSearch(string)
 	if(string == '')
 	{
 		$('div.input_text_div').addClass('input_text_error_div');
-		
+
 		focusTextInput('input:text#search_input');
 	}
 	else
@@ -2057,7 +2129,7 @@ function getArtistBiography()
 
 	var artist = div.data('artist');
 
-	$.getJSON(project_website_https+'api/1/artist/biography/?artist='+artist+'&callback=?', function(metadata)
+	$.getJSON(project_website_https+'api/1/artist/biography/?version='+encodeURIComponent(project_version)+'&artist='+artist+'&callback=?', function(metadata)
 	{
 		var biography = (metadata.biography == '') ? 'No biography available.' : metadata.biography;
 
@@ -2083,31 +2155,36 @@ function browseAlbum(uri)
 
 // Profile
 
+function confirmAuthorizeWithSpotify()
+{
+	showDialog({ title: 'Authorize with Spotify', body_class: 'dialog_message_div', body_content: 'This will redirect you to Spotify\'s website where you must log in as the same user you are logged in as in the Spotify desktop client.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog authorize_with_spotify'] }, cookie: null });
+}
+
 function authorizeWithSpotify()
 {
 	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 
 	var uri = window.location.href.replace(window.location.hash, '')+'#profile//spotify_token=';
 
-	window.location.href = project_website+'api/1/spotify/authorize/?redirect_uri='+encodeURIComponent(uri);
-}
-
-function confirmAuthorizeWithSpotify()
-{
-	showDialog({ title: 'Authorize with Spotify', body_class: 'dialog_message_div', body_content: 'This will redirect you to Spotify\'s website where you must log in as the same user you are logged in as in the Spotify desktop client.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog authorize_with_spotify'] }, cookie: null });
-}
-
-function deauthorizeFromSpotify()
-{
-	$.get('profile.php?deauthorize_from_spotify', function()
-	{
-		window.location.replace('.');
-	});
+	window.location.assign(project_website+'api/1/spotify/authorize/?redirect_uri='+encodeURIComponent(uri));
 }
 
 function confirmDeauthorizeFromSpotify()
 {
 	showDialog({ title: 'Deauthorize from Spotify', body_class: 'dialog_message_div', body_content: 'This will deauthorize you from Spotify. Normally you only do this if you are going to authorize as another Spotify user.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog deauthorize_from_spotify'] }, cookie: null });
+}
+
+function deauthorizeFromSpotify()
+{
+	Cookies.remove('last_refresh_playlists', { path: project_path });
+	Cookies.remove('last_refresh_library', { path: project_path });
+
+	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
+
+	$.get('profile.php?deauthorize_from_spotify', function()
+	{
+		window.location.replace('.');
+	});
 }
 
 // User
@@ -2122,13 +2199,16 @@ function getUser(username)
 function saveSetting(setting, value)
 {
 	var cookie = { id: setting, value: value, expires: 3650 };
+
 	Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
+
 	showToast('Tap top right icon to apply', 4);
 }
 
 function applySettings()
 {
 	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
+
 	window.location.replace('.');
 }
 
@@ -2141,7 +2221,7 @@ function disableSetting(div)
 
 function makeDonation()
 {
-	if(ua_is_android_app && 'JSmakeDonation' in window.Android)
+	if(ua_is_android_app)
 	{
 		Android.JSmakeDonation();
 	}
@@ -2166,11 +2246,6 @@ function removeAllPlaylists()
 	});
 }
 
-function confirmClearCache()
-{
-	showDialog({ title: 'Clear Cache', body_class: 'dialog_message_div', body_content: 'Clear various cache files.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog clear_cache'] }, cookie: null });
-}
-
 function clearCache()
 {
 	$.post('main.php?'+getCurrentTime(), { action: 'clear_cache' }, function()
@@ -2181,7 +2256,7 @@ function clearCache()
 
 function confirmRestoreToDefault()
 {
-	showDialog({ title: 'Restore', body_class: 'dialog_message_div', body_content: 'This will restore settings, messages, etc.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['hide_dialog restore_to_default'] }, cookie: null });
+	showDialog({ title: 'Restore', body_class: 'dialog_message_div', body_content: 'This will restore settings, messages, etc.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys : ['actions'], values: ['restore_to_default'] }, cookie: null });
 }
 
 function restoreToDefault()
@@ -2243,16 +2318,7 @@ function setCss()
 	$('div#nowplaying_div').css('bottom', '-'+window_height+'px').data('cssbottom', $('div#nowplaying_div').css('bottom'));
 	$('div#activity_fab_div').data('cssbottom', $('div#activity_fab_div').css('bottom'));
 
-	var css = '';
-
-	if(ua_supports_csstransitions && ua_supports_csstransforms3d)
-	{
-		css += '.show_nowplaying_animation { transform: translate3d(0, -'+window_height+'px, 0); -webkit-transform: translate3d(0, -'+window_height+'px, 0); -moz-transform: translate3d(0, -'+window_height+'px, 0); -ms-transform: translate3d(0, -'+window_height+'px, 0); } ';
-
-		if(!ua_is_ios) css += '.card_highlight { transform: scale3d(0.975, 0.975, 1); -webkit-transform: scale3d(0.975, 0.975, 1); -moz-transform: scale3d(0.975, 0.975, 1); -ms-transform: scale3d(0.975, 0.975, 1); } ';
-	}
-
-	style.html(css);
+	if(ua_supports_csstransitions && ua_supports_csstransforms3d) style.html('.show_nowplaying_animation { transform: translate3d(0, -'+window_height+'px, 0); -webkit-transform: translate3d(0, -'+window_height+'px, 0); -moz-transform: translate3d(0, -'+window_height+'px, 0); -ms-transform: translate3d(0, -'+window_height+'px, 0); } .card_highlight { transform: scale3d(0.975, 0.975, 1); -webkit-transform: scale3d(0.975, 0.975, 1); -moz-transform: scale3d(0.975, 0.975, 1); -ms-transform: scale3d(0.975, 0.975, 1); }');
 }
 
 function setWidescreenCss()
@@ -2349,8 +2415,18 @@ function scrollToTop(animate)
 	}
 }
 
+function toggleListItemActions(element)
+{
+	var list_item_actions_div = $('div.list_item_actions_div', element.parent());
+	var is_list_item_actions_div_hidden = !isDisplayed(list_item_actions_div);
+
+	hideListItemActions();
+
+	if(is_list_item_actions_div_hidden) showListItemActions(element);
+}
+
 function showListItemActions(element)
-{	
+{
 	var list_item_div = element.parent();
 	var list_item_main_div = element;
 	var list_item_icon_div = $('div.list_item_main_inner_icon_div > div', list_item_main_div);
@@ -2418,7 +2494,7 @@ function showActivityFab(button)
 			else
 			{
 				div.stop().animate({ 'bottom': '68px' }, 250);
-			}				
+			}
 		}
 	}, timeout);
 }
@@ -2523,7 +2599,7 @@ function showToast(text, duration)
 		toast_div.animate({ 'bottom': '64px', 'opacity': '1' }, 250);
 	}
 
-	var duration = parseInt(duration * 1000);
+	var duration = duration * 1000;
 
 	timeout_show_toast = setTimeout(function()
 	{
@@ -2602,7 +2678,7 @@ function showDialog(dialog)
 		$('div#dialog_div').show();
 
 		var height = $('div#dialog_div').outerHeight();
-		var margin = parseInt(height / 2);
+		var margin = height / 2;
 
 		$('div#dialog_div').css('margin-top', '-'+margin+'px');
 
@@ -2740,77 +2816,69 @@ function checkForDialogs()
 {
 	if(isDisplayed('div#dialog_div')) return;
 
-	var cookie = { id: 'hide_information_dialog_'+project_version, value: 'true', expires: 7 };
+	var latest_version = Cookies.get('latest_version');
 
-	if(!isCookie(cookie.id) && project_is_spotify_subscription_premium && project_spotify_is_new)
+	if(latest_version > project_version)
 	{
-		showDialog({ title: 'Information', body_class: 'dialog_message_div', body_content: 'Without Spotify Premium, Queue does not work properly. A workaround is to create a playlist as queue and toggle shuffle off if you want linear playback.<br><br>Queue should work if playing a playlist, artist or album before queuing tracks.<br><br>Manually playing local files does not work, but play when you play a playlists.', button1: null, button2: null, cookie: cookie });
+		var cookie = { id: 'hide_update_available_dialog_'+project_version, value: 'true', expires: 7 };
+		if(!isCookie(cookie.id)) showDialog({ title: 'Update Available', body_class: 'dialog_message_div', body_content: project_name+' '+latest_version+' has been released!', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?download'] }, cookie: cookie });
 	}
-	else
+
+	if(ua_is_android)
 	{
-		var latest_version = Cookies.get('latest_version');
-
-		if(parseFloat(latest_version) > project_version)
+		if(ua_is_android_app)
 		{
-			var cookie = { id: 'hide_update_available_dialog_'+project_version, value: 'true', expires: 7 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'Update Available', body_class: 'dialog_message_div', body_content: project_name+' '+latest_version+' has been released!', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?download'] }, cookie: cookie });
-		}
+			var versions = JSON.parse(Android.JSgetVersions());
 
-		if(ua_is_android)
+			var app_version = project_version;
+			var app_minimum_version = versions[1];
+
+			var android_app_version = versions[0];
+			var android_app_minimum_version = project_android_app_minimum_version;
+
+			var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
+
+			if(app_version < app_minimum_version || android_app_version < android_app_minimum_version)
+			{
+				showDialog({ title: 'App Versions Mismatch', body_class: 'dialog_message_div', body_content: 'The '+project_name+' version you are running is not compatible with your Android app version.<br><br>Long-press the back button on your device and make sure you have the latest version of '+project_name+' and the Android app.', button1: null, button2: null, cookie: null });
+			}
+			else if(!isCookie(cookie.id))
+			{
+				showDialog({ title: 'Android App Tip', body_class: 'dialog_message_div', body_content: 'You can use the hardware volume buttons on your device to control Spotify\'s volume.<br><br>There are also some extra features that can be enabled in Settings.', button1: null, button2: null, cookie: cookie });
+			}
+
+			var installed = Cookies.get('installed_'+project_version);
+			var current_time = getCurrentTime();
+
+			var cookie = { id: 'hide_rate_on_google_play_dialog_'+project_version, value: 'true', expires: 3650 };
+			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 24) showDialog({ title: 'Like this App?', body_class: 'dialog_message_div', body_content: 'Please rate '+project_name+' on Google Play.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'RATE', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
+
+			var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
+			if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48) showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
+		}
+		else
 		{
-			if(ua_is_android_app)
-			{
-				var cookie = { id: 'hide_android_app_versions_mismatch_dialog_'+project_version, value: 'true', expires: 1 };
-
-				if(!isCookie(cookie.id))
-				{
-					var versions = JSON.parse(Android.JSgetVersions());
-
-					var app_version = project_version;
-					var app_minimum_version = parseFloat(versions[1]);
-
-					var android_app_version = parseFloat(versions[0]);
-					var android_app_minimum_version = project_android_app_minimum_version;
-
-					if(app_version < app_minimum_version || android_app_version < android_app_minimum_version) showDialog({ title: 'App Versions Mismatch', body_class: 'dialog_message_div', body_content: 'The '+project_name+' version you are running is not compatible with this Android app version. Make sure you are running the latest version of both '+project_name+' and the Android app.', button1: null, button2: null, cookie: cookie });
-				}
-
-				var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
-				if(!isCookie(cookie.id)) showDialog({ title: 'Android App Tip', body_class: 'dialog_message_div', body_content: 'You can use the hardware volume buttons on your device to control Spotify\'s volume.<br><br>There are also some extra features that can be enabled in Settings.', button1: null, button2: null, cookie: cookie });
-
-				var installed = parseInt(Cookies.get('installed_'+project_version));
-				var current_time = getCurrentTime();
-
-				var cookie = { id: 'hide_rate_on_google_play_dialog_'+project_version, value: 'true', expires: 3650 };
-				if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 24) showDialog({ title: 'Like this App?', body_class: 'dialog_message_div', body_content: 'Please rate '+project_name+' on Google Play.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'RATE', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
-
-				var cookie = { id: 'hide_make_donation_'+project_version, value: 'true', expires: 3650 };
-				if(!isCookie(cookie.id) && current_time > installed + 1000 * 3600 * 48) showDialog({ title: 'Want to Contribute?', body_class: 'dialog_message_div', body_content: 'Please consider making a donation to support the development of '+project_name+'.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'MAKE DONATION', keys : ['actions'], values: ['hide_dialog make_donation'] }, cookie: cookie });
-			}
-			else
-			{
-				var cookie = { id: 'hide_android_app_dialog', value: 'true', expires: 1 };
-				if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
-			}
+			var cookie = { id: 'hide_android_app_dialog', value: 'true', expires: 1 };
+			if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
 		}
-		else if(ua_is_ios)
+	}
+	else if(ua_is_ios)
+	{
+		if(ua_is_standalone)
 		{
-			if(ua_is_standalone)
-			{
-				var cookie = { id: 'hide_ios_back_gesture_dialog', value: 'true', expires: 3650 };
-				if(!isCookie(cookie.id)) showDialog({ title: 'iOS Tip', body_class: 'dialog_message_div', body_content: 'Since you are running fullscreen and your device has no back button, you can swipe in from the right to go back.<br><br>Avoid the multitasking button at the center right of the screen on devices that run iOS 9 or newer that support it.', button1: null, button2: null, cookie: cookie });
-			}
-			else
-			{
-				var cookie = { id: 'hide_ios_home_screen_dialog', value: 'true', expires: 1 };
-				if(!isCookie(cookie.id)) showDialog({ title: 'iOS Warning', body_class: 'dialog_message_div', body_content: 'To function correctly, '+project_name+' should be added to your home screen.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
-			}
+			var cookie = { id: 'hide_ios_back_gesture_dialog', value: 'true', expires: 3650 };
+			if(!isCookie(cookie.id)) showDialog({ title: 'iOS Tip', body_class: 'dialog_message_div', body_content: 'Since you are running fullscreen and your device has no back button, you can swipe in from the right to go back.<br><br>Avoid the multitasking button at the center right of the screen on devices that run iOS 9 or newer that support it.', button1: null, button2: null, cookie: cookie });
 		}
-		else if(ua_is_os_x && !ua_is_standalone)
+		else
 		{
-			var cookie = { id: 'hide_ox_x_integration_dialog', value: 'true', expires: 3650 };
-			if(!isCookie(cookie.id)) showDialog({ title: 'OS X Tip', body_class: 'dialog_message_div', body_content: 'Install Fluid to run '+project_name+' as a standalone app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?os_x_integration'] }, cookie: cookie });
+			var cookie = { id: 'hide_ios_home_screen_dialog', value: 'true', expires: 1 };
+			if(!isCookie(cookie.id)) showDialog({ title: 'iOS Warning', body_class: 'dialog_message_div', body_content: 'To function correctly, '+project_name+' should be added to your home screen.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
 		}
+	}
+	else if(ua_is_os_x && !ua_is_standalone)
+	{
+		var cookie = { id: 'hide_ox_x_integration_dialog', value: 'true', expires: 3650 };
+		if(!isCookie(cookie.id)) showDialog({ title: 'OS X Tip', body_class: 'dialog_message_div', body_content: 'Install Fluid to run '+project_name+' as a standalone app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?os_x_integration'] }, cookie: cookie });
 	}
 }
 
@@ -2839,7 +2907,7 @@ function showNotification(title, body, icon, onclick, duration)
 		}
 	}
 
-	var duration = parseInt(duration * 1000);
+	var duration = duration * 1000;
 
 	clearTimeout(timeout_notification);
 
@@ -2861,7 +2929,7 @@ function setScrollPosition(position)
 	window.scrollTo(0, position);
 }
 
-function saveScrollPosition(action)
+function saveScrollPosition()
 {
 	if(scroll_position_save_disable) return;
 
@@ -2878,10 +2946,10 @@ function saveScrollPosition(action)
 
 		if(isCookie(cookie.id))
 		{
-			var cookie_a = Cookies.getJSON(cookie.id);
-			cookie_a.scroll_position = position;
+			var current_activity_cookie = Cookies.getJSON(cookie.id);
+			current_activity_cookie.scroll_position = position;
 
-			Cookies.set(cookie.id, JSON.stringify(cookie_a), { expires: cookie.expires, path: project_path });
+			Cookies.set(cookie.id, JSON.stringify(current_activity_cookie), { expires: cookie.expires, path: project_path });
 		}
 	}
 
@@ -2908,18 +2976,18 @@ function restoreScrollPosition()
 
 		if(isCookie(cookie.id))
 		{
-			var cookie_a = Cookies.getJSON(cookie.id);
+			var current_activity_cookie = Cookies.getJSON(cookie.id);
 
-			setScrollPosition(cookie_a.scroll_position);
+			setScrollPosition(current_activity_cookie.scroll_position);
 		}
 
-		return;	
+		return;
 	}
 	else if(typeof scroll_position[time] == 'undefined')
 	{
 		return;
 	}
-	
+
 	var position = scroll_position[time].position;
 
 	setScrollPosition(position);
@@ -2960,6 +3028,15 @@ function nativeAppLoad(is_paused)
 {
 	if(ua_is_android_app)
 	{
+		if(settings_persistent_notification)
+		{
+			Android.JSsetSharedBoolean('PERSISTENT_NOTIFICATION', true);
+		}
+		else
+		{
+			Android.JSsetSharedBoolean('PERSISTENT_NOTIFICATION', false);
+		}
+
 		if(settings_keep_screen_on)
 		{
 			Android.JSkeepScreenOn(true);
@@ -3006,15 +3083,6 @@ function nativeAppLoad(is_paused)
 			Android.JSsetSharedBoolean('SHAKE_TO_SKIP', false);
 		}
 
-		if(settings_persistent_notification)
-		{
-			Android.JSsetSharedBoolean('PERSISTENT_NOTIFICATION', true);
-		}
-		else
-		{
-			Android.JSsetSharedBoolean('PERSISTENT_NOTIFICATION', false);
-		}
-
 		var shareUri = urlToUri(Android.JSgetSharedString('SHARE_URI'));
 
 		if(shareUri != '')
@@ -3041,18 +3109,18 @@ function nativeAppLoad(is_paused)
 			Android.JSsetSharedString('SHARE_URI', '');
 		}
 
-		if('JSstartService' in window.Android) Android.JSstartService();
+		Android.JSstartService();
 	}
 }
 
 function setNativeAppStatusBarColor(color)
 {
-	if(ua_is_android_app && 'JSsetStatusBarColor' in window.Android) Android.JSsetStatusBarColor(color);
+	if(ua_is_android_app) Android.JSsetStatusBarColor(color);
 }
 
 function setNativeAppStatusBarColorFromImage(uri)
 {
-	if(ua_is_android_app && 'JSsetStatusBarColorFromImage' in window.Android && !isWidescreen()) Android.JSsetStatusBarColorFromImage(uri);
+	if(ua_is_android_app && !isWidescreen()) Android.JSsetStatusBarColorFromImage(uri);
 }
 
 function resetNativeAppStatusBarColor(hide)
@@ -3103,14 +3171,14 @@ function nativeAppAction(action)
 	}
 }
 
-function changeNativeAppComputer()
-{
-	if(ua_is_android_app) showDialog({ title: 'Change Computer', body_class: 'dialog_message_div', body_content: 'You can always go back to the list of computers by long-pressing the back button on your device.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys: ['actions'], values: ['confirm_change_native_app_computer'] }, cookie: null });
-}
-
 function confirmChangeNativeAppComputer()
 {
 	if(ua_is_android_app) Android.JSfinishActivity();
+}
+
+function changeNativeAppComputer()
+{
+	if(ua_is_android_app) showDialog({ title: 'Change Computer', body_class: 'dialog_message_div', body_content: 'You can always go back to the list of computers by long-pressing the back button on your device.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys: ['actions'], values: ['confirm_change_native_app_computer'] }, cookie: null });
 }
 
 function nativeAppCanCloseCover()
@@ -3146,6 +3214,8 @@ function enableKeyboardShortcuts()
 			Mousetrap.bind('z', function(event) { onKeyboardKeyPressed('z', event); }, 'keyup');
 			Mousetrap.bind('x', function(event) { onKeyboardKeyPressed('x', event); }, 'keyup');
 			Mousetrap.bind('c', function(event) { onKeyboardKeyPressed('c', event); }, 'keyup');
+			Mousetrap.bind('v', function(event) { onKeyboardKeyPressed('v', event); }, 'keyup');
+			Mousetrap.bind('b', function(event) { onKeyboardKeyPressed('b', event); }, 'keyup');
 			Mousetrap.bind('tab', function(event) { onKeyboardKeyPressed('tab', event); }, 'keydown');
 			Mousetrap.bind('enter', function(event) { onKeyboardKeyPressed('enter', event); }, 'keyup');
 			Mousetrap.bind('esc', function(event) { onKeyboardKeyPressed('esc', event); }, 'keyup');
@@ -3170,11 +3240,6 @@ function enableKeyboardShortcuts()
 
 // Check stuff
 
-function isWidescreen()
-{
-	return ($(window).width() >= 1024)
-}
-
 function checkForErrors()
 {
 	var cookie = { id: 'test', value: 'true' };
@@ -3190,7 +3255,7 @@ function checkForErrors()
 function checkForUpdates(type)
 {
 	var latest_version_cookie = { id: 'latest_version', expires: 3650 };
-	var latest_version = parseFloat(Cookies.get(latest_version_cookie.id));
+	var latest_version = Cookies.get(latest_version_cookie.id);
 
 	var last_update_check_cookie = { id: 'last_update_check', value: getCurrentTime(), expires: 3650 };
 	var last_update_check = Cookies.get(last_update_check_cookie.id);
@@ -3243,12 +3308,9 @@ function checkIfNewVersionIsInstalled(version)
 	if(version > project_version) showDialog({ title: 'New Version Installed', body_class: 'dialog_message_div', body_content: 'A new version of '+project_name+' has been installed!<br><br>You must now start the daemon on the computer running Spotify. Tap Help below to find out how. After it is done, tap Reload.', button1: { text: 'RELOAD', keys : ['actions'], values: ['reload_app'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?start_daemon'] }, cookie: null });
 }
 
-function shc(string, characters)
+function isWidescreen()
 {
-	var string = string.toLowerCase();
-	var characters = characters.toLowerCase();
-
-	return (string.indexOf(characters) != -1);
+	return ($(window).width() >= 1024)
 }
 
 function isDisplayed(id)
@@ -3271,16 +3333,19 @@ function getCurrentTime()
 	return new Date().getTime();
 }
 
+function shc(string, characters)
+{
+	var string = string.toLowerCase();
+	var characters = characters.toLowerCase();
+
+	return (string.indexOf(characters) != -1);
+}
+
 // Manipulate stuff
 
 function base64Decode(string)
 {
 	return Base64.decode(string);
-}
-
-function booleanToString(bool)
-{
-	return (bool) ? 'true' : 'false';
 }
 
 function stringToBoolean(string)
@@ -3307,7 +3372,7 @@ function hexToRgb(hex)
 {
 	var rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 
-	return parseInt(rgb[1], 16)+', '+parseInt(rgb[2], 16)+', '+ parseInt(rgb[3], 16);
+	return parseInt(rgb[1], 16)+', '+parseInt(rgb[2], 16)+', '+parseInt(rgb[3], 16);
 }
 
 // URIs

@@ -71,6 +71,14 @@ function onKeyboardKeyPressed(key, event)
 	{
 		remoteControl('next');
 	}
+	else if(key == 'v')
+	{
+		seekPosition('seek_back');
+	}
+	else if(key == 'b')
+	{
+		seekPosition('seek_forward');
+	}
 	else if(key == 'tab')
 	{
 		event.preventDefault();

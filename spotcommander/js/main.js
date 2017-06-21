@@ -25,14 +25,14 @@ function setGlobalVariables(global_variables)
 
 	// Project
 	project_name = global_variables.project_name;
-	project_version = parseFloat(global_variables.project_version);
-	project_serial = parseInt(global_variables.project_serial);
+	project_version = global_variables.project_version;
+	project_serial = global_variables.project_serial;
 	project_path = window.location.pathname;
 	project_website = global_variables.project_website;
 	project_website_https = global_variables.project_website_https;
 	project_developer = global_variables.project_developer;
 	project_android_app_minimum_version = parseFloat(global_variables.project_android_app_minimum_version);
-	project_error_code = parseInt(global_variables.project_error_code);
+	project_error_code = global_variables.project_error_code;
 	project_is_authorized_with_spotify = global_variables.project_is_authorized_with_spotify;
 	project_is_spotify_subscription_premium = global_variables.project_is_spotify_subscription_premium;
 	project_spotify_is_new = global_variables.project_spotify_is_new;
@@ -138,7 +138,7 @@ function setGlobalVariables(global_variables)
 	nowplaying_refreshing = false;
 	nowplaying_cover_art_moving = false;
 	nowplaying_play_pause = 'play';
-	nowplaying_last_data = '';
+	nowplaying_last_metadata = '';
 	nowplaying_last_uri = '';
 
 	// Cover art
@@ -150,13 +150,13 @@ function setGlobalVariables(global_variables)
 		{ setting: 'settings_keyboard_shortcuts' , value: (ua_supports_touch) ? 'false' : 'true' },
 		{ setting: 'settings_notifications' , value: 'false' },
 		{ setting: 'settings_update_lyrics' , value: 'false' },
+		{ setting: 'settings_persistent_notification' , value: 'false' },
 		{ setting: 'settings_keep_screen_on' , value: 'false' },
 		{ setting: 'settings_pause_on_incoming_call' , value: 'false' },
 		{ setting: 'settings_pause_on_outgoing_call' , value: 'false' },
 		{ setting: 'settings_flip_to_pause' , value: 'false' },
 		{ setting: 'settings_shake_to_skip' , value: 'false' },
 		{ setting: 'settings_shake_sensitivity' , value: 'normal' },
-		{ setting: 'settings_persistent_notification' , value: 'false' },
 		{ setting: 'settings_sort_playlists' , value: 'default' },
 		{ setting: 'settings_sort_playlist_tracks' , value: 'default' },
 		{ setting: 'settings_sort_library_tracks' , value: 'default' },
@@ -176,13 +176,13 @@ function setGlobalVariables(global_variables)
 	settings_notifications = stringToBoolean(Cookies.get('settings_notifications'));
 	settings_update_lyrics = stringToBoolean(Cookies.get('settings_update_lyrics'));
 	settings_keyboard_shortcuts = stringToBoolean(Cookies.get('settings_keyboard_shortcuts'));
+	settings_persistent_notification = stringToBoolean(Cookies.get('settings_persistent_notification'));
 	settings_keep_screen_on = stringToBoolean(Cookies.get('settings_keep_screen_on'));
 	settings_pause_on_incoming_call = stringToBoolean(Cookies.get('settings_pause_on_incoming_call'));
 	settings_pause_on_outgoing_call = stringToBoolean(Cookies.get('settings_pause_on_outgoing_call'));
 	settings_flip_to_pause = stringToBoolean(Cookies.get('settings_flip_to_pause'));
 	settings_shake_to_skip = stringToBoolean(Cookies.get('settings_shake_to_skip'));
 	settings_shake_sensitivity = Cookies.get('settings_shake_sensitivity');
-	settings_persistent_notification = stringToBoolean(Cookies.get('settings_persistent_notification'));
 }
 
 // Window load
@@ -237,7 +237,7 @@ $(window).on('load', function()
 			{
 				scrolling = false;
 
-				saveScrollPosition(null);
+				saveScrollPosition();
 			}, 250);
 		});
 
@@ -402,7 +402,7 @@ $(window).on('load', function()
 				var gesture_block = 50;
 
 				if(!pointer_gesture_done && !nowplaying_cover_art_moving && $(event.target).attr('id') != 'nowplaying_volume_slider' && pointer_nowplaying_moved_y > gesture_trigger && Math.abs(pointer_nowplaying_moved_x) < gesture_block)
-				{	
+				{
 					hideNowplaying();
 					pointer_gesture_done = true;
 				}
@@ -614,12 +614,7 @@ $(window).on('load', function()
 				}
 				else if(action == 'toggle_list_item_actions')
 				{
-					var list_item_actions_div = $('div.list_item_actions_div', element.parent());
-					var is_hidden = !isDisplayed(list_item_actions_div);
-
-					hideListItemActions();
-
-					if(is_hidden) showListItemActions(element);
+					toggleListItemActions(element);
 				}
 				else if(action == 'show_all_list_items')
 				{
@@ -673,10 +668,6 @@ $(window).on('load', function()
 				else if(action == 'remove_all_playlists')
 				{
 					removeAllPlaylists();
-				}
-				else if(action == 'confirm_clear_cache')
-				{
-					confirmClearCache();
 				}
 				else if(action == 'clear_cache')
 				{
@@ -745,7 +736,7 @@ $(window).on('load', function()
 				}
 				else if(action == 'play_uris')
 				{
-					playUris(data.uri, data.uris);
+					playUris(data.uri, data.queueuris);
 				}
 				else if(action == 'transfer_device')
 				{
@@ -809,7 +800,7 @@ $(window).on('load', function()
 				}
 				else if(action == 'confirm_remove_playlist')
 				{
-					confirmRemovePlaylist(data.id, data.uri);
+					confirmRemovePlaylist(data.id, data.name, data.uri);
 				}
 				else if(action == 'remove_playlist')
 				{
@@ -873,38 +864,7 @@ $(window).on('load', function()
 				}
 				else if(action == 'resize_cover_art')
 				{
-					if(ua_supports_csstransitions) element.addClass('show_hide_cover_art_animation');
-
-					var container_width = $('div#cover_art_div').width();
-					var width = element.data('width');
-					var height = element.data('height');
-					var minimum_height = element.height();
-					var resized = element.data('resized');
-
-					if(resized)
-					{
-						element.height('').data('resized', false);
-					}
-					else
-					{
-						if(width > container_width)
-						{
-							var ratio = container_width / width;
-							var height = Math.floor(height * ratio);
-
-							if(height > minimum_height) element.height(height);
-						}
-						else if(isWidescreen())
-						{
-							element.height(height);
-						}
-						else
-						{
-							element.height(container_width);
-						}
-
-						element.data('resized', true);
-					}
+					resizeCoverArt(element);
 				}
 				else if(action == 'set_cookie')
 				{
@@ -912,9 +872,9 @@ $(window).on('load', function()
 				}
 				else if(action == 'reload_app')
 				{
-					window.location.replace('.');
+					reloadApp();
 				}
-			}	
+			}
 		});
 
 		// Forms
@@ -937,17 +897,19 @@ $(window).on('load', function()
 			else if(id == 'create_playlist_form')
 			{
 				var name = $('input:text#create_playlist_name_input').val();
-				var make_public = ($('input:checkbox#create_playlist_make_public_input').prop('checked')) ? 'true' : 'false';
+				var make_public = ($('input:checkbox#create_playlist_make_public_input').prop('checked'));
+				var make_collaborative = ($('input:checkbox#create_playlist_make_collaborative_input').prop('checked'));
 
-				createPlaylist(name, make_public);
+				createPlaylist(name, make_public, make_collaborative);
 			}
 			else if(id == 'edit_playlist_form')
 			{
 				var name = $('input:text#edit_playlist_name_input').val();
 				var uri = $('input:hidden#edit_playlist_uri_input').val();
-				var make_public = ($('input:checkbox#edit_playlist_make_public_input').prop('checked')) ? 'true' : 'false';
+				var make_public = ($('input:checkbox#edit_playlist_make_public_input').prop('checked'));
+				var make_collaborative = ($('input:checkbox#edit_playlist_make_collaborative_input').prop('checked'));
 
-				editPlaylist(name, uri, make_public);
+				editPlaylist(name, uri, make_public, make_collaborative);
 			}
 			else if(id == 'search_form')
 			{
@@ -1026,23 +988,20 @@ $(window).on('load', function()
 			}
 		});
 
-		// Hash change
+		// Load app
 		$(window).on('hashchange', function()
 		{
 			showActivity();
 		});
 
-		// Installed
 		var cookie = { id: 'installed_'+project_version, value: getCurrentTime(), expires: 3650 };
-
 		if(!isCookie(cookie.id)) Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
 
-		// Show activity 
 		var cookie = { id: 'current_activity_'+project_version };
 
 		if(ua_is_ios && ua_is_standalone && isCookie(cookie.id))
 		{
-			var a = JSON.parse($.cookie(cookie.id));
+			var a = Cookies.getJSON(cookie.id);
 
 			activityLoading();
 			changeActivity(a.activity, a.subactivity, a.args);
@@ -1052,10 +1011,8 @@ $(window).on('load', function()
 			showActivity();
 		}
 
-		// Keyboard shortcuts
 		if(settings_keyboard_shortcuts) enableKeyboardShortcuts();
 
-		// Now playing
 		setTimeout(function()
 		{
 			nativeAppLoad(false);

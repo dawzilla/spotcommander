@@ -60,286 +60,286 @@ div.img_72_div
 
 div#nowplaying_cover_art_div
 {
-	background-image: url("../img/no-cover-art-640.png?13200");
+	background-image: url("../img/no-cover-art-640.png?13300");
 }
 
 /* 1x images */
 
-div.album_grey_24_img_div { background-image: url("../img/album-grey-24.png?13200"); }
-div.back_white_24_img_div { background-image: url("../img/back-white-24.png?13200"); }
-div.check_white_24_img_div { background-image: url("../img/check-white-24.png?13200"); }
-div.check_grey_24_img_div { background-image: url("../img/check-grey-24.png?13200"); }
-div.close_grey_24_img_div { background-image: url("../img/close-grey-24.png?13200"); }
-div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36.png?13200"); }
-div.down_grey_24_img_div { background-image: url("../img/down-grey-24.png?13200"); }
-div.down_white_24_img_div { background-image: url("../img/down-white-24.png?13200"); }
-div.download_white_24_img_div { background-image: url("../img/download-white-24.png?13200"); }
-div.exit_white_24_img_div { background-image: url("../img/exit-white-24.png?13200"); }
-div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48.png?13200"); }
-div.forward_white_24_img_div { background-image: url("../img/forward-white-24.png?13200"); }
-div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48.png?13200"); }
-div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24.png?13200"); }
-div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24.png?13200"); }
-div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24.png?13200"); }
-div.information_grey_48_img_div { background-image: url("../img/information-grey-48.png?13200"); }
-div.globe_white_24_img_div { background-image: url("../img/globe-white-24.png?13200"); }
-div.label_grey_24_img_div { background-image: url("../img/label-grey-24.png?13200"); }
-div.library_grey_36_img_div { background-image: url("../img/library-grey-36.png?13200"); }
-div.loading_white_24_img_div { background-image: url("../img/loading-white-24.gif?13200"); }
-div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24.png?13200"); }
-div.menu_white_24_img_div { background-image: url("../img/menu-white-24.png?13200"); }
-div.more_grey_24_img_div { background-image: url("../img/more-grey-24.png?13200"); }
-div.more_white_24_img_div { background-image: url("../img/more-white-24.png?13200"); }
-div.next_white_24_img_div { background-image: url("../img/next-white-24.png?13200"); }
-div.next_white_48_img_div { background-image: url("../img/next-white-48.png?13200"); }
-div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18.png?13200"); }
-div.pause_white_24_img_div { background-image: url("../img/pause-white-24.png?13200"); }
-div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72.png?13200"); }
-div.person_grey_24_img_div { background-image: url("../img/person-grey-24.png?13200"); }
-div.person_grey_72_img_div { background-image: url("../img/person-grey-72.png?13200"); }
-div.play_grey_24_img_div { background-image: url("../img/play-grey-24.png?13200"); }
-div.play_white_24_img_div { background-image: url("../img/play-white-24.png?13200"); }
-div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72.png?13200"); }
-div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24.png?13200"); }
-div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36.png?13200"); }
-div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24.png?13200"); }
-div.plus_white_24_img_div { background-image: url("../img/plus-white-24.png?13200"); }
-div.power_white_24_img_div { background-image: url("../img/power-white-24.png?13200"); }
-div.previous_white_24_img_div { background-image: url("../img/previous-white-24.png?13200"); }
-div.previous_white_48_img_div { background-image: url("../img/previous-white-48.png?13200"); }
-div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24.png?13200"); }
-div.queue_white_24_img_div { background-image: url("../img/queue-white-24.png?13200"); }
-div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24.png?13200"); }
-div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24.png?13200"); }
-div.search_grey_24_img_div { background-image: url("../img/search-grey-24.png?13200"); }
-div.search_grey_36_img_div { background-image: url("../img/search-grey-36.png?13200"); }
-div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48.png?13200"); }
-div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48.png?13200"); }
-div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4.png?13200"); }
-div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56.png?13200"); }
-div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48.png?13200"); }
-div.share_grey_24_img_div { background-image: url("../img/share-grey-24.png?13200"); }
-div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24.png?13200"); }
-div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18.png?13200"); }
-div.star_grey_24_img_div { background-image: url("../img/star-grey-24.png?13200"); }
-div.top_grey_24_img_div { background-image: url("../img/top-grey-24.png?13200"); }
-div.trash_white_24_img_div { background-image: url("../img/trash-white-24.png?13200"); }
-div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24.png?13200"); }
-div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48.png?13200"); }
-div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24.png?13200"); }
-div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24.png?13200"); }
-div.up_grey_24_img_div { background-image: url("../img/up-grey-24.png?13200"); }
-div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24.png?13200"); }
+div.album_grey_24_img_div { background-image: url("../img/album-grey-24.png?13300"); }
+div.back_white_24_img_div { background-image: url("../img/back-white-24.png?13300"); }
+div.check_white_24_img_div { background-image: url("../img/check-white-24.png?13300"); }
+div.check_grey_24_img_div { background-image: url("../img/check-grey-24.png?13300"); }
+div.close_grey_24_img_div { background-image: url("../img/close-grey-24.png?13300"); }
+div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36.png?13300"); }
+div.down_grey_24_img_div { background-image: url("../img/down-grey-24.png?13300"); }
+div.down_white_24_img_div { background-image: url("../img/down-white-24.png?13300"); }
+div.download_white_24_img_div { background-image: url("../img/download-white-24.png?13300"); }
+div.exit_white_24_img_div { background-image: url("../img/exit-white-24.png?13300"); }
+div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48.png?13300"); }
+div.forward_white_24_img_div { background-image: url("../img/forward-white-24.png?13300"); }
+div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48.png?13300"); }
+div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24.png?13300"); }
+div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24.png?13300"); }
+div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24.png?13300"); }
+div.information_grey_48_img_div { background-image: url("../img/information-grey-48.png?13300"); }
+div.globe_white_24_img_div { background-image: url("../img/globe-white-24.png?13300"); }
+div.label_grey_24_img_div { background-image: url("../img/label-grey-24.png?13300"); }
+div.library_grey_36_img_div { background-image: url("../img/library-grey-36.png?13300"); }
+div.loading_white_24_img_div { background-image: url("../img/loading-white-24.gif?13300"); }
+div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24.png?13300"); }
+div.menu_white_24_img_div { background-image: url("../img/menu-white-24.png?13300"); }
+div.more_grey_24_img_div { background-image: url("../img/more-grey-24.png?13300"); }
+div.more_white_24_img_div { background-image: url("../img/more-white-24.png?13300"); }
+div.next_white_24_img_div { background-image: url("../img/next-white-24.png?13300"); }
+div.next_white_48_img_div { background-image: url("../img/next-white-48.png?13300"); }
+div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18.png?13300"); }
+div.pause_white_24_img_div { background-image: url("../img/pause-white-24.png?13300"); }
+div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72.png?13300"); }
+div.person_grey_24_img_div { background-image: url("../img/person-grey-24.png?13300"); }
+div.person_grey_72_img_div { background-image: url("../img/person-grey-72.png?13300"); }
+div.play_grey_24_img_div { background-image: url("../img/play-grey-24.png?13300"); }
+div.play_white_24_img_div { background-image: url("../img/play-white-24.png?13300"); }
+div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72.png?13300"); }
+div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24.png?13300"); }
+div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36.png?13300"); }
+div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24.png?13300"); }
+div.plus_white_24_img_div { background-image: url("../img/plus-white-24.png?13300"); }
+div.power_white_24_img_div { background-image: url("../img/power-white-24.png?13300"); }
+div.previous_white_24_img_div { background-image: url("../img/previous-white-24.png?13300"); }
+div.previous_white_48_img_div { background-image: url("../img/previous-white-48.png?13300"); }
+div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24.png?13300"); }
+div.queue_white_24_img_div { background-image: url("../img/queue-white-24.png?13300"); }
+div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24.png?13300"); }
+div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24.png?13300"); }
+div.search_grey_24_img_div { background-image: url("../img/search-grey-24.png?13300"); }
+div.search_grey_36_img_div { background-image: url("../img/search-grey-36.png?13300"); }
+div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48.png?13300"); }
+div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48.png?13300"); }
+div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4.png?13300"); }
+div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56.png?13300"); }
+div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48.png?13300"); }
+div.share_grey_24_img_div { background-image: url("../img/share-grey-24.png?13300"); }
+div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24.png?13300"); }
+div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18.png?13300"); }
+div.star_grey_24_img_div { background-image: url("../img/star-grey-24.png?13300"); }
+div.top_grey_24_img_div { background-image: url("../img/top-grey-24.png?13300"); }
+div.trash_white_24_img_div { background-image: url("../img/trash-white-24.png?13300"); }
+div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24.png?13300"); }
+div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48.png?13300"); }
+div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24.png?13300"); }
+div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24.png?13300"); }
+div.up_grey_24_img_div { background-image: url("../img/up-grey-24.png?13300"); }
+div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24.png?13300"); }
 
 /* 2x images */
 
 @media screen and (min-resolution: 2dppx), screen and (-webkit-min-device-pixel-ratio: 2)
 {
-	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-2x.png?13200"); }
-	div.back_white_24_img_div { background-image: url("../img/back-white-24-2x.png?13200"); }
-	div.check_white_24_img_div { background-image: url("../img/check-white-24-2x.png?13200"); }
-	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-2x.png?13200"); }
-	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-2x.png?13200"); }
-	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-2x.png?13200"); }
-	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-2x.png?13200"); }
-	div.down_white_24_img_div { background-image: url("../img/down-white-24-2x.png?13200"); }
-	div.download_white_24_img_div { background-image: url("../img/download-white-24-2x.png?13200"); }
-	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-2x.png?13200"); }
-	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-2x.png?13200"); }
-	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-2x.png?13200"); }
-	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-2x.png?13200"); }
-	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-2x.png?13200"); }
-	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-2x.png?13200"); }
-	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-2x.png?13200"); }
-	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-2x.png?13200"); }
-	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-2x.png?13200"); }
-	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-2x.png?13200"); }
-	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-2x.png?13200"); }
-	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-2x.gif?13200"); }
-	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-2x.png?13200"); }
-	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-2x.png?13200"); }
-	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-2x.png?13200"); }
-	div.more_white_24_img_div { background-image: url("../img/more-white-24-2x.png?13200"); }
-	div.next_white_24_img_div { background-image: url("../img/next-white-24-2x.png?13200"); }
-	div.next_white_48_img_div { background-image: url("../img/next-white-48-2x.png?13200"); }
-	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-2x.png?13200"); }
-	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-2x.png?13200"); }
-	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-2x.png?13200"); }
-	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-2x.png?13200"); }
-	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-2x.png?13200"); }
-	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-2x.png?13200"); }
-	div.play_white_24_img_div { background-image: url("../img/play-white-24-2x.png?13200"); }
-	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-2x.png?13200"); }
-	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-2x.png?13200"); }
-	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-2x.png?13200"); }
-	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-2x.png?13200"); }
-	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-2x.png?13200"); }
-	div.power_white_24_img_div { background-image: url("../img/power-white-24-2x.png?13200"); }
-	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-2x.png?13200"); }
-	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-2x.png?13200"); }
-	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-2x.png?13200"); }
-	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-2x.png?13200"); }
-	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-2x.png?13200"); }
-	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-2x.png?13200"); }
-	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-2x.png?13200"); }
-	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-2x.png?13200"); }
-	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-2x.png?13200"); }
-	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-2x.png?13200"); }
-	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-2x.png?13200"); }
-	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-2x.png?13200"); }
-	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-2x.png?13200"); }
-	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-2x.png?13200"); }
-	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-2x.png?13200"); }
-	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-2x.png?13200"); }
-	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-2x.png?13200"); }
-	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-2x.png?13200"); }
-	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-2x.png?13200"); }
-	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-2x.png?13200"); }
-	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-2x.png?13200"); }
-	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-2x.png?13200"); }
-	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-2x.png?13200"); }
-	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-2x.png?13200"); }
-	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-2x.png?13200"); }
+	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-2x.png?13300"); }
+	div.back_white_24_img_div { background-image: url("../img/back-white-24-2x.png?13300"); }
+	div.check_white_24_img_div { background-image: url("../img/check-white-24-2x.png?13300"); }
+	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-2x.png?13300"); }
+	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-2x.png?13300"); }
+	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-2x.png?13300"); }
+	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-2x.png?13300"); }
+	div.down_white_24_img_div { background-image: url("../img/down-white-24-2x.png?13300"); }
+	div.download_white_24_img_div { background-image: url("../img/download-white-24-2x.png?13300"); }
+	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-2x.png?13300"); }
+	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-2x.png?13300"); }
+	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-2x.png?13300"); }
+	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-2x.png?13300"); }
+	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-2x.png?13300"); }
+	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-2x.png?13300"); }
+	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-2x.png?13300"); }
+	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-2x.png?13300"); }
+	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-2x.png?13300"); }
+	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-2x.png?13300"); }
+	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-2x.png?13300"); }
+	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-2x.gif?13300"); }
+	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-2x.png?13300"); }
+	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-2x.png?13300"); }
+	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-2x.png?13300"); }
+	div.more_white_24_img_div { background-image: url("../img/more-white-24-2x.png?13300"); }
+	div.next_white_24_img_div { background-image: url("../img/next-white-24-2x.png?13300"); }
+	div.next_white_48_img_div { background-image: url("../img/next-white-48-2x.png?13300"); }
+	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-2x.png?13300"); }
+	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-2x.png?13300"); }
+	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-2x.png?13300"); }
+	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-2x.png?13300"); }
+	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-2x.png?13300"); }
+	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-2x.png?13300"); }
+	div.play_white_24_img_div { background-image: url("../img/play-white-24-2x.png?13300"); }
+	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-2x.png?13300"); }
+	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-2x.png?13300"); }
+	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-2x.png?13300"); }
+	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-2x.png?13300"); }
+	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-2x.png?13300"); }
+	div.power_white_24_img_div { background-image: url("../img/power-white-24-2x.png?13300"); }
+	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-2x.png?13300"); }
+	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-2x.png?13300"); }
+	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-2x.png?13300"); }
+	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-2x.png?13300"); }
+	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-2x.png?13300"); }
+	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-2x.png?13300"); }
+	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-2x.png?13300"); }
+	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-2x.png?13300"); }
+	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-2x.png?13300"); }
+	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-2x.png?13300"); }
+	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-2x.png?13300"); }
+	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-2x.png?13300"); }
+	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-2x.png?13300"); }
+	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-2x.png?13300"); }
+	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-2x.png?13300"); }
+	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-2x.png?13300"); }
+	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-2x.png?13300"); }
+	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-2x.png?13300"); }
+	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-2x.png?13300"); }
+	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-2x.png?13300"); }
+	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-2x.png?13300"); }
+	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-2x.png?13300"); }
+	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-2x.png?13300"); }
+	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-2x.png?13300"); }
+	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-2x.png?13300"); }
 }
 
 /* 3x images */
 
 @media screen and (min-resolution: 3dppx), screen and (-webkit-min-device-pixel-ratio: 3)
 {
-	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-3x.png?13200"); }
-	div.back_white_24_img_div { background-image: url("../img/back-white-24-3x.png?13200"); }
-	div.check_white_24_img_div { background-image: url("../img/check-white-24-3x.png?13200"); }
-	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-3x.png?13200"); }
-	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-3x.png?13200"); }
-	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-3x.png?13200"); }
-	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-3x.png?13200"); }
-	div.down_white_24_img_div { background-image: url("../img/down-white-24-3x.png?13200"); }
-	div.download_white_24_img_div { background-image: url("../img/download-white-24-3x.png?13200"); }
-	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-3x.png?13200"); }
-	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-3x.png?13200"); }
-	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-3x.png?13200"); }
-	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-3x.png?13200"); }
-	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-3x.png?13200"); }
-	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-3x.png?13200"); }
-	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-3x.png?13200"); }
-	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-3x.png?13200"); }
-	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-3x.png?13200"); }
-	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-3x.png?13200"); }
-	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-3x.png?13200"); }
-	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-3x.gif?13200"); }
-	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-3x.png?13200"); }
-	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-3x.png?13200"); }
-	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-3x.png?13200"); }
-	div.more_white_24_img_div { background-image: url("../img/more-white-24-3x.png?13200"); }
-	div.next_white_24_img_div { background-image: url("../img/next-white-24-3x.png?13200"); }
-	div.next_white_48_img_div { background-image: url("../img/next-white-48-3x.png?13200"); }
-	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-3x.png?13200"); }
-	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-3x.png?13200"); }
-	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-3x.png?13200"); }
-	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-3x.png?13200"); }
-	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-3x.png?13200"); }
-	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-3x.png?13200"); }
-	div.play_white_24_img_div { background-image: url("../img/play-white-24-3x.png?13200"); }
-	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-3x.png?13200"); }
-	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-3x.png?13200"); }
-	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-3x.png?13200"); }
-	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-3x.png?13200"); }
-	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-3x.png?13200"); }
-	div.power_white_24_img_div { background-image: url("../img/power-white-24-3x.png?13200"); }
-	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-3x.png?13200"); }
-	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-3x.png?13200"); }
-	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-3x.png?13200"); }
-	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-3x.png?13200"); }
-	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-3x.png?13200"); }
-	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-3x.png?13200"); }
-	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-3x.png?13200"); }
-	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-3x.png?13200"); }
-	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-3x.png?13200"); }
-	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-3x.png?13200"); }
-	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-3x.png?13200"); }
-	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-3x.png?13200"); }
-	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-3x.png?13200"); }
-	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-3x.png?13200"); }
-	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-3x.png?13200"); }
-	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-3x.png?13200"); }
-	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-3x.png?13200"); }
-	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-3x.png?13200"); }
-	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-3x.png?13200"); }
-	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-3x.png?13200"); }
-	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-3x.png?13200"); }
-	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-3x.png?13200"); }
-	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-3x.png?13200"); }
-	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-3x.png?13200"); }
-	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-3x.png?13200"); }
+	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-3x.png?13300"); }
+	div.back_white_24_img_div { background-image: url("../img/back-white-24-3x.png?13300"); }
+	div.check_white_24_img_div { background-image: url("../img/check-white-24-3x.png?13300"); }
+	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-3x.png?13300"); }
+	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-3x.png?13300"); }
+	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-3x.png?13300"); }
+	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-3x.png?13300"); }
+	div.down_white_24_img_div { background-image: url("../img/down-white-24-3x.png?13300"); }
+	div.download_white_24_img_div { background-image: url("../img/download-white-24-3x.png?13300"); }
+	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-3x.png?13300"); }
+	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-3x.png?13300"); }
+	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-3x.png?13300"); }
+	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-3x.png?13300"); }
+	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-3x.png?13300"); }
+	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-3x.png?13300"); }
+	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-3x.png?13300"); }
+	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-3x.png?13300"); }
+	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-3x.png?13300"); }
+	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-3x.png?13300"); }
+	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-3x.png?13300"); }
+	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-3x.gif?13300"); }
+	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-3x.png?13300"); }
+	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-3x.png?13300"); }
+	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-3x.png?13300"); }
+	div.more_white_24_img_div { background-image: url("../img/more-white-24-3x.png?13300"); }
+	div.next_white_24_img_div { background-image: url("../img/next-white-24-3x.png?13300"); }
+	div.next_white_48_img_div { background-image: url("../img/next-white-48-3x.png?13300"); }
+	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-3x.png?13300"); }
+	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-3x.png?13300"); }
+	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-3x.png?13300"); }
+	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-3x.png?13300"); }
+	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-3x.png?13300"); }
+	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-3x.png?13300"); }
+	div.play_white_24_img_div { background-image: url("../img/play-white-24-3x.png?13300"); }
+	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-3x.png?13300"); }
+	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-3x.png?13300"); }
+	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-3x.png?13300"); }
+	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-3x.png?13300"); }
+	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-3x.png?13300"); }
+	div.power_white_24_img_div { background-image: url("../img/power-white-24-3x.png?13300"); }
+	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-3x.png?13300"); }
+	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-3x.png?13300"); }
+	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-3x.png?13300"); }
+	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-3x.png?13300"); }
+	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-3x.png?13300"); }
+	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-3x.png?13300"); }
+	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-3x.png?13300"); }
+	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-3x.png?13300"); }
+	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-3x.png?13300"); }
+	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-3x.png?13300"); }
+	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-3x.png?13300"); }
+	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-3x.png?13300"); }
+	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-3x.png?13300"); }
+	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-3x.png?13300"); }
+	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-3x.png?13300"); }
+	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-3x.png?13300"); }
+	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-3x.png?13300"); }
+	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-3x.png?13300"); }
+	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-3x.png?13300"); }
+	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-3x.png?13300"); }
+	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-3x.png?13300"); }
+	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-3x.png?13300"); }
+	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-3x.png?13300"); }
+	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-3x.png?13300"); }
+	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-3x.png?13300"); }
 }
 
 /* 4x images */
 
 @media screen and (min-resolution: 4dppx), screen and (-webkit-min-device-pixel-ratio: 4)
 {
-	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-4x.png?13200"); }
-	div.back_white_24_img_div { background-image: url("../img/back-white-24-4x.png?13200"); }
-	div.check_white_24_img_div { background-image: url("../img/check-white-24-4x.png?13200"); }
-	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-4x.png?13200"); }
-	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-4x.png?13200"); }
-	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-4x.png?13200"); }
-	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-4x.png?13200"); }
-	div.down_white_24_img_div { background-image: url("../img/down-white-24-4x.png?13200"); }
-	div.download_white_24_img_div { background-image: url("../img/download-white-24-4x.png?13200"); }
-	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-4x.png?13200"); }
-	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-4x.png?13200"); }
-	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-4x.png?13200"); }
-	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-4x.png?13200"); }
-	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-4x.png?13200"); }
-	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-4x.png?13200"); }
-	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-4x.png?13200"); }
-	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-4x.png?13200"); }
-	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-4x.png?13200"); }
-	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-4x.png?13200"); }
-	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-4x.png?13200"); }
-	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-4x.gif?13200"); }
-	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-4x.png?13200"); }
-	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-4x.png?13200"); }
-	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-4x.png?13200"); }
-	div.more_white_24_img_div { background-image: url("../img/more-white-24-4x.png?13200"); }
-	div.next_white_24_img_div { background-image: url("../img/next-white-24-4x.png?13200"); }
-	div.next_white_48_img_div { background-image: url("../img/next-white-48-4x.png?13200"); }
-	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-4x.png?13200"); }
-	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-4x.png?13200"); }
-	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-4x.png?13200"); }
-	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-4x.png?13200"); }
-	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-4x.png?13200"); }
-	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-4x.png?13200"); }
-	div.play_white_24_img_div { background-image: url("../img/play-white-24-4x.png?13200"); }
-	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-4x.png?13200"); }
-	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-4x.png?13200"); }
-	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-4x.png?13200"); }
-	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-4x.png?13200"); }
-	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-4x.png?13200"); }
-	div.power_white_24_img_div { background-image: url("../img/power-white-24-4x.png?13200"); }
-	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-4x.png?13200"); }
-	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-4x.png?13200"); }
-	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-4x.png?13200"); }
-	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-4x.png?13200"); }
-	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-4x.png?13200"); }
-	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-4x.png?13200"); }
-	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-4x.png?13200"); }
-	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-4x.png?13200"); }
-	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-4x.png?13200"); }
-	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-4x.png?13200"); }
-	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-4x.png?13200"); }
-	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-4x.png?13200"); }
-	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-4x.png?13200"); }
-	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-4x.png?13200"); }
-	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-4x.png?13200"); }
-	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-4x.png?13200"); }
-	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-4x.png?13200"); }
-	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-4x.png?13200"); }
-	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-4x.png?13200"); }
-	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-4x.png?13200"); }
-	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-4x.png?13200"); }
-	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-4x.png?13200"); }
-	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-4x.png?13200"); }
-	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-4x.png?13200"); }
-	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-4x.png?13200"); }
+	div.album_grey_24_img_div { background-image: url("../img/album-grey-24-4x.png?13300"); }
+	div.back_white_24_img_div { background-image: url("../img/back-white-24-4x.png?13300"); }
+	div.check_white_24_img_div { background-image: url("../img/check-white-24-4x.png?13300"); }
+	div.check_grey_24_img_div { background-image: url("../img/check-grey-24-4x.png?13300"); }
+	div.close_grey_24_img_div { background-image: url("../img/close-grey-24-4x.png?13300"); }
+	div.cloud_grey_36_img_div { background-image: url("../img/cloud-grey-36-4x.png?13300"); }
+	div.down_grey_24_img_div { background-image: url("../img/down-grey-24-4x.png?13300"); }
+	div.down_white_24_img_div { background-image: url("../img/down-white-24-4x.png?13300"); }
+	div.download_white_24_img_div { background-image: url("../img/download-white-24-4x.png?13300"); }
+	div.exit_white_24_img_div { background-image: url("../img/exit-white-24-4x.png?13300"); }
+	div.facebook_grey_48_img_div { background-image: url("../img/facebook-grey-48-4x.png?13300"); }
+	div.forward_white_24_img_div { background-image: url("../img/forward-white-24-4x.png?13300"); }
+	div.googleplus_grey_48_img_div { background-image: url("../img/googleplus-grey-48-4x.png?13300"); }
+	div.headphones_grey_24_img_div { background-image: url("../img/headphones-grey-24-4x.png?13300"); }
+	div.heart_grey_24_img_div { background-image: url("../img/heart-grey-24-4x.png?13300"); }
+	div.hot_grey_24_img_div { background-image: url("../img/hot-grey-24-4x.png?13300"); }
+	div.information_grey_48_img_div { background-image: url("../img/information-grey-48-4x.png?13300"); }
+	div.globe_white_24_img_div { background-image: url("../img/globe-white-24-4x.png?13300"); }
+	div.label_grey_24_img_div { background-image: url("../img/label-grey-24-4x.png?13300"); }
+	div.library_grey_36_img_div { background-image: url("../img/library-grey-36-4x.png?13300"); }
+	div.loading_white_24_img_div { background-image: url("../img/loading-white-24-4x.gif?13300"); }
+	div.lock_open_white_24_img_div { background-image: url("../img/lock-open-white-24-4x.png?13300"); }
+	div.menu_white_24_img_div { background-image: url("../img/menu-white-24-4x.png?13300"); }
+	div.more_grey_24_img_div { background-image: url("../img/more-grey-24-4x.png?13300"); }
+	div.more_white_24_img_div { background-image: url("../img/more-white-24-4x.png?13300"); }
+	div.next_white_24_img_div { background-image: url("../img/next-white-24-4x.png?13300"); }
+	div.next_white_48_img_div { background-image: url("../img/next-white-48-4x.png?13300"); }
+	div.pencil_grey_18_img_div { background-image: url("../img/pencil-grey-18-4x.png?13300"); }
+	div.pause_white_24_img_div { background-image: url("../img/pause-white-24-4x.png?13300"); }
+	div.pause_circle_white_72_img_div { background-image: url("../img/pause-circle-white-72-4x.png?13300"); }
+	div.person_grey_24_img_div { background-image: url("../img/person-grey-24-4x.png?13300"); }
+	div.person_grey_72_img_div { background-image: url("../img/person-grey-72-4x.png?13300"); }
+	div.play_grey_24_img_div { background-image: url("../img/play-grey-24-4x.png?13300"); }
+	div.play_white_24_img_div { background-image: url("../img/play-white-24-4x.png?13300"); }
+	div.play_circle_white_72_img_div { background-image: url("../img/play-circle-white-72-4x.png?13300"); }
+	div.playlist_grey_24_img_div { background-image: url("../img/playlist-grey-24-4x.png?13300"); }
+	div.playlist_grey_36_img_div { background-image: url("../img/playlist-grey-36-4x.png?13300"); }
+	div.plus_grey_24_img_div { background-image: url("../img/plus-grey-24-4x.png?13300"); }
+	div.plus_white_24_img_div { background-image: url("../img/plus-white-24-4x.png?13300"); }
+	div.power_white_24_img_div { background-image: url("../img/power-white-24-4x.png?13300"); }
+	div.previous_white_24_img_div { background-image: url("../img/previous-white-24-4x.png?13300"); }
+	div.previous_white_48_img_div { background-image: url("../img/previous-white-48-4x.png?13300"); }
+	div.queue_grey_24_img_div { background-image: url("../img/queue-grey-24-4x.png?13300"); }
+	div.queue_white_24_img_div { background-image: url("../img/queue-white-24-4x.png?13300"); }
+	div.refresh_white_24_img_div { background-image: url("../img/refresh-white-24-4x.png?13300"); }
+	div.repeat_white_24_img_div { background-image: url("../img/repeat-white-24-4x.png?13300"); }
+	div.search_grey_24_img_div { background-image: url("../img/search-grey-24-4x.png?13300"); }
+	div.search_grey_36_img_div { background-image: url("../img/search-grey-36-4x.png?13300"); }
+	div.seek_back_white_48_img_div { background-image: url("../img/seek-back-white-48-4x.png?13300"); }
+	div.seek_forward_white_48_img_div { background-image: url("../img/seek-forward-white-48-4x.png?13300"); }
+	div.shadow_down_black_4_img_div { background-image: url("../img/shadow-down-black-4-4x.png?13300"); }
+	div.shadow_down_black_56_img_div { background-image: url("../img/shadow-down-black-56-4x.png?13300"); }
+	div.shadow_up_black_48_img_div { background-image: url("../img/shadow-up-black-48-4x.png?13300"); }
+	div.share_grey_24_img_div { background-image: url("../img/share-grey-24-4x.png?13300"); }
+	div.shuffle_white_24_img_div { background-image: url("../img/shuffle-white-24-4x.png?13300"); }
+	div.sort_grey_18_img_div { background-image: url("../img/sort-grey-18-4x.png?13300"); }
+	div.star_grey_24_img_div { background-image: url("../img/star-grey-24-4x.png?13300"); }
+	div.top_grey_24_img_div { background-image: url("../img/top-grey-24-4x.png?13300"); }
+	div.trash_white_24_img_div { background-image: url("../img/trash-white-24-4x.png?13300"); }
+	div.trash_grey_24_img_div { background-image: url("../img/trash-grey-24-4x.png?13300"); }
+	div.twitter_grey_48_img_div { background-image: url("../img/twitter-grey-48-4x.png?13300"); }
+	div.unfold_less_grey_24_img_div { background-image: url("../img/unfold-less-grey-24-4x.png?13300"); }
+	div.unfold_more_grey_24_img_div { background-image: url("../img/unfold-more-grey-24-4x.png?13300"); }
+	div.up_grey_24_img_div { background-image: url("../img/up-grey-24-4x.png?13300"); }
+	div.volume_up_grey_24_img_div { background-image: url("../img/volume-up-grey-24-4x.png?13300"); }
 }

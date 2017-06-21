@@ -252,7 +252,7 @@ div.bottom_actionbar_inner_left_widescreen_div
 	div.bottom_actionbar_inner_left_widescreen_div
 	{
 		display: table-cell;
-	}	
+	}
 }
 
 div#bottom_actionbar_inner_left_third_div
@@ -1080,7 +1080,7 @@ div.input_checkbox_div
 div.input_checkbox_div > div
 {
 	display: table-cell;
-	padding: 16px 2px;
+	padding: 16px 2px 0 2px;
 	vertical-align: middle;
 	font-size: 15px;
 }
@@ -1213,7 +1213,7 @@ div#nowplaying_lower_div
 div#nowplaying_lower_div > div
 {
 	display: table-cell;
-	width: 100%;	
+	width: 100%;
 	height: 100%;
 	vertical-align: top;
 }
@@ -1857,7 +1857,7 @@ li
 
 .up_arrow_dark_grey_highlight
 {
-	border-bottom-color: #bdbdbd !important;	
+	border-bottom-color: #bdbdbd !important;
 }
 
 .actions_span_highlight

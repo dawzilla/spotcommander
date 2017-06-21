@@ -74,9 +74,9 @@ require_once('main.php');
 
 <link rel="fluid-icon" href="<?php echo project_website_https; ?>img/favicon.png" title="<?php echo project_name; ?>">
 
+<link rel="stylesheet" href="css/style-animations.css?<?php echo project_serial; ?>">
 <link rel="stylesheet" href="css/style-fonts.css?<?php echo project_serial; ?>">
 <link rel="stylesheet" href="css/style-images.css?<?php echo project_serial; ?>">
-<link rel="stylesheet" href="css/style-animations.css?<?php echo project_serial; ?>">
 <link rel="stylesheet" href="css/style.css?<?php echo project_serial; ?>">
 
 <style></style>
@@ -153,8 +153,8 @@ require_once('main.php');
 </div>
 <div id="nowplaying_remote_lower_div">
 <div title="Toggle Shuffle" class="actions_div" data-actions="toggle_shuffle_repeat" data-remotecontrol="toggle_shuffle" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_24_div shuffle_white_24_img_div"></div></div>
-<div title="Seek back 30 seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_back" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_back_white_48_img_div"></div></div>
-<div title="Seek forward 30 seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_forward" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_forward_white_48_img_div"></div></div>
+<div title="Seek Back 30 Seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_back" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_back_white_48_img_div"></div></div>
+<div title="Seek Forward 30 Seconds" class="actions_div" data-actions="seek" data-remotecontrol="seek_forward" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_48_div seek_forward_white_48_img_div"></div></div>
 <div title="Toggle Repeat" class="actions_div" data-actions="toggle_shuffle_repeat" data-remotecontrol="toggle_repeat" data-highlightclass="dark_highlight" onclick="void(0)"><div class="img_div img_24_div repeat_white_24_img_div"></div></div>
 </div>
 </div>

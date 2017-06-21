@@ -21,6 +21,9 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 require_once('main.php');
 
+$activity = array();
+$activity['project_version'] = project_version;
+
 if(isset($_GET['queue_uri']))
 {
 	echo queue_uri(rawurldecode($_POST['artist']), rawurldecode($_POST['title']), $_POST['uri']);
@@ -43,12 +46,10 @@ elseif(isset($_GET['clear']))
 }
 else
 {
-	$activity = array();
-	$activity['project_version'] = project_version;
 	$activity['title'] = 'Queue';
 	$activity['actions'][] = array('action' => array('Clear', 'trash_white_24_img_div'), 'keys' => array('actions'), 'values' => array('clear_queue'));
 
-	$tracks = get_db_rows('queue', "SELECT id, artist, title, uri, sortorder FROM queue ORDER BY sortorder, id", array('id', 'artist', 'title', 'uri', 'sortorder'));
+	$tracks = get_db_rows('queue', "SELECT id, artist, title, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT 226", array('id', 'artist', 'title', 'uri', 'sortorder'));
 
 	if(empty($tracks))
 	{

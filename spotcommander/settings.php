@@ -42,7 +42,7 @@ if(floatval($latest_version) > project_version)
 {
 	echo '
 		<div class="setting_div actions_div" data-actions="open_external_activity" data-uri="' . project_website . '?download" onclick="void(0)">
-		<div class="setting_text_div"><div><b>Update Available</b></div><div>You are running version ' . number_format(project_version, 1) . '. The latest version is ' . $latest_version . '. Tap here to download the latest version</div></div>
+		<div class="setting_text_div"><div><b>Update Available</b></div><div>You are running version ' . project_version . '. The latest version is ' . $latest_version . '. Tap here to download the latest version</div></div>
 		</div>
 	';
 }
@@ -50,7 +50,7 @@ else
 {
 	echo '
 		<div class="setting_div actions_div" data-actions="check_for_updates" onclick="void(0)">
-		<div class="setting_text_div"><div>No Updates Available</div><div>You are running version ' . number_format(project_version, 1) . '. The latest version is ' . $latest_version . '. Tap here to check for updates now</div></div>
+		<div class="setting_text_div"><div>No Updates Available</div><div>You are running version ' . project_version . '. The latest version is ' . $latest_version . '. Tap here to check for updates now</div></div>
 		</div>
 	';
 }
@@ -82,6 +82,11 @@ else
 <div class="list_header_div"><div>Android Extras</div><div></div></div>
 
 <div class="list_div">
+
+<div class="setting_div">
+<div class="setting_text_div"><div><label for="settings_persistent_notification">Persistent Notification</label></div><div>Remote control from a notification when the app is not open. Android 4.1 and newer</div></div>
+<div class="setting_edit_div"><input type="checkbox" class="setting_checkbox" id="settings_persistent_notification" name="settings_persistent_notification"<?php echo setting_checkbox_status('settings_persistent_notification'); ?>></div>
+</div>
 
 <div class="setting_div">
 <div class="setting_text_div"><div><label for="settings_keep_screen_on">Keep Screen On</label></div><div>Dim screen instead of turning it off automatically. Will drain the battery faster</div></div>
@@ -122,11 +127,6 @@ echo get_setting_dropdown($setting, $options);
 ?>
 
 </div>
-</div>
-
-<div class="setting_div">
-<div class="setting_text_div"><div><label for="settings_persistent_notification">Persistent Notification</label></div><div>Remote control when the app is not open. If this device is paired with an Android Wear device, a regular notification is shown anyway. Android 4.1 and newer</div></div>
-<div class="setting_edit_div"><input type="checkbox" class="setting_checkbox" id="settings_persistent_notification" name="settings_persistent_notification"<?php echo setting_checkbox_status('settings_persistent_notification'); ?>></div>
 </div>
 
 <div class="setting_div actions_div" data-actions="change_native_app_computer" onclick="void(0)">
@@ -171,7 +171,7 @@ echo get_setting_dropdown($setting, $options);
 <div class="setting_text_div"><div>Remove All Playlists</div><div>Start fresh. This will not delete your playlists from Spotify</div></div>
 </div>
 
-<div class="setting_div actions_div" data-actions="confirm_clear_cache" onclick="void(0)">
+<div class="setting_div actions_div" data-actions="clear_cache" onclick="void(0)">
 <div class="setting_text_div"><div>Clear Cache</div><div>Tap here to clear various cache files</div></div>
 </div>
 

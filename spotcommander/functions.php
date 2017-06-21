@@ -131,6 +131,7 @@ function deauthorize_from_spotify()
 	file_write(__DIR__ . '/run/spotify.country', '');
 
 	clean_library('track');
+	clean_library('album');
 	clean_library('artist');
 
 	clear_cache();
@@ -295,7 +296,7 @@ function remote_control_spotify($api_uri, $action, $data)
 
 function get_current_seek_position()
 {
-	$files = get_external_files(array('https://api.spotify.com/v1/me/player'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files(array('https://api.spotify.com/v1/me/player?market=' . get_spotify_country()), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 	$metadata = json_decode($files[0], true);
 
 	return (empty($metadata)) ? 0 : intval($metadata['progress_ms']);
@@ -494,16 +495,18 @@ function get_playlists_as_json($with_access)
 
 function get_playlist($playlist_uri)
 {
-	$return = null;
-	$error = false;
+	$playlist_id = uri_to_id($playlist_uri);
 
 	$user = get_playlist_user($playlist_uri);
 
-	$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '?fields=images,name,owner(id),public,snapshot_id,tracks(items,total,limit)';
+	$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . $playlist_id . '?fields=images,name,owner(id),public,collaborative,snapshot_id,tracks(items,total,limit)&market=' . get_spotify_country();
 	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
 	$files = get_external_files(array($api_uri), $api_headers, null);
 	$metadata = json_decode($files[0], true);
+
+	$return = null;
+	$error = false;
 
 	if(empty($metadata['name']))
 	{
@@ -516,6 +519,7 @@ function get_playlist($playlist_uri)
 		$return['name'] = $metadata['name'];
 		$return['user'] = $metadata['owner']['id'];
 		$return['public'] = ($metadata['public']) ? 'Yes' : 'No';
+		$return['collaborative'] = ($metadata['collaborative']) ? 'Yes' : 'No';
 		$return['snapshot_id'] = $metadata['snapshot_id'];
 		$return['cover_art_uri'] = (empty($metadata['images'][0]['url'])) ? '' : $metadata['images'][0]['url'];
 
@@ -551,14 +555,14 @@ function get_playlist($playlist_uri)
 
 		if($tracks_count > $tracks_limit)
 		{
-			$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($playlist_uri) . '/tracks?fields=items';
+			$api_uri = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . $playlist_id . '/tracks?fields=items&market=' . get_spotify_country();
 
 			$pages = $tracks_count / $tracks_limit;
 			$pages = ceil($pages - 1);
 
 			$get_files = array();
 			$offset = 0;
-			
+
 			for($n = 0; $n < $pages; $n++)
 			{
 				$offset = $offset + $tracks_limit;
@@ -648,7 +652,7 @@ function refresh_spotify_playlists()
 
 			$get_files = array();
 			$offset = 0;
-			
+
 			for($n = 0; $n < $pages; $n++)
 			{
 				$offset = $offset + $playlists_limit;
@@ -731,7 +735,7 @@ function import_playlists($uris)
 			$user = get_playlist_user($uri);
 
 			$get_uris[$i] = $uri;
-			$get_files[$i] = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '?fields=name,uri';
+			$get_files[$i] = 'https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '?fields=name,uri&market=' . get_spotify_country();
 
 			$i++;
 		}
@@ -772,9 +776,12 @@ function import_playlists($uris)
 	return ($error) ? 'error' : $i;
 }
 
-function create_playlist($name, $make_public)
+function create_playlist($name, $make_public, $make_collaborative)
 {
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode(get_spotify_username()) . '/playlists'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode(array('name' => $name, 'public' => $make_public))));
+	$make_public = string_to_boolean($make_public);
+	$make_collaborative = string_to_boolean($make_collaborative);
+
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode(get_spotify_username()) . '/playlists'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode(array('name' => $name, 'public' => $make_public, 'collaborative' => $make_collaborative))));
 	$playlist = json_decode($files[0], true);
 
 	if(!empty($playlist['name']))
@@ -790,11 +797,14 @@ function create_playlist($name, $make_public)
 	return 'error';
 }
 
-function edit_playlist($name, $uri, $make_public)
+function edit_playlist($name, $uri, $make_public, $make_collaborative)
 {
+	$make_public = string_to_boolean($make_public);
+	$make_collaborative = string_to_boolean($make_collaborative);
+
 	$user = get_playlist_user($uri);
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri)), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('name' => $name, 'public' => $make_public))));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri)), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('name' => $name, 'public' => $make_public, 'collaborative' => $make_collaborative))));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -851,7 +861,7 @@ function add_uris_to_playlist($uri, $uris)
 			foreach($tracks as $track)
 			{
 				$uris .= $track['uri'] . ' ';
-			}		
+			}
 		}
 
 		$uris = trim($uris);
@@ -859,7 +869,7 @@ function add_uris_to_playlist($uri, $uris)
 
 	$uris = explode(' ', $uris);
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode($uris)));
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . $user . '/playlists/' . uri_to_id($uri) . '/tracks'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('POST', json_encode(array('uris' => $uris))));
 	$response = $files[0];
 
 	if(is_int($response))
@@ -893,7 +903,7 @@ function delete_uris_from_playlists($uri, $uris, $positions, $snapshot_id)
 function refresh_playlist($uri)
 {
 	$cover_art_cache = get_cover_art_cache('small');
-	
+
 	if(!empty($cover_art_cache[$uri]))
 	{
 		unset($cover_art_cache[$uri]);
@@ -901,7 +911,7 @@ function refresh_playlist($uri)
 	}
 
 	$cover_art_cache = get_cover_art_cache('medium');
-	
+
 	if(!empty($cover_art_cache[$uri]))
 	{
 		unset($cover_art_cache[$uri]);
@@ -1055,7 +1065,9 @@ function is_saved($uri)
 
 function refresh_library()
 {
-	$api_uris = array('https://api.spotify.com/v1/me/tracks?limit=50&market=' . get_spotify_country(), 'https://api.spotify.com/v1/me/following?type=artist&limit=50', 'https://api.spotify.com/v1/me/albums?limit=50');
+	$country = get_spotify_country();
+
+	$api_uris = array('https://api.spotify.com/v1/me/tracks?limit=50&market=' . $country, 'https://api.spotify.com/v1/me/following?type=artist&limit=50', 'https://api.spotify.com/v1/me/albums?limit=50&market=' . $country);
 	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
 	$files = get_external_files($api_uris, $api_headers, null);
@@ -1101,7 +1113,7 @@ function refresh_library()
 
 			$get_files = array();
 			$offset = 0;
-			
+
 			for($n = 0; $n < $pages; $n++)
 			{
 				$offset = $offset + $tracks_limit;
@@ -1254,7 +1266,7 @@ function get_search($string)
 
 	$country = get_spotify_country();
 
-	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=track&market=' . $country . '&limit=50&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=album&market=' . $country . '&limit=24&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=artist&market=' . $country . '&limit=12&q=' . rawurlencode($string), 'https://api.spotify.com/v1/search?type=playlist&market=' . $country . '&limit=50&q=' . rawurlencode($string)), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
+	$files = get_external_files(array('https://api.spotify.com/v1/users/' . rawurlencode($string), 'https://api.spotify.com/v1/search?q=' . rawurlencode($string) . '&type=track&market=' . $country . '&limit=50', 'https://api.spotify.com/v1/search?q=' . rawurlencode($string) . '&type=album&market=' . $country . '&limit=24', 'https://api.spotify.com/v1/search?q=' . rawurlencode($string) . '&type=artist&market=' . $country . '&limit=12', 'https://api.spotify.com/v1/search?q=' . rawurlencode($string) . '&type=playlist&market=' . $country . '&limit=50'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 
 	$user = json_decode($files[0], true);
 	$tracks = json_decode($files[1], true);
@@ -1438,7 +1450,7 @@ function get_artist($uri)
 
 	$artist_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id;
 	$tracks_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/top-tracks?country=' . $country;
-	$albums_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/albums?limit=50&album_type=album,single&country=' . $country;
+	$albums_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/albums?album_type=album,single&market=' . $country . '&limit=50';
 	$related_artists_api_uri = 'https://api.spotify.com/v1/artists/' . $uri_id . '/related-artists';
 
 	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
@@ -1527,7 +1539,7 @@ function get_artist($uri)
 
 				$get_files = array();
 				$offset = 0;
-				
+
 				for($n = 0; $n < $pages; $n++)
 				{
 					$offset = $offset + $albums_limit;
@@ -1615,7 +1627,7 @@ function get_album($uri)
 	$return = null;
 	$error = false;
 
-	$api_uri = 'https://api.spotify.com/v1/albums/' . uri_to_id($uri);
+	$api_uri = 'https://api.spotify.com/v1/albums/' . uri_to_id($uri) . '?market=' . get_spotify_country();
 	$api_headers = array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token());
 
 	$files = get_external_files(array($api_uri), $api_headers, null);
@@ -1672,7 +1684,7 @@ function get_album($uri)
 
 			$get_files = array();
 			$offset = 0;
-			
+
 			for($n = 0; $n < $pages; $n++)
 			{
 				$offset = $offset + $tracks_limit;
@@ -1750,7 +1762,7 @@ function get_tracks($uris)
 
 	foreach($tracks as $track)
 	{
-		$track = json_decode($track, true);	
+		$track = json_decode($track, true);
 		$return[$i] = (empty($track['name']) || empty($track['uri'])) ? null : $track;
 
 		$i++;
@@ -1910,7 +1922,7 @@ function get_external_files($uris, $headers, $post)
 		curl_setopt($ch[$i], CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch[$i], CURLOPT_TIMEOUT_MS, 10000);
 		curl_setopt($ch[$i], CURLOPT_USERAGENT, $ua);
-		
+
 		if(!empty($headers)) curl_setopt($ch[$i], CURLOPT_HTTPHEADER, $headers);
 
 		if(!empty($post))
@@ -2041,12 +2053,11 @@ function check_for_errors()
 
 function check_for_updates()
 {
-	$project_version = number_format(project_version, 1);
 	$spotify_is_new = (spotify_is_new()) ? 'New' : 'Old';
 	$is_spotify_subscription_premium = (is_spotify_subscription_premium()) ? 'Yes' : 'No';
 	$system_information = get_system_information();
 
-	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode($project_version) . '&spotify=' . rawurlencode($spotify_is_new) . '&premium=' . rawurlencode($is_spotify_subscription_premium) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
+	$files = get_external_files(array(project_website . 'api/1/latest-version/?version=' . rawurlencode(project_version) . '&spotify=' . rawurlencode($spotify_is_new) . '&premium=' . rawurlencode($is_spotify_subscription_premium) . '&uname=' . rawurlencode($system_information['uname']) . '&ua=' . rawurlencode($system_information['ua'])), null, null);
 	$latest_version = trim($files[0]);
 
 	return (preg_match('/^\d+\.\d+$/', $latest_version)) ? $latest_version : 'error';
@@ -2107,11 +2118,6 @@ function convert_length($length, $from)
 function convert_popularity($popularity)
 {
 	return round(floatval($popularity) * 100) . ' %';
-}
-
-function boolean_to_string($bool)
-{
-	return ($bool) ? 'true' : 'false';
 }
 
 function string_to_boolean($string)

@@ -21,14 +21,14 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 require_once('main.php');
 
+$activity = array();
+$activity['project_version'] = project_version;
+
 $browse_uri = $_GET['uri'];
 $browse_uri_type = get_uri_type($browse_uri);
 $album_uri = ($browse_uri_type == 'track') ? get_track_album($browse_uri) : $browse_uri;
 
 $metadata = (empty($album_uri)) ? null : get_album($album_uri);
-
-$activity = array();
-$activity['project_version'] = project_version;
 
 if(empty($metadata))
 {
@@ -57,7 +57,7 @@ else
 	$cover_art_height = $metadata['cover_art_height'];
 	$tracks_count = $metadata['tracks_count'];
 	$total_length = $metadata['total_length'];
-	
+
 	$details_dialog = array();
 	$details_dialog['title'] = hsc($title);
 	$details_dialog['details'][] = array('detail' => 'Type', 'value' => $type);
@@ -92,6 +92,7 @@ else
 	foreach($discs as $disc)
 	{
 		$tracks = $disc;
+
 		$i++;
 
 		$queue_uris = array();
@@ -148,7 +149,7 @@ else
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-queueuris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>

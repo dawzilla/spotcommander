@@ -1,6 +1,8 @@
 <?php
 
 // Set to false to disable Spotify Premium features
+// It is recommended to install Spotify version 0.9 if you do this
+// See http://www.olejon.net/code/spotcommander/?downgrade_spotify
 define('config_enable_spotify_premium_features', true);
 
 // Set to false to not send information about your system when checking for updates and when there is a fatal error

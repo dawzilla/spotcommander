@@ -77,9 +77,10 @@ else
 
 		foreach($devices as $device)
 		{
-			$name = $device['name'];
-			$active = ($device['is_active']) ? 'Active Device' : 'Available Device';
 			$id = $device['id'];
+			$active = ($device['is_active']) ? 'Active Device' : 'Available Device';
+			$name = $device['name'];
+			$type = $device['type'];
 
 			$img_class = 'headphones_grey_24_img_div';
 			$text_class = '';
@@ -95,7 +96,7 @@ else
 				<div title="' . hsc($name) . '" class="list_item_main_div actions_div" data-actions="transfer_device" data-devicename="' . hsc($name) . '" data-deviceid="' . $id . '" data-highlightclass="light_grey_highlight" onclick="void(0)">
 				<div class="list_item_main_inner_div">
 				<div class="list_item_main_inner_circle_div"><div class="' . $img_class . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . $text_class . '">' . hsc($name) . '</div><div class="list_item_main_inner_text_lower_div">' . $active . '</div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . $text_class . '">' . hsc($name) . '</div><div class="list_item_main_inner_text_lower_div">' . $type . ' - ' . $active . '</div></div>
 				</div>
 				</div>
 				</div>

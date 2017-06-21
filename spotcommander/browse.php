@@ -26,7 +26,7 @@ $activity['project_version'] = project_version;
 
 if(isset($_GET['featured-playlists']))
 {
-	$files = get_external_files(array(project_website . 'api/1/browse/featured-playlists/?time=' . $_GET['time'] . '&country=' . $_GET['country'] . '&fields=' . rawurlencode('description,playlists') . '&token=' . get_spotify_token()), null, null);
+	$files = get_external_files(array(project_website . 'api/1/browse/featured-playlists/?version=' . rawurlencode(project_version) . '&time=' . $_GET['time'] . '&country=' . $_GET['country'] . '&fields=' . rawurlencode('description,playlists') . '&token=' . get_spotify_token()), null, null);
 	$metadata = json_decode($files[0], true);
 
 	if(empty($metadata['metadata']))
@@ -78,7 +78,7 @@ elseif(isset($_GET['genres']))
 	{
 		$activity['title'] = rawurldecode($_GET['name']);
 
-		$files = get_external_files(array(project_website . 'api/1/browse/genre/?genre=' . $_GET['genre'] . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
+		$files = get_external_files(array(project_website . 'api/1/browse/genre/?version=' . rawurlencode($project_version) . '&genre=' . $_GET['genre'] . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
 		$playlists = json_decode($files[0], true);
 
 		if(!is_array($playlists))
@@ -119,7 +119,7 @@ elseif(isset($_GET['genres']))
 	{
 		$activity['title'] = 'Genres &amp; Moods';
 
-		$files = get_external_files(array(project_website . 'api/1/browse/genres/?country=' . $country . '&token=' . get_spotify_token()), null, null);
+		$files = get_external_files(array(project_website . 'api/1/browse/genres/?version=' . rawurlencode($project_version) . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
 		$genres = json_decode($files[0], true);
 
 		if(!is_array($genres))
@@ -159,7 +159,7 @@ elseif(isset($_GET['popular-playlists']))
 {
 	$activity['title'] = 'Popular Playlists';
 
-	$files = get_external_files(array(project_website . 'api/2/browse/popular-playlists/'), null, null);
+	$files = get_external_files(array(project_website . 'api/2/browse/popular-playlists/?version=' . rawurlencode($project_version)), null, null);
 	$playlists = json_decode($files[0], true);
 
 	if(!is_array($playlists))
@@ -202,7 +202,7 @@ elseif(isset($_GET['new-releases']))
 
 	$activity['title'] = 'New Releases in ' . get_country_name($country);
 
-	$files = get_external_files(array(project_website . 'api/1/browse/new-releases/?country=' . $country . '&token=' . get_spotify_token()), null, null);
+	$files = get_external_files(array(project_website . 'api/1/browse/new-releases/?version=' . rawurlencode($project_version) . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
 	$albums = json_decode($files[0], true);
 
 	if(!is_array($albums))
@@ -247,7 +247,7 @@ elseif(isset($_GET['charts']))
 
 	$activity['title'] = 'Most ' . ucfirst($chart) . ' in ' . get_country_name($country);
 
-	$files = get_external_files(array(project_website . 'api/1/browse/charts/?chart=' . $chart . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
+	$files = get_external_files(array(project_website . 'api/1/browse/charts/?version=' . rawurlencode($project_version) . '&chart=' . $chart . '&country=' . $country . '&token=' . get_spotify_token()), null, null);
 	$metadata = json_decode($files[0], true);
 
 	if(empty($metadata['tracks']))
@@ -266,9 +266,9 @@ elseif(isset($_GET['charts']))
 	{
 		$tracks = $metadata['tracks'];
 
-		$add_to_playlist_uris = '';
-
 		$queue_uris = array();
+
+		$add_to_playlist_uris = '';
 
 		$n = 0;
 
@@ -276,18 +276,18 @@ elseif(isset($_GET['charts']))
 		{
 			$track_uri = url_to_uri($track['uri']);
 
-			$add_to_playlist_uris .= $track_uri . ' ';
-
 			$queue_uris[$n] = $track_uri;
+
+			$add_to_playlist_uris .= $track_uri . ' ';
 
 			$n++;
 		}
 
-		$add_to_playlist_uris = trim($add_to_playlist_uris);
+		$activity['queueuris'] = json_encode($queue_uris);
 
-		$queue_uris = base64_encode(json_encode($queue_uris));
+		$activity['fab'] = array('label' => 'Play', 'icon' => 'play_white_24_img_div', 'keys' => array('actions', 'uri', 'queueuris'), 'values' => array('play_uris', $queue_uris[0], $activity['queueuris']));
 
-		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
+		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], trim($add_to_playlist_uris)));
 
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
@@ -329,7 +329,7 @@ elseif(isset($_GET['charts']))
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
@@ -368,9 +368,9 @@ elseif(isset($_GET['recommendations']))
 	{
 		$tracks = $metadata['tracks'];
 
-		$add_to_playlist_uris = '';
-
 		$queue_uris = array();
+
+		$add_to_playlist_uris = '';
 
 		$n = 0;
 
@@ -378,18 +378,18 @@ elseif(isset($_GET['recommendations']))
 		{
 			$track_uri = $track['uri'];
 
-			$add_to_playlist_uris .= $track_uri . ' ';
-
 			$queue_uris[$n] = $track_uri;
+
+			$add_to_playlist_uris .= $track_uri . ' ';
 
 			$n++;
 		}
 
-		$add_to_playlist_uris = trim($add_to_playlist_uris);
+		$activity['queueuris'] = json_encode($queue_uris);
 
-		$queue_uris = base64_encode(json_encode($queue_uris));
+		$activity['fab'] = array('label' => 'Play', 'icon' => 'play_white_24_img_div', 'keys' => array('actions', 'uri', 'queueuris'), 'values' => array('play_uris', $queue_uris[0], $activity['queueuris']));
 
-		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], $add_to_playlist_uris));
+		$activity['actions'][] = array('action' => array('Add to Playlist', 'plus_white_24_img_div'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $activity['title'], trim($add_to_playlist_uris)));
 
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
@@ -437,7 +437,7 @@ elseif(isset($_GET['recommendations']))
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>

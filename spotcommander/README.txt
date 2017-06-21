@@ -13,14 +13,17 @@ BEFORE UPGRADING:
 * It is recommended that Spotify Premium users update to the latest Spotify desktop client
 * Before updating to the latest Spotify desktop client, you should delete the directories ~/.config/spotify and ~/.cache/spotify
 
-CHANGELOG v 13.2:
+CHANGELOG v 13.3:
 
+* Fixes for the previous version's new features (see below)
+* Toggle if a Playlist is Collaborative when creating or editing a Playlist
+* Keyboard shortcuts to seek back or forward (V and B)
 * Many new features for Spotify Premium users, but it is not a requirement (see below)
 * Spotify Premium: Use the new Spotify Player API, which still is in beta, but seems stable
 * Spotify Premium: Full support for the latest Spotify desktop client (works with some quirks without Premium)
 * Spotify Premium: Transfer playback to other devices with Spotify open and active, like phones and tablets (Devices in the side menu)
 * Spotify Premium: Full playback control on all devices as long as the Spotify desktop client is running on the computer running SpotCommander, as the commands goes through the new Spotify Player API
-* Spotify Premium: Seek in tracks
+* Spotify Premium: Seek 30 seconds back/foward in tracks
 * Spotify Premium: Full control over toggling Shuffle and Repeat
 * Spotify Premium: Playing a track in any list of tracks, ranging from Library to playlists, artists, albums, recently played etc will continue playing tracks in that list
 * Show Recently Played from the Spotify API, so it shows tracks played not using SpotCommander as well

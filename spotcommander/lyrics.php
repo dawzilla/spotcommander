@@ -24,7 +24,7 @@ require_once('main.php');
 $artist = rawurldecode($_GET['artist']);
 $title = rawurldecode($_GET['title']);
 
-$files = get_external_files(array(project_website . 'api/1/lyrics/?artist=' . rawurlencode($artist) . '&title=' . rawurlencode($title)), null, null);
+$files = get_external_files(array(project_website . 'api/1/lyrics/?version=' . rawurlencode(project_version) . '&artist=' . rawurlencode($artist) . '&title=' . rawurlencode($title)), null, null);
 $lyrics = json_decode($files[0], true);
 
 $activity = array();
@@ -33,7 +33,7 @@ $activity['title'] = hsc($title);
 
 if(empty($lyrics['lyrics']))
 {
-	$activity['actions'][] = array('action' => array('Search the Web', 'globe_white_24_img_div'), 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.google.com/search?q=' . rawurlencode($artist . ' ' . $title . ' lyrics')));
+	$activity['actions'][] = array('action' => array('Search the Web', 'globe_white_24_img_div'), 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.google.com/search?q=' . rawurlencode($artist . ' ' . $title . ' Lyrics')));
 	$content = '<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>No match</div></div>';
 }
 else

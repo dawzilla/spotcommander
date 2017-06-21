@@ -55,16 +55,28 @@ elseif(isset($_GET['search']))
 	}
 	else
 	{
-		echo '<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">';
-
 		$user = $search['user'];
 		$tracks = $search['tracks'];
 		$albums = $search['albums'];
 		$artists = $search['artists'];
 		$playlists = $search['playlists'];
 
-		$total_results = 50;
-		$initial_results = (get_search_type($string) == 'track' || get_search_type($string) == 'isrc') ? 50 : 5;
+		if(is_array($tracks))
+		{
+			$queue_uris = array();
+			$n = 0;
+
+			foreach($tracks as $track)
+			{
+				$queue_uris[$n] = $track['uri'];
+
+				$n++;
+			}
+
+			$activity['queueuris'] = json_encode($queue_uris);
+		}
+
+		echo '<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">';
 
 		if(!empty($user))
 		{
@@ -93,17 +105,7 @@ elseif(isset($_GET['search']))
 
 		if(is_array($tracks))
 		{
-			$queue_uris = array();
-			$n = 0;
-
-			foreach($tracks as $track)
-			{
-				$queue_uris[$n] = $track['uri'];
-
-				$n++;
-			}
-
-			$queue_uris = base64_encode(json_encode($queue_uris));
+			$initial_results = (get_search_type($string) == 'track' || get_search_type($string) == 'isrc') ? 50 : 5;
 
 			$actions_dialog = array();
 			$actions_dialog['title'] = 'Sort By';
@@ -146,7 +148,7 @@ elseif(isset($_GET['search']))
 			foreach($tracks as $track)
 			{
 				$i++;
-				
+
 				$artist = $track['artist'];
 				$artist_uri = $track['artist_uri'];
 				$album = $track['album'];
@@ -185,7 +187,7 @@ elseif(isset($_GET['search']))
 					</div>
 					<div class="list_item_actions_div">
 					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 					<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>

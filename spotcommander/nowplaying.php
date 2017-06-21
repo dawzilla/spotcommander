@@ -19,6 +19,8 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 
 */
 
+header('Content-Type: application/json');
+
 require_once('main.php');
 
 $nowplaying = get_nowplaying();
@@ -52,8 +54,7 @@ if(spotify_is_running())
 		$artist = (empty($nowplaying['artist'])) ? $artist : $nowplaying['artist'];
 		$title = (empty($nowplaying['title'])) ? $title : $nowplaying['title'];
 		$album = (empty($nowplaying['album'])) ? $album : $nowplaying['album'];
-		$uri = ($is_local) ? preg_replace('/:\d*$/', '', $nowplaying['url']) . ':' : url_to_uri($nowplaying['url']);
-		$share_uri = ($is_local) ? 'spotify:local:' : $uri;
+		$uri = url_to_uri($nowplaying['url']);
 		$length = convert_length($nowplaying['length'], 'mc');
 		$cover_art = (empty($nowplaying['artUrl'])) ? 'img/no-cover-art-640.png?' . project_serial : str_replace(array('http:', 'open.spotify.com', '/thumb/'), array('https:', 'i.scdn.co', '/image/'), $nowplaying['artUrl']);
 		$popularity = (empty($nowplaying['autoRating'])) ? 'Unknown' : convert_popularity($nowplaying['autoRating']);
@@ -70,7 +71,7 @@ if(spotify_is_running())
 		$actions_dialog['actions'][] = array('text' => 'Go to Artist', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_artist', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
-		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($share_uri))));
+		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
 		$actions_dialog['actions'][] = array('text' => 'YouTube', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.youtube.com/results?search_query=' . rawurlencode($artist . ' ' . $title)));
 		$actions_dialog['actions'][] = array('text' => 'Last.fm', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'http://www.last.fm/music/' . urlencode($artist) . '/_/' . urlencode($title)));
 		$actions_dialog['actions'][] = array('text' => 'Wikipedia', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist)));

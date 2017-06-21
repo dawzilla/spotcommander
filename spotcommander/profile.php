@@ -23,7 +23,6 @@ require_once('main.php');
 
 $activity = array();
 $activity['project_version'] = project_version;
-$activity['is_authorized_with_spotify'] = false;
 $activity['title'] = 'Profile';
 
 if(isset($_GET['deauthorize_from_spotify']))
@@ -36,12 +35,12 @@ elseif(isset($_GET['spotify_token']))
 
 	if(is_authorized_with_spotify())
 	{
-		$activity['is_authorized_with_spotify'] = true;
+		$activity['actions'][] = array('action' => array('Reload ' . project_name, 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('reload_app'));
 
 		echo '
 			<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">
 
-			<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Wait&hellip;</div></div>
+			<div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Success! Tap the top right icon to reload ' . project_name . '.</div></div>
 
 			</div>
 		';
@@ -89,6 +88,23 @@ else
 	}
 	else
 	{
+		if(!empty($profile['top_tracks']))
+		{
+			$tracks = $profile['top_tracks'];
+
+			$queue_uris = array();
+			$n = 0;
+
+			foreach($tracks as $track)
+			{
+				$queue_uris[$n] = $track['uri'];
+
+				$n++;
+			}
+
+			$activity['queueuris'] = json_encode($queue_uris);
+		}
+
 		$activity['actions'][] = array('action' => array('Deauthorize with Spotify', 'exit_white_24_img_div'), 'keys' => array('actions'), 'values' => array('confirm_deauthorize_from_spotify'));
 
 		$style = (empty($profile['image'])) ? '' : 'background-size: cover; background-image: url(\'' . $profile['image'] . '\')';
@@ -119,18 +135,6 @@ else
 		else
 		{
 			$tracks = $profile['top_tracks'];
-
-			$queue_uris = array();
-			$n = 0;
-
-			foreach($tracks as $track)
-			{
-				$queue_uris[$n] = $track['uri'];
-
-				$n++;
-			}
-
-			$queue_uris = base64_encode(json_encode($queue_uris));
 
 			foreach($tracks as $track)
 			{
@@ -170,7 +174,7 @@ else
 					</div>
 					<div class="list_item_actions_div">
 					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-uris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 					<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
