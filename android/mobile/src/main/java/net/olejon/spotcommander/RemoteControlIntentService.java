@@ -54,21 +54,21 @@ public class RemoteControlIntentService extends IntentService
 		{
             switch(action)
             {
-                case "adjust_spotify_volume_mute":
+                case "adjust_volume_mute":
                 {
-                    action = "adjust_spotify_volume";
+                    action = "adjust_volume";
                     subAction = "mute";
                     break;
                 }
-                case "adjust_spotify_volume_down":
+                case "adjust_volume_down":
                 {
-                    action = "adjust_spotify_volume";
+                    action = "adjust_volume";
                     subAction = "down";
                     break;
                 }
-                case "adjust_spotify_volume_up":
+                case "adjust_volume_up":
                 {
-                    action = "adjust_spotify_volume";
+                    action = "adjust_volume";
                     subAction = "up";
                     break;
                 }

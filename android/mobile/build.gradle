@@ -10,8 +10,8 @@ android
         applicationId "net.olejon.spotcommander"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 79
-        versionName "7.9"
+        versionCode 133
+        versionName "13.3"
     }
 
     buildTypes
@@ -28,8 +28,8 @@ android
 dependencies
 {
     wearApp project(':wear')
-    compile 'com.google.android.gms:play-services-analytics:10.2.6'
-    compile 'com.google.android.gms:play-services-wearable:10.2.6'
+    compile 'com.google.android.gms:play-services-analytics:11.0.1'
+    compile 'com.google.android.gms:play-services-wearable:11.0.1'
     compile 'com.android.support:support-v13:25.3.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'

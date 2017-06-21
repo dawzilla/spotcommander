@@ -173,6 +173,27 @@ final class MyTools
         return ((size) == Configuration.SCREENLAYOUT_SIZE_LARGE || (size) == Configuration.SCREENLAYOUT_SIZE_XLARGE);
     }
 
+    // Up navigation
+    public void navigateUp(final Activity activity)
+    {
+        final Intent navigateUpIntent = NavUtils.getParentActivityIntent(activity);
+
+        if(NavUtils.shouldUpRecreateTask(activity, navigateUpIntent) || activity.isTaskRoot())
+        {
+            TaskStackBuilder.create(mContext).addNextIntentWithParentStack(navigateUpIntent).startActivities();
+        }
+        else
+        {
+            NavUtils.navigateUpFromSameTask(activity);
+        }
+    }
+
+    // Toast
+    public void showToast(final String toast, final int length)
+    {
+        Toast.makeText(mContext, toast, length).show();
+    }
+
     // Open URI
     public void openChromeCustomTabsUri(final String uri)
     {
@@ -205,27 +226,6 @@ final class MyTools
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
             mContext.startActivity(browserIntent);
         }
-    }
-
-    // Up navigation
-    public void navigateUp(final Activity activity)
-    {
-        final Intent navigateUpIntent = NavUtils.getParentActivityIntent(activity);
-
-        if(NavUtils.shouldUpRecreateTask(activity, navigateUpIntent) || activity.isTaskRoot())
-        {
-            TaskStackBuilder.create(mContext).addNextIntentWithParentStack(navigateUpIntent).startActivities();
-        }
-        else
-        {
-            NavUtils.navigateUpFromSameTask(activity);
-        }
-    }
-
-    // Toast
-    public void showToast(final String toast, final int length)
-    {
-        Toast.makeText(mContext, toast, length).show();
     }
 
     // Remote control
@@ -263,7 +263,7 @@ final class MyTools
             final String action = strings[3];
             final String data = strings[4];
 
-            final StringRequest stringRequest = new StringRequest(Request.Method.POST, uri+"/", new Response.Listener<String>()
+            final StringRequest stringRequest = new StringRequest(Request.Method.POST, uri+"/main.php", new Response.Listener<String>()
             {
                 @Override
                 public void onResponse(String response)

@@ -64,10 +64,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
 
 import org.json.JSONObject;
 
@@ -82,8 +78,6 @@ public class MainActivity extends AppCompatActivity
     private final Context mContext = this;
 
 	private final MyTools mTools = new MyTools(mContext);
-
-    private GoogleApiClient mGoogleApiClient;
 
 	private SQLiteDatabase mDatabase;
 	private Cursor mCursor;
@@ -102,9 +96,6 @@ public class MainActivity extends AppCompatActivity
 
         // Allow landscape?
         if(!mTools.allowLandscape()) setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        // Google API client
-        mGoogleApiClient = new GoogleApiClient.Builder(mContext).addApiIfAvailable(Wearable.API).build();
 
 		// Database
 		mDatabase = new MainSQLiteHelper(mContext).getWritableDatabase();
@@ -287,8 +278,6 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onResume();
 
-        if(mGoogleApiClient != null) mGoogleApiClient.connect();
-
 		listComputers();
 	}
 
@@ -297,8 +286,6 @@ public class MainActivity extends AppCompatActivity
 	protected void onDestroy()
 	{
 		super.onDestroy();
-
-        if(mGoogleApiClient != null) mGoogleApiClient.disconnect();
 
 		if(mCursor != null && !mCursor.isClosed()) mCursor.close();
 		if(mDatabase != null && mDatabase.isOpen()) mDatabase.close();
@@ -371,27 +358,8 @@ public class MainActivity extends AppCompatActivity
         mTools.setSharedPreferencesLong("LAST_COMPUTER_ID", id);
         mTools.setSharedPreferencesString("LAST_NETWORK_ID", mTools.getCurrentNetwork());
 
-        if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
-        {
-            Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>()
-            {
-                @Override
-                public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult)
-                {
-                    mTools.setSharedPreferencesBoolean("WEAR_CONNECTED", (getConnectedNodesResult.getNodes().size() > 0));
-
-                    Intent intent = new Intent(mContext, WebViewActivity.class);
-                    startActivity(intent);
-                }
-            });
-        }
-        else
-        {
-            mTools.setSharedPreferencesBoolean("WEAR_CONNECTED", false);
-
-            Intent intent = new Intent(mContext, WebViewActivity.class);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(mContext, WebViewActivity.class);
+        startActivity(intent);
     }
 
     private void removeComputer(final long id)

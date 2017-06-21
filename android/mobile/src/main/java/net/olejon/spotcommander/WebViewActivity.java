@@ -82,7 +82,6 @@ public class WebViewActivity extends AppCompatActivity
 	private NotificationCompat.Builder mNotificationBuilder;
 	private WebView mWebView;
 
-    private PendingIntent mLaunchActivityPendingIntent;
     private PendingIntent mHidePendingIntent;
     private PendingIntent mPreviousPendingIntent;
     private PendingIntent mPlayPausePendingIntent;
@@ -162,7 +161,7 @@ public class WebViewActivity extends AppCompatActivity
 			final Intent launchActivityIntent = new Intent(mContext, MainActivity.class);
 			launchActivityIntent.setAction("android.intent.action.MAIN");
 			launchActivityIntent.addCategory("android.intent.category.LAUNCHER");
-	        mLaunchActivityPendingIntent = PendingIntent.getActivity(mContext, 0, launchActivityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            PendingIntent launchActivityPendingIntent = PendingIntent.getActivity(mContext, 0, launchActivityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent hideIntent = new Intent(mContext, RemoteControlIntentService.class);
 			hideIntent.setAction("hide_notification");
@@ -185,24 +184,29 @@ public class WebViewActivity extends AppCompatActivity
 			mNextPendingIntent = PendingIntent.getService(mContext, 0, nextIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeDownIntent = new Intent(mContext, RemoteControlIntentService.class);
-            volumeDownIntent.setAction("adjust_spotify_volume_down");
+            volumeDownIntent.setAction("adjust_volume_down");
             volumeDownIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
             mVolumeDownPendingIntent = PendingIntent.getService(mContext, 0, volumeDownIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeUpIntent = new Intent(mContext, RemoteControlIntentService.class);
-            volumeUpIntent.setAction("adjust_spotify_volume_up");
+            volumeUpIntent.setAction("adjust_volume_up");
             volumeUpIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
             mVolumeUpPendingIntent = PendingIntent.getService(mContext, 0, volumeUpIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             mNotificationManager = NotificationManagerCompat.from(mContext);
             mNotificationBuilder = new NotificationCompat.Builder(mContext);
 
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) mNotificationBuilder.setPriority(Notification.PRIORITY_MAX);
+            mNotificationBuilder.setWhen(0)
+                    .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                    .setContentTitle(getString(R.string.project_name))
+                    .setContentIntent(launchActivityPendingIntent);
 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             {
-                mNotificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
-                mNotificationBuilder.setCategory(Notification.CATEGORY_TRANSPORT);
+                mNotificationBuilder.setCategory(Notification.CATEGORY_TRANSPORT)
+                        .setPriority(Notification.PRIORITY_MAX)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC);
             }
 		}
 
@@ -278,15 +282,14 @@ public class WebViewActivity extends AppCompatActivity
 		// User agent
         mProjectVersionName = mTools.getProjectVersionName();
 
-        final String uaAppend1 = (!username.equals("") && !password.equals("")) ? "AUTHENTICATION_ENABLED " : "";
-        final String uaAppend2 = (mTools.getSharedPreferencesBoolean("WEAR_CONNECTED")) ? "WEAR_CONNECTED " : "";
-        final String uaAppend3 = (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT && !mTools.getDefaultSharedPreferencesBoolean("HARDWARE_ACCELERATED_ANIMATIONS")) ? "DISABLE_CSSTRANSITIONS DISABLE_CSSTRANSFORMS3D " : "";
+        final String userAgentAppend1 = (!username.equals("") && !password.equals("")) ? "AUTHENTICATION_ENABLED" : "";
+        final String userAgentAppend2 = (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT && !mTools.getDefaultSharedPreferencesBoolean("HARDWARE_ACCELERATED_ANIMATIONS")) ? "DISABLE_CSSTRANSITIONS DISABLE_CSSTRANSFORMS3D" : "";
 
 		// Web settings
 		final WebSettings webSettings = mWebView.getSettings();
 		webSettings.setJavaScriptEnabled(true);
 		webSettings.setSupportZoom(false);
-		webSettings.setUserAgentString(getString(R.string.webview_user_agent, webSettings.getUserAgentString(), mProjectVersionName, uaAppend1, uaAppend2, uaAppend3));
+		webSettings.setUserAgentString(getString(R.string.webview_user_agent, webSettings.getUserAgentString(), mProjectVersionName, userAgentAppend1, userAgentAppend2));
 
 		// Load app
 		if(savedInstanceState != null)
@@ -319,46 +322,29 @@ public class WebViewActivity extends AppCompatActivity
 
             if(!nowplaying_artist.equals(getString(R.string.notification_no_music_is_playing_artist)))
             {
-                if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
+                if(mPersistentNotificationIsSupported && mGoogleApiClient != null && mGoogleApiClient.isConnected())
                 {
                     Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>()
                     {
                         @Override
                         public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult)
                         {
-                            mNotificationBuilder.setWhen(0)
-                                    .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
-                                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                                    .setContentTitle(getString(R.string.project_name))
-                                    .setContentIntent(mLaunchActivityPendingIntent)
-                                    .setTicker(nowplaying_artist+" - "+nowplaying_title)
-                                    .extend(new NotificationCompat.WearableExtender()
-                                            .setHintHideIcon(true)
-                                            .setBackground(BitmapFactory.decodeResource(getResources(), R.drawable.notification_background))
-                                            .addAction(new NotificationCompat.Action.Builder(R.drawable.notification_icon, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent).build())
-                                            .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent).build())
-                                            .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_down_white_24dp, getString(R.string.notification_action_volume_down), mVolumeDownPendingIntent).build())
-                                            .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_up_white_24dp, getString(R.string.notification_action_volume_up), mVolumeUpPendingIntent).build())
-                                            .setContentIcon(R.drawable.notification_icon)
-                                            .setContentAction(0)
-                                    );
-
                             if(getConnectedNodesResult.getNodes().size() > 0)
                             {
                                 mNotificationBuilder.setContentText(getString(R.string.notification_wear_text))
                                         .addAction(R.drawable.ic_skip_previous_white_24dp, getString(R.string.notification_action_previous), mPreviousPendingIntent)
                                         .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent)
-                                        .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent);
-
-                                mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
-                            }
-                            else if(mPersistentNotificationIsSupported && mTools.getSharedPreferencesBoolean("PERSISTENT_NOTIFICATION"))
-                            {
-                                mNotificationBuilder.setOngoing(true)
-                                        .setContentText(getString(R.string.notification_mobile_text))
-                                        .addAction(R.drawable.ic_close_white_24dp, getString(R.string.notification_action_hide), mHidePendingIntent)
-                                        .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent)
-                                        .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent);
+                                        .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent)
+                                        .extend(new NotificationCompat.WearableExtender()
+                                                .setBackground(BitmapFactory.decodeResource(getResources(), R.drawable.notification_background))
+                                                .setContentAction(0)
+                                                .setContentIcon(R.drawable.notification_icon)
+                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent).build())
+                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_skip_previous_white_24dp, getString(R.string.notification_action_previous), mPreviousPendingIntent).build())
+                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent).build())
+                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_down_white_24dp, getString(R.string.notification_action_volume_down), mVolumeDownPendingIntent).build())
+                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_up_white_24dp, getString(R.string.notification_action_volume_up), mVolumeUpPendingIntent).build())
+                                        );
 
                                 mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
                             }
@@ -367,13 +353,8 @@ public class WebViewActivity extends AppCompatActivity
                 }
                 else if(mPersistentNotificationIsSupported && mTools.getSharedPreferencesBoolean("PERSISTENT_NOTIFICATION"))
                 {
-                    mNotificationBuilder.setWhen(0)
+                    mNotificationBuilder.setContentText(getString(R.string.notification_mobile_text))
                             .setOngoing(true)
-                            .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
-                            .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                            .setContentTitle(getString(R.string.project_name))
-                            .setContentText(getString(R.string.notification_mobile_text))
-                            .setContentIntent(mLaunchActivityPendingIntent)
                             .setTicker(nowplaying_artist+" - "+nowplaying_title)
                             .addAction(R.drawable.ic_close_white_24dp, getString(R.string.notification_action_hide), mHidePendingIntent)
                             .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent)
@@ -546,6 +527,110 @@ public class WebViewActivity extends AppCompatActivity
 	private class JavaScriptInterface
 	{
         @JavascriptInterface
+        public void JSstartService()
+        {
+            final Intent startServiceIntent = new Intent(mContext, RemoteControlService.class);
+
+            if(mTools.getSharedPreferencesBoolean("PAUSE_ON_INCOMING_CALL") || mTools.getSharedPreferencesBoolean("PAUSE_ON_OUTGOING_CALL") || mTools.getSharedPreferencesBoolean("FLIP_TO_PAUSE") || mTools.getSharedPreferencesBoolean("SHAKE_TO_SKIP"))
+            {
+                startService(startServiceIntent);
+            }
+            else
+            {
+                stopService(startServiceIntent);
+            }
+        }
+
+        @JavascriptInterface
+        public String JSgetVersions()
+        {
+            return new JSONArray(Arrays.asList(mProjectVersionName, getString(R.string.project_minimum_version))).toString();
+        }
+
+        @JavascriptInterface
+        public String JSgetSharedString(String preference)
+        {
+            return mTools.getSharedPreferencesString(preference);
+        }
+
+        @JavascriptInterface
+        public void JSsetSharedString(String preference, String string)
+        {
+            mTools.setSharedPreferencesString(preference, string);
+        }
+
+        @JavascriptInterface
+        public boolean JSgetSharedBoolean(String preference)
+        {
+            return mTools.getSharedPreferencesBoolean(preference);
+        }
+
+        @JavascriptInterface
+        public void JSsetSharedBoolean(String preference, boolean bool)
+        {
+            mTools.setSharedPreferencesBoolean(preference, bool);
+        }
+
+        @JavascriptInterface
+        public void JSkeepScreenOn(boolean keepScreenOn)
+        {
+            if(keepScreenOn)
+            {
+                if(!mWakeLock.isHeld()) mWakeLock.acquire();
+            }
+            else
+            {
+                if(mWakeLock.isHeld()) mWakeLock.release();
+            }
+        }
+
+        @JavascriptInterface
+        public void JSfinishActivity()
+        {
+            mHasLongPressedBack = true;
+
+            mTools.navigateUp(mActivity);
+        }
+
+        @JavascriptInterface
+        public int JSsearchApp(String searchApp, String string)
+        {
+            int searchAppFound;
+
+            try
+            {
+                getPackageManager().getApplicationInfo(searchApp, 0);
+
+                final Intent intent = new Intent(Intent.ACTION_SEARCH);
+                intent.setPackage(searchApp);
+                intent.putExtra("query", string);
+                startActivity(intent);
+
+                searchAppFound = 1;
+            }
+            catch(Exception e)
+            {
+                searchAppFound = 0;
+
+                Log.e("WebViewActivity", Log.getStackTraceString(e));
+            }
+
+            return searchAppFound;
+        }
+
+        @JavascriptInterface
+        public void JSshare(String title, String uri)
+        {
+            final Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_TEXT, uri);
+            intent.setType("text/plain");
+
+            final Intent chooserIntent = Intent.createChooser(intent, title);
+            startActivity(chooserIntent);
+        }
+
+        @JavascriptInterface
         public void JSmakeDonation()
         {
             final Intent intent = new Intent(mContext, DonateActivity.class);
@@ -553,68 +638,9 @@ public class WebViewActivity extends AppCompatActivity
         }
 
 	    @JavascriptInterface
-	    public void JSshare(String title, String uri)
-	    {
-	    	final Intent intent = new Intent();
-	    	intent.setAction(Intent.ACTION_SEND);
-	    	intent.putExtra(Intent.EXTRA_TEXT, uri);
-	    	intent.setType("text/plain");
-
-	    	final Intent chooserIntent = Intent.createChooser(intent, title);
-	    	startActivity(chooserIntent);
-	    }
-
-	    @JavascriptInterface
 	    public void JSopenUri(String uri)
 	    {
             mTools.openChromeCustomTabsUri(uri);
-	    }
-
-	    @JavascriptInterface
-	    public int JSsearchApp(String searchApp, String string)
-	    {
-            int appFound;
-
-	    	try
-	    	{
-				getPackageManager().getApplicationInfo(searchApp, 0);
-
-		    	final Intent intent = new Intent(Intent.ACTION_SEARCH);
-		    	intent.setPackage(searchApp);
-		    	intent.putExtra("query", string);
-		    	startActivity(intent);
-
-                appFound = 1;
-	    	}
-	    	catch(Exception e)
-	    	{
-                appFound = 0;
-
-                Log.e("WebViewActivity", Log.getStackTraceString(e));
-	    	}
-
-            return appFound;
-	    }
-
-	    @JavascriptInterface
-	    public void JSkeepScreenOn(boolean keepScreenOn)
-	    {
-	    	if(keepScreenOn)
-	    	{
-	    		if(!mWakeLock.isHeld()) mWakeLock.acquire();
-	    	}
-	    	else
-	    	{
-	    		if(mWakeLock.isHeld()) mWakeLock.release();
-	    	}
-	    }
-
-	    @JavascriptInterface
-	    public void JSfinishActivity()
-	    {
-            mHasLongPressedBack = true;
-
-            mTools.navigateUp(mActivity);
 	    }
 
         @JavascriptInterface
@@ -657,61 +683,6 @@ public class WebViewActivity extends AppCompatActivity
             final GetStatusBarColorFromImageTask getStatusBarColorFromImageTask = new GetStatusBarColorFromImageTask();
             getStatusBarColorFromImageTask.execute(uri);
         }
-
-	    @JavascriptInterface
-	    public void JSstartService()
-	    {
-            final Intent intent = new Intent(mContext, RemoteControlService.class);
-
-            if(mTools.getSharedPreferencesBoolean("PAUSE_ON_INCOMING_CALL") || mTools.getSharedPreferencesBoolean("PAUSE_ON_OUTGOING_CALL") || mTools.getSharedPreferencesBoolean("FLIP_TO_PAUSE") || mTools.getSharedPreferencesBoolean("SHAKE_TO_SKIP"))
-            {
-                Log.w("LOG", "Starting service");
-
-                startService(intent);
-            }
-            else
-            {
-                Log.w("LOG", "Stopping service");
-
-                stopService(intent);
-            }
-	    }
-
-	    @JavascriptInterface
-	    public String JSgetSharedString(String preference)
-	    {
-			return mTools.getSharedPreferencesString(preference);
-	    }
-
-	    @JavascriptInterface
-	    public void JSsetSharedString(String preference, String string)
-	    {
-            mTools.setSharedPreferencesString(preference, string);
-	    }
-
-	    @JavascriptInterface
-	    public boolean JSgetSharedBoolean(String preference)
-	    {
-	    	return mTools.getSharedPreferencesBoolean(preference);
-	    }
-
-	    @JavascriptInterface
-	    public void JSsetSharedBoolean(String preference, boolean bool)
-	    {
-            mTools.setSharedPreferencesBoolean(preference, bool);
-	    }
-
-	    @JavascriptInterface
-	    public String JSgetVersions()
-	    {
-	    	return new JSONArray(Arrays.asList(mProjectVersionName, getString(R.string.project_minimum_version))).toString();
-	    }
-
-	    @JavascriptInterface
-	    public String JSgetPackageName()
-	    {
-			return mContext.getPackageName();
-	    }
 	}
 
     private class GetStatusBarColorFromImageTask extends AsyncTask<String, String, Bitmap>

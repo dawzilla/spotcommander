@@ -3,9 +3,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/wear_main_layout" style="@style/wear_main_layout">
 
     <LinearLayout style="@style/wear_main_inner_layout">
-        <ImageButton android:id="@+id/wear_adjust_spotify_volume_mute_button" android:src="@drawable/ic_volume_mute_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
-        <ImageButton android:id="@+id/wear_adjust_spotify_volume_down_button" android:src="@drawable/ic_volume_down_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
-        <ImageButton android:id="@+id/wear_adjust_spotify_volume_up_button" android:src="@drawable/ic_volume_up_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
+        <ImageButton android:id="@+id/wear_adjust_volume_mute_button" android:src="@drawable/ic_volume_mute_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
+        <ImageButton android:id="@+id/wear_adjust_volume_down_button" android:src="@drawable/ic_volume_down_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
+        <ImageButton android:id="@+id/wear_adjust_volume_up_button" android:src="@drawable/ic_volume_up_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
     </LinearLayout>
 
     <LinearLayout style="@style/wear_main_inner_layout">
@@ -15,7 +15,9 @@
     </LinearLayout>
 
     <LinearLayout style="@style/wear_main_inner_layout">
+        <ImageButton android:id="@+id/wear_seek_back_button" android:src="@drawable/ic_fast_rewind_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
         <ImageButton android:id="@+id/wear_launch_quit_button" android:src="@drawable/ic_settings_power_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
+        <ImageButton android:id="@+id/wear_seek_forward_button" android:src="@drawable/ic_fast_forward_white_36dp" android:onClick="onButtonClick" android:contentDescription="@string/image_content_description" style="@style/wear_button"/>
     </LinearLayout>
 
 </LinearLayout>

@@ -66,17 +66,17 @@ public class WidgetLarge extends AppWidgetProvider
 
             final Intent volumeMuteIntent = new Intent(context, WidgetLarge.class);
             volumeMuteIntent.setAction("volume_mute");
-            volumeMuteIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_spotify_volume", "mute"});
+            volumeMuteIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "mute"});
             final PendingIntent volumeMutePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeMuteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeDownIntent = new Intent(context, WidgetLarge.class);
             volumeDownIntent.setAction("volume_down");
-            volumeDownIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_spotify_volume", "down"});
+            volumeDownIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "down"});
             final PendingIntent volumeDownPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeDownIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeUpIntent = new Intent(context, WidgetLarge.class);
             volumeUpIntent.setAction("volume_up");
-            volumeUpIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_spotify_volume", "up"});
+            volumeUpIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "up"});
             final PendingIntent volumeUpPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeUpIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent playlistsIntent = new Intent(context, PlaylistsActivity.class);

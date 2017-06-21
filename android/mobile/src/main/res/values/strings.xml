@@ -6,7 +6,7 @@
     <string name="project_name">SpotCommander</string>
     <string name="project_website">http://www.olejon.net/code/spotcommander/</string>
     <string name="project_privacy_policy">https://github.com/olejon/spotcommander/wiki/PrivacyPolicy</string>
-    <string name="project_minimum_version">13.0</string>
+    <string name="project_minimum_version">13.2</string>
 
     <!-- Main -->
     <string name="main_title">Computers</string>
@@ -80,7 +80,7 @@
     <string name="webview_dialog_ssl_error_title">Error</string>
     <string name="webview_dialog_ssl_error_message">You are using an insecure HTTPS connection with a nonissued certificate. This is not allowed according to Google\'s guidelines.</string>
     <string name="webview_dialog_ssl_error_positive_button">CLOSE</string>
-    <string name="webview_user_agent">%1$s SpotCommander/%2$s %3$s%4$s%5$s</string>
+    <string name="webview_user_agent">%1$s SpotCommander/%2$s %3$s %4$s</string>
 
     <!-- Donate -->
     <string name="donate_title">Donate</string>
@@ -93,7 +93,7 @@
     <string name="donate_menu_reset">Reset</string>
 
     <!-- Playlists -->
-    <string name="playlists_title">Shuffle Play</string>
+    <string name="playlists_title">Play Playlist</string>
     <string name="playlists_error">Could not get playlists</string>
 
     <!-- Widget -->
@@ -102,7 +102,7 @@
 
     <!-- Notification -->
     <string name="notification_mobile_text">Tap to open.</string>
-    <string name="notification_wear_text">Swipe on watch for actions.</string>
+    <string name="notification_wear_text">See watch for actions.</string>
     <string name="notification_action_hide">Hide</string>
     <string name="notification_action_previous">Previous</string>
     <string name="notification_action_play_pause">Play</string>

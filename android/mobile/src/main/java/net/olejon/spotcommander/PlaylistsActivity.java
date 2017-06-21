@@ -154,7 +154,7 @@ public class PlaylistsActivity extends AppCompatActivity
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id)
                         {
-                            mTools.remoteControl(computerId, "shuffle_play_uri", mPlaylistUris.get(position));
+                            mTools.remoteControl(computerId, "play_uri", mPlaylistUris.get(position));
 
                             finish();
                         }

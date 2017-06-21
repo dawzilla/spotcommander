@@ -92,19 +92,19 @@ public class MainActivity extends WearableActivity
     {
         switch(view.getId())
         {
-            case R.id.wear_adjust_spotify_volume_mute_button:
+            case R.id.wear_adjust_volume_mute_button:
             {
-                sendMessage("adjust_spotify_volume_mute");
+                sendMessage("adjust_volume_mute");
                 break;
             }
-            case R.id.wear_adjust_spotify_volume_down_button:
+            case R.id.wear_adjust_volume_down_button:
             {
-                sendMessage("adjust_spotify_volume_down");
+                sendMessage("adjust_volume_down");
                 break;
             }
-            case R.id.wear_adjust_spotify_volume_up_button:
+            case R.id.wear_adjust_volume_up_button:
             {
-                sendMessage("adjust_spotify_volume_up");
+                sendMessage("adjust_volume_up");
                 break;
             }
             case R.id.wear_previous_button:
@@ -122,9 +122,19 @@ public class MainActivity extends WearableActivity
                 sendMessage("next");
                 break;
             }
+            case R.id.wear_seek_back_button:
+            {
+                sendMessage("seek_back");
+                break;
+            }
             case R.id.wear_launch_quit_button:
             {
                 sendMessage("launch_quit");
+                break;
+            }
+            case R.id.wear_seek_forward_button:
+            {
+                sendMessage("seek_forward");
                 break;
             }
         }
