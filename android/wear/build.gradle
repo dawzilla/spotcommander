@@ -10,8 +10,8 @@ android
         applicationId "net.olejon.spotcommander"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 133
-        versionName "13.3"
+        versionCode 13400
+        versionName "13.4"
     }
 
     buildTypes

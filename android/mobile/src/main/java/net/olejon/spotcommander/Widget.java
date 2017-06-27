@@ -48,10 +48,20 @@ public class Widget extends AppWidgetProvider
             previousIntent.putExtra(WIDGET_INTENT_EXTRA, new String[] {id, "previous", ""});
             final PendingIntent previousPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, previousIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
+            final Intent seekBackIntent = new Intent(context, Widget.class);
+            seekBackIntent.setAction("seek_back");
+            seekBackIntent.putExtra(WIDGET_INTENT_EXTRA, new String[] {id, "seek_back", ""});
+            final PendingIntent seekBackPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, seekBackIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
             final Intent playPauseIntent = new Intent(context, Widget.class);
             playPauseIntent.setAction("play_pause");
             playPauseIntent.putExtra(WIDGET_INTENT_EXTRA, new String[] {id, "play_pause", ""});
             final PendingIntent playPausePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, playPauseIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+            final Intent seekForwardIntent = new Intent(context, Widget.class);
+            seekForwardIntent.setAction("seek_forward");
+            seekForwardIntent.putExtra(WIDGET_INTENT_EXTRA, new String[] {id, "seek_forward", ""});
+            final PendingIntent seekForwardPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, seekForwardIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent nextIntent = new Intent(context, Widget.class);
             nextIntent.setAction("next");
@@ -62,7 +72,9 @@ public class Widget extends AppWidgetProvider
 
             views.setOnClickPendingIntent(R.id.widget_launcher_button, launchActivityPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_previous_button, previousPendingIntent);
+            views.setOnClickPendingIntent(R.id.widget_seek_back_button, seekBackPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_play_button, playPausePendingIntent);
+            views.setOnClickPendingIntent(R.id.widget_seek_forward_button, seekForwardPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_next_button, nextPendingIntent);
 
             appWidgetManager.updateAppWidget(appWidgetId, views);

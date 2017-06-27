@@ -24,8 +24,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.activity.WearableActivity;
+import android.support.wearable.view.BoxInsetLayout;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -39,9 +39,8 @@ public class MainActivity extends WearableActivity
 
     private final Context mContext = this;
 
-    private LinearLayout linearLayout;
-
     private GoogleApiClient mGoogleApiClient;
+    private BoxInsetLayout boxInsetLayout;
 
     // Create activity
     @Override
@@ -52,7 +51,7 @@ public class MainActivity extends WearableActivity
         // Layout
         setContentView(R.layout.activity_main);
 
-        linearLayout = (LinearLayout) findViewById(R.id.wear_main_layout);
+        boxInsetLayout = (BoxInsetLayout) findViewById(R.id.wear_main_layout);
 
         // Ambient mode
         setAmbientEnabled();
@@ -76,7 +75,7 @@ public class MainActivity extends WearableActivity
     {
         super.onEnterAmbient(ambientDetails);
 
-        linearLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
+        boxInsetLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.black));
     }
 
     @Override
@@ -84,7 +83,7 @@ public class MainActivity extends WearableActivity
     {
         super.onExitAmbient();
 
-        linearLayout.setBackgroundResource(R.drawable.background);
+        boxInsetLayout.setBackgroundResource(R.drawable.background);
     }
 
     // Buttons

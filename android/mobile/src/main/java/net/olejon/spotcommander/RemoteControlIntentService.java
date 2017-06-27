@@ -20,8 +20,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 */
 
 import android.app.IntentService;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 
 public class RemoteControlIntentService extends IntentService
@@ -35,46 +33,14 @@ public class RemoteControlIntentService extends IntentService
 		super("RemoteControlIntentService");
 	}
 
-	// Intent
 	@Override
 	protected void onHandleIntent(Intent intent)
 	{
-		final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
 		final long computerId = intent.getLongExtra(REMOTE_CONTROL_INTENT_SERVICE_EXTRA, 0);
 
 		String action = intent.getAction();
 		String subAction = "";
 
-		if(action.equals("hide_notification"))
-		{
-			notificationManager.cancel(WebViewActivity.NOTIFICATION_ID);
-		}
-		else
-		{
-            switch(action)
-            {
-                case "adjust_volume_mute":
-                {
-                    action = "adjust_volume";
-                    subAction = "mute";
-                    break;
-                }
-                case "adjust_volume_down":
-                {
-                    action = "adjust_volume";
-                    subAction = "down";
-                    break;
-                }
-                case "adjust_volume_up":
-                {
-                    action = "adjust_volume";
-                    subAction = "up";
-                    break;
-                }
-            }
-
-            mTools.remoteControl(computerId, action, subAction);
-		}
+		mTools.remoteControl(computerId, action, subAction);
 	}
 }

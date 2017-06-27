@@ -5,6 +5,5 @@
     <dimen name="add_computer_body_layout_padding_top">0dp</dimen>
     <dimen name="add_computer_body_layout_padding_right">0dp</dimen>
     <dimen name="add_computer_body_layout_padding_left">0dp</dimen>
-    <dimen name="widget_margin">8dp</dimen>
 
 </resources>

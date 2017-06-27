@@ -49,10 +49,20 @@ public class WidgetLarge extends AppWidgetProvider
             previousIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "previous", ""});
             final PendingIntent previousPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, previousIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
+            final Intent seekBackIntent = new Intent(context, WidgetLarge.class);
+            seekBackIntent.setAction("seek_back");
+            seekBackIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "seek_back", ""});
+            final PendingIntent seekBackPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, seekBackIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
             final Intent playPauseIntent = new Intent(context, WidgetLarge.class);
             playPauseIntent.setAction("play_pause");
             playPauseIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "play_pause", ""});
             final PendingIntent playPausePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, playPauseIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+            final Intent seekForwardIntent = new Intent(context, WidgetLarge.class);
+            seekForwardIntent.setAction("seek_forward");
+            seekForwardIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "seek_forward", ""});
+            final PendingIntent seekForwardPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, seekForwardIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent nextIntent = new Intent(context, WidgetLarge.class);
             nextIntent.setAction("next");
@@ -65,17 +75,17 @@ public class WidgetLarge extends AppWidgetProvider
             final PendingIntent launchQuitPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, launchQuitIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeMuteIntent = new Intent(context, WidgetLarge.class);
-            volumeMuteIntent.setAction("volume_mute");
+            volumeMuteIntent.setAction("adjust_volume_mute");
             volumeMuteIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "mute"});
             final PendingIntent volumeMutePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeMuteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeDownIntent = new Intent(context, WidgetLarge.class);
-            volumeDownIntent.setAction("volume_down");
+            volumeDownIntent.setAction("adjust_volume_down");
             volumeDownIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "down"});
             final PendingIntent volumeDownPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeDownIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             final Intent volumeUpIntent = new Intent(context, WidgetLarge.class);
-            volumeUpIntent.setAction("volume_up");
+            volumeUpIntent.setAction("adjust_volume_up");
             volumeUpIntent.putExtra(WIDGET_LARGE_INTENT_EXTRA, new String[] {id, "adjust_volume", "up"});
             final PendingIntent volumeUpPendingIntent = PendingIntent.getBroadcast(context, appWidgetId, volumeUpIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
@@ -87,7 +97,9 @@ public class WidgetLarge extends AppWidgetProvider
 
             views.setOnClickPendingIntent(R.id.widget_launcher_button, launchActivityPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_previous_button, previousPendingIntent);
+            views.setOnClickPendingIntent(R.id.widget_seek_back_button, seekBackPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_play_button, playPausePendingIntent);
+            views.setOnClickPendingIntent(R.id.widget_seek_forward_button, seekForwardPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_next_button, nextPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_power_button, launchQuitPendingIntent);
             views.setOnClickPendingIntent(R.id.widget_volume_mute_button, volumeMutePendingIntent);

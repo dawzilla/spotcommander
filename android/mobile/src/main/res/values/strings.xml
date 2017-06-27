@@ -36,7 +36,7 @@
     <string name="settings_category_appearance">Appearance</string>
     <string name="settings_category_advanced">Advanced</string>
     <string name="settings_hide_status_bar_title">Hide Status Bar</string>
-    <string name="settings_hide_status_bar_summary">Check this to hide the status bar in the app</string>
+    <string name="settings_hide_status_bar_summary">Check this to hide the status bar in the app. Useful if your screen is too small to show Now Playing + Remote</string>
     <string name="settings_accelerated_animations_title">Accelerated Animations</string>
     <string name="settings_accelerated_animations_summary">Uncheck this if you experience that the app becomes unresponsive. This is a known issue on some devices running Android versions older than Android 4.4. Unchecking this will not have any effect on Android 4.4 and newer</string>
 
@@ -101,14 +101,13 @@
     <string name="widget_list_empty">No computers</string>
 
     <!-- Notification -->
-    <string name="notification_mobile_text">Tap to open.</string>
-    <string name="notification_wear_text">See watch for actions.</string>
-    <string name="notification_action_hide">Hide</string>
+    <string name="notification_title">SpotCommander</string>
+    <string name="notification_text">Tap to open</string>
     <string name="notification_action_previous">Previous</string>
+    <string name="notification_action_seek_back">Seek Back</string>
     <string name="notification_action_play_pause">Play</string>
+    <string name="notification_action_seek_forward">Seek Forward</string>
     <string name="notification_action_next">Next</string>
-    <string name="notification_action_volume_down">Volume down</string>
-    <string name="notification_action_volume_up">Volume up</string>
     <string name="notification_no_music_is_playing_artist">Unknown</string>
 
     <!-- Shortcuts -->

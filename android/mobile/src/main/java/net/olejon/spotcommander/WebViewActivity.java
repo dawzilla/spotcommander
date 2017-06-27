@@ -34,10 +34,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -56,6 +56,7 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
@@ -68,7 +69,9 @@ import java.util.Arrays;
 
 public class WebViewActivity extends AppCompatActivity
 {
-	public final static int NOTIFICATION_ID = 1;
+    private final static String MESSAGE_PATH = "/notification";
+
+	private final static int NOTIFICATION_ID = 1;
 
     private final Activity mActivity = this;
 
@@ -82,19 +85,11 @@ public class WebViewActivity extends AppCompatActivity
 	private NotificationCompat.Builder mNotificationBuilder;
 	private WebView mWebView;
 
-    private PendingIntent mHidePendingIntent;
-    private PendingIntent mPreviousPendingIntent;
-    private PendingIntent mPlayPausePendingIntent;
-    private PendingIntent mVolumeDownPendingIntent;
-    private PendingIntent mVolumeUpPendingIntent;
-    private PendingIntent mNextPendingIntent;
-
 	private String mProjectVersionName;
 	private String mCurrentNetwork;
 
     private boolean mActivityIsPaused = false;
 	private boolean mHasLongPressedBack = false;
-	private boolean mPersistentNotificationIsSupported = false;
 
     private int mStatusBarPrimaryColor = 0;
     private int mStatusBarCoverArtColor = 0;
@@ -154,67 +149,59 @@ public class WebViewActivity extends AppCompatActivity
         }
 
 		// Notification
-        mPersistentNotificationIsSupported = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN);
+        final Intent launchActivityIntent = new Intent(mContext, MainActivity.class);
+        launchActivityIntent.setAction("android.intent.action.MAIN");
+        launchActivityIntent.addCategory("android.intent.category.LAUNCHER");
+        final PendingIntent launchActivityPendingIntent = PendingIntent.getActivity(mContext, 0, launchActivityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-		if(mPersistentNotificationIsSupported)
-		{
-			final Intent launchActivityIntent = new Intent(mContext, MainActivity.class);
-			launchActivityIntent.setAction("android.intent.action.MAIN");
-			launchActivityIntent.addCategory("android.intent.category.LAUNCHER");
-            PendingIntent launchActivityPendingIntent = PendingIntent.getActivity(mContext, 0, launchActivityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final Intent previousIntent = new Intent(mContext, RemoteControlIntentService.class);
+        previousIntent.setAction("previous");
+        previousIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
+        final PendingIntent previousPendingIntent = PendingIntent.getService(mContext, 0, previousIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            final Intent hideIntent = new Intent(mContext, RemoteControlIntentService.class);
-			hideIntent.setAction("hide_notification");
-			hideIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-			mHidePendingIntent = PendingIntent.getService(mContext, 0, hideIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final Intent seekBackIntent = new Intent(mContext, RemoteControlIntentService.class);
+        seekBackIntent.setAction("seek_back");
+        seekBackIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
+        final PendingIntent seekBackPendingIntent = PendingIntent.getService(mContext, 0, seekBackIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            final Intent previousIntent = new Intent(mContext, RemoteControlIntentService.class);
-            previousIntent.setAction("previous");
-            previousIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-            mPreviousPendingIntent = PendingIntent.getService(mContext, 0, previousIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final Intent playPauseIntent = new Intent(mContext, RemoteControlIntentService.class);
+        playPauseIntent.setAction("play_pause");
+        playPauseIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
+        final PendingIntent playPausePendingIntent = PendingIntent.getService(mContext, 0, playPauseIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            final Intent playPauseIntent = new Intent(mContext, RemoteControlIntentService.class);
-			playPauseIntent.setAction("play_pause");
-			playPauseIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-			mPlayPausePendingIntent = PendingIntent.getService(mContext, 0, playPauseIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final Intent seekForwardIntent = new Intent(mContext, RemoteControlIntentService.class);
+        seekForwardIntent.setAction("seek_forward");
+        seekForwardIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
+        final PendingIntent seekForwardPendingIntent = PendingIntent.getService(mContext, 0, seekForwardIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            final Intent nextIntent = new Intent(mContext, RemoteControlIntentService.class);
-			nextIntent.setAction("next");
-			nextIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-			mNextPendingIntent = PendingIntent.getService(mContext, 0, nextIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final Intent nextIntent = new Intent(mContext, RemoteControlIntentService.class);
+        nextIntent.setAction("next");
+        nextIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
+        final PendingIntent nextPendingIntent = PendingIntent.getService(mContext, 0, nextIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            final Intent volumeDownIntent = new Intent(mContext, RemoteControlIntentService.class);
-            volumeDownIntent.setAction("adjust_volume_down");
-            volumeDownIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-            mVolumeDownPendingIntent = PendingIntent.getService(mContext, 0, volumeDownIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        mNotificationManager = NotificationManagerCompat.from(mContext);
+        mNotificationBuilder = new NotificationCompat.Builder(mContext);
 
-            final Intent volumeUpIntent = new Intent(mContext, RemoteControlIntentService.class);
-            volumeUpIntent.setAction("adjust_volume_up");
-            volumeUpIntent.putExtra(RemoteControlIntentService.REMOTE_CONTROL_INTENT_SERVICE_EXTRA, computerId);
-            mVolumeUpPendingIntent = PendingIntent.getService(mContext, 0, volumeUpIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        mNotificationBuilder.setWhen(0)
+                .setContentTitle(getString(R.string.notification_title))
+                .setContentText(getString(R.string.notification_text))
+                .setContentIntent(launchActivityPendingIntent)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
+                .setColor(ContextCompat.getColor(mContext, R.color.light_green))
+                .setStyle(new NotificationCompat.MediaStyle().setShowActionsInCompactView(0, 2, 4))
+                .addAction(R.drawable.ic_skip_previous_white_24dp, getString(R.string.notification_action_previous), previousPendingIntent)
+                .addAction(R.drawable.ic_fast_rewind_white_24dp, getString(R.string.notification_action_seek_back), seekBackPendingIntent)
+                .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), playPausePendingIntent)
+                .addAction(R.drawable.ic_fast_forward_white_24dp, getString(R.string.notification_action_seek_forward), seekForwardPendingIntent)
+                .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), nextPendingIntent);
 
-            mNotificationManager = NotificationManagerCompat.from(mContext);
-            mNotificationBuilder = new NotificationCompat.Builder(mContext);
-
-            mNotificationBuilder.setWhen(0)
-                    .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
-                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                    .setContentTitle(getString(R.string.project_name))
-                    .setContentIntent(launchActivityPendingIntent);
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            {
-                mNotificationBuilder.setCategory(Notification.CATEGORY_TRANSPORT)
-                        .setPriority(Notification.PRIORITY_MAX)
-                        .setVisibility(Notification.VISIBILITY_PUBLIC);
-            }
-		}
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) mNotificationBuilder.setOngoing(true).setPriority(Notification.PRIORITY_HIGH);
 
 		// Web view
         mWebView = (WebView) findViewById(R.id.webview_webview);
 
         mWebView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.background));
-        mWebView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);
 
         mWebView.setWebViewClient(new WebViewClient()
 		{
@@ -320,48 +307,12 @@ public class WebViewActivity extends AppCompatActivity
             final String nowplaying_artist = mTools.getSharedPreferencesString("NOWPLAYING_ARTIST");
             final String nowplaying_title = mTools.getSharedPreferencesString("NOWPLAYING_TITLE");
 
-            if(!nowplaying_artist.equals(getString(R.string.notification_no_music_is_playing_artist)))
+            if(mTools.getSharedPreferencesBoolean("PERSISTENT_NOTIFICATION") && !nowplaying_artist.equals(getString(R.string.notification_no_music_is_playing_artist)))
             {
-                if(mPersistentNotificationIsSupported && mGoogleApiClient != null && mGoogleApiClient.isConnected())
-                {
-                    Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>()
-                    {
-                        @Override
-                        public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult)
-                        {
-                            if(getConnectedNodesResult.getNodes().size() > 0)
-                            {
-                                mNotificationBuilder.setContentText(getString(R.string.notification_wear_text))
-                                        .addAction(R.drawable.ic_skip_previous_white_24dp, getString(R.string.notification_action_previous), mPreviousPendingIntent)
-                                        .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent)
-                                        .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent)
-                                        .extend(new NotificationCompat.WearableExtender()
-                                                .setBackground(BitmapFactory.decodeResource(getResources(), R.drawable.notification_background))
-                                                .setContentAction(0)
-                                                .setContentIcon(R.drawable.notification_icon)
-                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent).build())
-                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_skip_previous_white_24dp, getString(R.string.notification_action_previous), mPreviousPendingIntent).build())
-                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent).build())
-                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_down_white_24dp, getString(R.string.notification_action_volume_down), mVolumeDownPendingIntent).build())
-                                                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_volume_up_white_24dp, getString(R.string.notification_action_volume_up), mVolumeUpPendingIntent).build())
-                                        );
+                mNotificationBuilder.setTicker(nowplaying_artist+" - "+nowplaying_title);
+                mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
 
-                                mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
-                            }
-                        }
-                    });
-                }
-                else if(mPersistentNotificationIsSupported && mTools.getSharedPreferencesBoolean("PERSISTENT_NOTIFICATION"))
-                {
-                    mNotificationBuilder.setContentText(getString(R.string.notification_mobile_text))
-                            .setOngoing(true)
-                            .setTicker(nowplaying_artist+" - "+nowplaying_title)
-                            .addAction(R.drawable.ic_close_white_24dp, getString(R.string.notification_action_hide), mHidePendingIntent)
-                            .addAction(R.drawable.ic_play_arrow_white_24dp, getString(R.string.notification_action_play_pause), mPlayPausePendingIntent)
-                            .addAction(R.drawable.ic_skip_next_white_24dp, getString(R.string.notification_action_next), mNextPendingIntent);
-
-                    mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
-                }
+                sendMessage("show_notification");
             }
         }
 
@@ -382,7 +333,12 @@ public class WebViewActivity extends AppCompatActivity
 
         if(mGoogleApiClient != null) mGoogleApiClient.connect();
 
-		if(mPersistentNotificationIsSupported) mNotificationManager.cancel(NOTIFICATION_ID);
+        if(mTools.getSharedPreferencesBoolean("PERSISTENT_NOTIFICATION"))
+        {
+            mNotificationManager.cancel(NOTIFICATION_ID);
+
+            sendMessage("hide_notification");
+        }
 
 		if(mCurrentNetwork.equals(mTools.getCurrentNetwork()))
 		{
@@ -523,8 +479,39 @@ public class WebViewActivity extends AppCompatActivity
         }
 	}
 
+	// Send message
+    private void sendMessage(final String message)
+    {
+        if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
+        {
+            Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>()
+            {
+                @Override
+                public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult)
+                {
+                    String nodeId = null;
+
+                    for(Node node : getConnectedNodesResult.getNodes())
+                    {
+                        if(node.isNearby())
+                        {
+                            nodeId = node.getId();
+
+                            break;
+                        }
+
+                        nodeId = node.getId();
+                    }
+
+                    if(nodeId != null) Wearable.MessageApi.sendMessage(mGoogleApiClient, nodeId, MESSAGE_PATH, message.getBytes());
+                }
+            });
+        }
+    }
+
 	// JavaScript interface
-	private class JavaScriptInterface
+	@SuppressWarnings("unused")
+    private class JavaScriptInterface
 	{
         @JavascriptInterface
         public void JSstartService()

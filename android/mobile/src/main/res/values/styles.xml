@@ -184,7 +184,7 @@
     </style>
 
     <style name="donate_button_base">
-        <item name="android:background">@color/light_grey</item>
+        <item name="android:background">@drawable/button</item>
     </style>
 
     <style name="donate_information" parent="donate_information_base">
@@ -207,7 +207,6 @@
     <style name="playlist_list" parent="listview">
         <item name="android:visibility">gone</item>
         <item name="android:divider">@color/dark</item>
-        <item name="android:scrollbarStyle">insideOverlay</item>
         <item name="android:listSelector">@drawable/playlists_list_item</item>
     </style>
 
@@ -236,14 +235,14 @@
     </style>
 
     <!-- Web view -->
-    <style name="webview" parent="webview_base">
+    <style name="webview">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:overScrollMode">never</item>
         <item name="android:scrollbars">vertical</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scrollbar</item>
+        <item name="android:scrollbarSize">6dp</item>
     </style>
-
-    <style name="webview_base"/>
 
     <!-- Toolbar -->
     <style name="toolbar" parent="toolbar_base">
@@ -284,6 +283,8 @@
         <item name="titleEnabled">false</item>
     </style>
 
+    <style name="collapsing_toolbar_base"/>
+
     <style name="collapsing_toolbar_toolbar">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">?attr/actionBarSize</item>
@@ -305,10 +306,11 @@
         <item name="android:dividerHeight">1dp</item>
         <item name="android:headerDividersEnabled">false</item>
         <item name="android:overScrollMode">never</item>
-        <item name="android:scrollbarStyle">outsideOverlay</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scrollbar</item>
+        <item name="android:scrollbarSize">6dp</item>
     </style>
 
-    <style name="listview_base" parent="android:Widget.ListView"/>
+    <style name="listview_base" parent="android:Widget.Holo.Light.ListView"/>
 
     <style name="listview_empty" parent="listview_empty_base">
         <item name="android:layout_width">match_parent</item>
@@ -327,15 +329,15 @@
     </style>
 
     <!-- Nested scroll view -->
-    <style name="nested_scrollview" parent="nested_scrollview_base">
+    <style name="nested_scrollview">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:overScrollMode">never</item>
         <item name="android:scrollbars">vertical</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scrollbar</item>
+        <item name="android:scrollbarSize">6dp</item>
         <item name="layout_behavior">@string/appbar_scrolling_view_behavior</item>
     </style>
-
-    <style name="nested_scrollview_base"/>
 
     <!-- Floating action button -->
     <style name="fab_layout" parent="fab_layout_base">
@@ -366,7 +368,6 @@
     <style name="widget_layout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:layout_margin">@dimen/widget_margin</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:background">@drawable/widget</item>
     </style>
@@ -374,7 +375,6 @@
     <style name="widget_large_layout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_margin">@dimen/widget_margin</item>
         <item name="android:orientation">vertical</item>
         <item name="android:background">@drawable/widget</item>
     </style>
