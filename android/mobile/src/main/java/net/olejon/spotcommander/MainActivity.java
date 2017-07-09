@@ -37,7 +37,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,24 +49,8 @@ import android.widget.ListView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.android.volley.Cache;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Network;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
-import com.android.volley.toolbox.HurlStack;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-
-import org.json.JSONObject;
-
-import java.net.URLEncoder;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -90,6 +73,10 @@ public class MainActivity extends AppCompatActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+        // Firebase
+        FirebaseAnalytics.getInstance(mContext);
+        FirebaseMessaging.getInstance().subscribeToTopic("message");
 
         // Settings
         PreferenceManager.setDefaultValues(mContext, R.xml.settings, false);
@@ -191,85 +178,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        // Message dialog
-        String version = mTools.getProjectVersionName();
-        String device = "";
-
-        try
-        {
-            device = (Build.MANUFACTURER == null || Build.MODEL == null) ? "" : URLEncoder.encode(Build.MANUFACTURER+" "+Build.MODEL+" "+Build.VERSION.SDK_INT, "utf-8");
-        }
-        catch(Exception e)
-        {
-            Log.e("MainActivity", Log.getStackTraceString(e));
-        }
-
-        final Cache cache = new DiskBasedCache(getCacheDir(), 0);
-
-        final Network network = new BasicNetwork(new HurlStack());
-
-        final RequestQueue requestQueue = new RequestQueue(cache, network);
-
-        requestQueue.start();
-
-        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, getString(R.string.project_website)+"api/1/android/message/?version_name="+version+"&device="+device, null, new Response.Listener<JSONObject>()
-        {
-            @Override
-            public void onResponse(JSONObject response)
-            {
-                requestQueue.stop();
-
-                try
-                {
-                    final long id = response.getLong("id");
-                    final String title = response.getString("title");
-                    final String message = response.getString("message");
-
-                    final long lastId = mTools.getSharedPreferencesLong("LAST_MESSAGE_ID");
-
-                    if(lastId == 0)
-                    {
-                        mTools.setSharedPreferencesLong("LAST_MESSAGE_ID", id);
-                    }
-                    else if(id != lastId)
-                    {
-                        new MaterialDialog.Builder(mContext).title(title).content(message).positiveText(R.string.main_message_dialog_positive_button).onPositive(new MaterialDialog.SingleButtonCallback()
-                        {
-                            @Override
-                            public void onClick(@NonNull MaterialDialog materialDialog, @NonNull DialogAction dialogAction)
-                            {
-                                mTools.setSharedPreferencesLong("LAST_MESSAGE_ID", id);
-                            }
-                        }).contentColorRes(R.color.black).positiveColorRes(R.color.dark_green).show();
-                    }
-                }
-                catch(Exception e)
-                {
-                    Log.e("MainActivity", Log.getStackTraceString(e));
-                }
-            }
-        }, new Response.ErrorListener()
-        {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                requestQueue.stop();
-
-                Log.e("MainActivity", error.toString());
-            }
-        });
-
-        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        requestQueue.add(jsonObjectRequest);
-
         // Permissions
         grantPermissions(true);
-
-        // Google analytics
-        final GoogleAnalytics googleAnalytics = GoogleAnalytics.getInstance(mContext);
-        final Tracker tracker = googleAnalytics.newTracker(R.xml.app_tracker);
-        tracker.send(new HitBuilders.ScreenViewBuilder().build());
 	}
 
 	// Resume activity

@@ -4,9 +4,8 @@
 
     <!-- Project -->
     <string name="project_name">SpotCommander</string>
-    <string name="project_website">http://www.olejon.net/code/spotcommander/</string>
     <string name="project_privacy_policy">https://github.com/olejon/spotcommander/wiki/PrivacyPolicy</string>
-    <string name="project_minimum_version">13.2</string>
+    <string name="project_minimum_version">13.4</string>
 
     <!-- Main -->
     <string name="main_title">Computers</string>
@@ -19,7 +18,6 @@
     <string name="main_permissions_dialog_title">Allow features</string>
     <string name="main_permissions_dialog_message">The features Pause on Incoming Call and Pause on Outgoing Call that can be activated in Settings in the main app require the Phone permission.</string>
     <string name="main_permissions_dialog_positive_button">OK</string>
-    <string name="main_message_dialog_positive_button">CLOSE</string>
     <string name="main_remove_computer_dialog_title">Remove Computer</string>
     <string name="main_remove_computer_dialog_message">Do you want to remove this computer?</string>
     <string name="main_remove_computer_dialog_positive_button">YES</string>
