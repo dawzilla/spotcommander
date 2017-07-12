@@ -1,6 +1,6 @@
 ## SpotCommander
 
-The most intuitive and feature-rich remote control for Spotify for Linux.
+The most intuitive and feature-rich remote control for Spotify for Linux, NOT Windows or Mac OS X.
 
 #### Links
 * [Project website](https://www.olejon.net/code/spotcommander/)
