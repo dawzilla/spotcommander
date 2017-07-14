@@ -50,7 +50,7 @@ function showActivity()
 
 		activityLoaded();
 
-		if(ua_is_ios && ua_is_standalone && !isActivity('profile', ''))
+		if(ua_ios && ua_standalone && !isActivity('profile', ''))
 		{
 			var cookie = { id: 'current_activity_'+project_version, value: JSON.stringify({ activity: a.activity, subactivity: a.subactivity, args: a.args, scroll_position: 0 }), expires: 1 };
 			Cookies.set(cookie.id, cookie.value, { expires: cookie.expires, path: project_path });
@@ -68,7 +68,7 @@ function showActivity()
 			setActivityActions('<div title="Retry" class="actions_div" data-actions="reload_activity" data-highlightclass="light_green_highlight" onclick="void(0)"><div class="img_div img_24_div refresh_white_24_img_div"></div></div>');
 			setActivityActionsVisibility('visible');
 
-			var append = (ua_is_android_app) ? ' Long-press the back button on your device to go back to the list of computers.' : '';
+			var append = (ua_android_app) ? ' Long-press the back button on your device to go back to the list of computers.' : '';
 
 			setActivityContent('<div id="activity_inner_div"><div id="activity_message_div"><div><div class="img_div img_48_div information_grey_48_img_div"></div></div><div>Request failed. Make sure you are connected. Tap the top right icon to retry.'+append+'</div></div></div>');
 
@@ -257,7 +257,7 @@ function activityLoaded()
 	}
 	else if(isActivity('settings', ''))
 	{
-		if(ua_is_android_app) $('div#settings_android_app_div').show();
+		if(ua_android_app) $('div#settings_android_app_div').show();
 		if(!ua_supports_notifications) disableSetting('div#setting_notifications_div');
 	}
 
@@ -286,7 +286,7 @@ function activityLoaded()
 
 function changeActivity(activity, subactivity, args)
 {
-	if(project_is_authorized_with_spotify)
+	if(project_authorized_with_spotify)
 	{
 		scrolling_last_list_header = null;
 
@@ -303,7 +303,7 @@ function changeActivity(activity, subactivity, args)
 
 function replaceActivity(activity, subactivity, args)
 {
-	if(project_is_authorized_with_spotify)
+	if(project_authorized_with_spotify)
 	{
 		scrolling_last_list_header = null;
 
@@ -348,7 +348,7 @@ function getActivity()
 
 	if(hash == '')
 	{
-		var activity = (project_is_authorized_with_spotify) ? ['playlists', '', '', 'default'] : ['profile', '', '', 'default'];
+		var activity = (project_authorized_with_spotify) ? ['playlists', '', '', 'default'] : ['profile', '', '', 'default'];
 	}
 	else
 	{
@@ -397,7 +397,7 @@ function isActivityWithArgs(activity, subactivity, args)
 
 function goBack()
 {
-	if(ua_is_ios && ua_is_standalone)
+	if(ua_ios && ua_standalone)
 	{
 		if(!isDisplayed('div#transparent_cover_div') && !isDisplayed('div#black_cover_div') && !isDisplayed('div#black_cover_activity_div') && !isVisible('div#nowplaying_div') && !textInputHasFocus()) history.back();
 	}
@@ -432,7 +432,7 @@ function goBack()
 
 function openExternalActivity(uri)
 {
-	if(ua_is_android_app)
+	if(ua_android_app)
 	{
 		if(shc(uri, 'https://www.youtube.com/results?search_query='))
 		{
@@ -452,7 +452,7 @@ function openExternalActivity(uri)
 	}
 	else
 	{
-		if(ua_is_ios && ua_is_standalone)
+		if(ua_ios && ua_standalone)
 		{
 			var a = document.createElement('a');
 			a.setAttribute('href', project_website+'?redirect&uri='+encodeURIComponent(uri));
@@ -693,7 +693,7 @@ function remoteControl(action)
 
 	clearTimeout(timeout_remote_control);
 
-	if(project_is_spotify_subscription_premium && project_spotify_is_new && action == 'play_pause')
+	if(project_spotify_subscription_premium && project_spotify_new && action == 'play_pause')
 	{
 		action = nowplaying_play_pause;
 	}
@@ -714,23 +714,21 @@ function remoteControl(action)
 		}
 		else if(action == 'next' || action == 'previous')
 		{
-			var timeout = (xhr_data == 'queue_is_empty') ? 500 : 1000;
-
 			timeout_remote_control = setTimeout(function()
 			{
 				refreshNowplaying('manual');
-			}, timeout);
+			}, 1000);
 		}
 	});
 }
 
 function seekPosition(action)
 {
-	if(project_is_spotify_subscription_premium)
+	if(project_spotify_subscription_premium)
 	{
 		xhr_remote_control = $.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
 		{
-			if(xhr_data == 'spotify_is_not_running')
+			if(xhr_data == 'spotify_not_running')
 			{
 				showToast('Spotify is not running', 2);
 			}
@@ -749,7 +747,7 @@ function seekPosition(action)
 
 function toggleShuffleRepeat(action)
 {
-	if(project_is_spotify_subscription_premium && action == 'toggle_shuffle')
+	if(project_spotify_subscription_premium && action == 'toggle_shuffle')
 	{
 		var actions = [];
 
@@ -758,7 +756,7 @@ function toggleShuffleRepeat(action)
 
 		showActionsDialog({ title: 'Toggle Shuffle', actions: actions });
 	}
-	else if(project_is_spotify_subscription_premium && action == 'toggle_repeat')
+	else if(project_spotify_subscription_premium && action == 'toggle_repeat')
 	{
 		var actions = [];
 
@@ -772,7 +770,7 @@ function toggleShuffleRepeat(action)
 	{
 		$.post('main.php?'+getCurrentTime(), { action: action }, function(xhr_data)
 		{
-			if(xhr_data == 'spotify_is_not_running')
+			if(xhr_data == 'spotify_not_running')
 			{
 				showToast('Spotify is not running', 2);
 			}
@@ -823,7 +821,7 @@ function playUri(uri)
 	});
 }
 
-function playUris(uri, queueuris)
+function playUris(uri, queueuri, queueuris)
 {
 	if(getUriType(uri) == 'local')
 	{
@@ -831,11 +829,19 @@ function playUris(uri, queueuris)
 	}
 	else
 	{
-		var activity_data = getActivityData();
+		queueuris = queueuris.split(' ');
 
-		var queueuris = (typeof activity_data['queueuris'] == 'undefined') ? JSON.parse(base64Decode(queueuris)) : JSON.parse(activity_data['queueuris']);
+		if(project_spotify_subscription_premium && queueuris.length > project_spotify_premium_tracks_limit)
+		{
+			var actions = [];
 
-		if(project_is_spotify_subscription_premium && queueuris.length == 226) showDialog({ title: 'Too Many Tracks', body_class: 'dialog_message_div', body_content: 'This track may not play because of the Spotify API tracks limit. You can play the Playlist or Queue this track instead.<br><br>Some tracks have not been added to the Spotify API.', button1: null, button2: null, cookie: null });
+			actions[0] = { text: 'Queue Tracks', keys: ['actions', 'queueuri', 'randomly'], values: ['hide_dialog queue_uris', queueuri, 'false'] };
+			actions[1] = { text: 'Queue Tracks Randomly', keys: ['actions', 'queueuri', 'randomly'], values: ['hide_dialog queue_uris', queueuri, 'true'] };
+
+			showActionsDialog({ title: 'Spotify API Limit Error', actions: actions });
+
+			return;
+		}
 
 		var uris = [];
 		var n = 0;
@@ -854,7 +860,7 @@ function playUris(uri, queueuris)
 
 		startRefreshNowplaying();
 
-		$.post('main.php?'+getCurrentTime(), { action: 'play_uris', data: data }, function(xhr_data)
+		$.post('main.php?'+getCurrentTime(), { action: 'play_uris', data: data }, function()
 		{
 			refreshNowplaying('manual');
 		});
@@ -870,7 +876,7 @@ function suspendComputer()
 {
 	remoteControl('suspend_computer');
 
-	if(ua_is_android_app) Android.JSfinishActivity();
+	if(ua_android_app) Android.JSfinishActivity();
 }
 
 function confirmShutDownComputer()
@@ -882,7 +888,7 @@ function shutDownComputer()
 {
 	remoteControl('shut_down_computer');
 
-	if(ua_is_android_app) Android.JSfinishActivity();
+	if(ua_android_app) Android.JSfinishActivity();
 }
 
 // Now playing
@@ -1116,7 +1122,7 @@ function refreshNowplaying(type)
 
 				cover_art_div.data('uri', nowplaying.uri).attr('title', nowplaying.album);
 
-				if(nowplaying.is_local)
+				if(nowplaying.local)
 				{
 					$.getJSON(project_website_https+'api/1/cover-art/?type=album&artist='+encodeURIComponent(nowplaying.artist)+'&album='+encodeURIComponent(nowplaying.album)+'&callback=?', function(metadata)
 					{
@@ -1150,11 +1156,11 @@ function refreshNowplaying(type)
 					});
 				}
 
-				$('div#nowplaying_artist_div').attr('title', nowplaying.artist).html(hsc(nowplaying.artist));
-				$('div#nowplaying_title_div').attr('title', nowplaying.title+' ('+nowplaying.tracklength+')').html(hsc(nowplaying.title));
+				$('div#nowplaying_artist_div').attr('title', nowplaying.artist).html(nowplaying.artist);
+				$('div#nowplaying_title_div').attr('title', nowplaying.title+' ('+nowplaying.tracklength+')').html(nowplaying.title);
 
 				hideDiv('div#bottom_actionbar_inner_center_div > div');
-				$('div#bottom_actionbar_inner_center_div > div').attr('title', nowplaying.artist+' - '+nowplaying.title+' ('+nowplaying.tracklength+')').html(hsc(nowplaying.title));
+				$('div#bottom_actionbar_inner_center_div > div').attr('title', nowplaying.artist+' - '+nowplaying.title+' ('+nowplaying.tracklength+')').html(nowplaying.title);
 				fadeInDiv('div#bottom_actionbar_inner_center_div > div');
 
 				highlightNowplayingListItem();
@@ -1163,7 +1169,7 @@ function refreshNowplaying(type)
 
 				if(settings_update_lyrics && isActivity('lyrics', '') && nowplaying.uri != '') replaceActivity('lyrics', '', 'artist='+encodeURIComponent(nowplaying.artist)+'&title='+encodeURIComponent(nowplaying.title));
 
-				if(ua_is_android_app)
+				if(ua_android_app)
 				{
 					Android.JSsetSharedString('NOWPLAYING_ARTIST', nowplaying.artist);
 					Android.JSsetSharedString('NOWPLAYING_TITLE', nowplaying.title);
@@ -1334,7 +1340,7 @@ function getCoverArt()
 			setNativeAppStatusBarColorFromImage(image_uri);
 		}
 
-		if(!ua_is_android_app) showCoverArtFabAnimation();
+		if(!ua_android_app) showCoverArtFabAnimation();
 	}
 	else
 	{
@@ -1354,15 +1360,11 @@ function getCoverArt()
 			if(element.attr('data-coverarturi') && !shc(element.attr('style'), 'background-image'))
 			{
 				var uri = element.data('coverarturi');
-				var timeout = index * 125;
 
-				setTimeout(function()
+				xhr_cover_art = $.post('main.php?get_cover_art&'+getCurrentTime(), { uri: uri, size: 'medium' }, function(xhr_data)
 				{
-					xhr_cover_art = $.post('main.php?get_cover_art&'+getCurrentTime(), { uri: uri, size: 'medium' }, function(xhr_data)
-					{
-						if(xhr_data != '') element.css('background-image', 'url("'+xhr_data+'")');
-					});
-				}, timeout);
+					if(xhr_data != '') element.css('background-image', 'url("'+xhr_data+'")');
+				});
 			}
 		});
 	}
@@ -1380,15 +1382,11 @@ function getCoverArt()
 			if(element.attr('data-coverarturi') && !shc(element.attr('style'), 'background-image'))
 			{
 				var uri = element.data('coverarturi');
-				var timeout = index * 125;
 
-				setTimeout(function()
+				xhr_cover_art = $.post('main.php?get_cover_art&'+getCurrentTime(), { uri: uri, size: 'small' }, function(xhr_data)
 				{
-					xhr_cover_art = $.post('main.php?get_cover_art&'+getCurrentTime(), { uri: uri, size: 'small' }, function(xhr_data)
-					{
-						if(xhr_data != '') element.css('background-image', 'url("'+xhr_data+'")').css('background-size', 'cover');
-					});
-				}, timeout);
+					if(xhr_data != '') element.css('background-image', 'url("'+xhr_data+'")').css('background-size', 'cover');
+				});
 			}
 		});
 	}
@@ -1433,7 +1431,7 @@ function resizeCoverArt(element)
 function setCoverArtSize()
 {
 	var cover_art_div = $('div#cover_art_art_div');
-	var is_widescreen = isWidescreen();
+	var widescreen = isWidescreen();
 
 	if(cover_art_div.length)
 	{
@@ -1453,13 +1451,13 @@ function setCoverArtSize()
 
 			cover_art_div.css('background-size', size);
 		}
-		else if(is_widescreen)
+		else if(widescreen)
 		{
 			cover_art_div.css('background-size', cover_art_width+'px auto');
 		}
 	}
 
-	if(cover_art_div.length && !is_widescreen)
+	if(cover_art_div.length && !widescreen)
 	{
 		activity_has_cover_art_opacity = true;
 
@@ -1526,7 +1524,7 @@ function queueUri(artist, title, uri)
 
 	$.post('queue.php?queue_uri&'+getCurrentTime(), { artist: artist, title: title, uri: uri }, function(xhr_data)
 	{
-		if(xhr_data == 'spotify_is_not_running')
+		if(xhr_data == 'spotify_not_running')
 		{
 			showToast('Spotify is not running', 2);
 		}
@@ -1534,6 +1532,27 @@ function queueUri(artist, title, uri)
 		{
 			showToast('Track queued', 2);
 			refreshQueueActivity();
+		}
+	});
+}
+
+function queueUris(queueuri, randomly)
+{
+	showToast('Wait&hellip;', 4);
+
+	$.post('queue.php?queue_uris&'+getCurrentTime(), { queueuri: queueuri, randomly: randomly }, function(xhr_data)
+	{
+		if(xhr_data == 'spotify_not_running')
+		{
+			showToast('Spotify is not running', 2);
+		}
+		else if(xhr_data == 'error')
+		{
+			showToast('Could not queue tracks', 2);
+		}
+		else
+		{
+			remoteControl('next');
 		}
 	});
 }
@@ -1638,14 +1657,7 @@ function addUrisToPlaylist(uri, uris)
 
 			var a = getActivity();
 
-			if(isActivity('playlists', 'browse') && shc(a.args, uri))
-			{
-				refreshActivity();
-			}
-			else
-			{
-				cachePlaylist(uri);
-			}
+			if(isActivity('playlists', 'browse') && shc(a.args, uri)) refreshActivity();
 		}
 	});
 }
@@ -1747,11 +1759,7 @@ function importPlaylists(uris)
 	{
 		var uri = urlToUri(validate[i]);
 
-		if(getUriType(uri) == 'playlist')
-		{
-			cachePlaylist(uri);
-		}
-		else
+		if(getUriType(uri) != 'playlist')
 		{
 			invalid = true;
 		}
@@ -1880,16 +1888,9 @@ function editPlaylist(name, uri, make_public, make_collaborative)
 				changeActivity('playlists', '', '');
 
 				showToast('Playlist '+xhr_data+' edited', 2);
-
-				cachePlaylist(uri);
 			}
 		});
 	}
-}
-
-function cachePlaylist(uri)
-{
-	$.post('playlists.php?cache_playlist&'+getCurrentTime(), { uri: uri });
 }
 
 function confirmRemovePlaylist(id, name, uri)
@@ -2162,7 +2163,7 @@ function confirmAuthorizeWithSpotify()
 
 function authorizeWithSpotify()
 {
-	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
+	if(ua_ios && ua_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 
 	var uri = window.location.href.replace(window.location.hash, '')+'#profile//spotify_token=';
 
@@ -2176,10 +2177,10 @@ function confirmDeauthorizeFromSpotify()
 
 function deauthorizeFromSpotify()
 {
+	if(ua_ios && ua_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
+
 	Cookies.remove('last_refresh_playlists', { path: project_path });
 	Cookies.remove('last_refresh_library', { path: project_path });
-
-	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 
 	$.get('profile.php?deauthorize_from_spotify', function()
 	{
@@ -2207,7 +2208,7 @@ function saveSetting(setting, value)
 
 function applySettings()
 {
-	if(ua_is_ios && ua_is_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
+	if(ua_ios && ua_standalone) Cookies.remove('current_activity_'+project_version, { path: project_path });
 
 	window.location.replace('.');
 }
@@ -2221,7 +2222,7 @@ function disableSetting(div)
 
 function makeDonation()
 {
-	if(ua_is_android_app)
+	if(ua_android_app)
 	{
 		Android.JSmakeDonation();
 	}
@@ -2284,7 +2285,7 @@ function shareUri(title, uri)
 	{
 		showToast('Not possible for local files', 4);
 	}
-	else if(ua_is_android_app)
+	else if(ua_android_app)
 	{
 		setTimeout(function()
 		{
@@ -2293,7 +2294,7 @@ function shareUri(title, uri)
 	}
 	else
 	{
-		showDialog({ title: title, body_class: 'dialog_share_div', body_content: '<div title="Share on Facebook" class="actions_div" data-actions="open_external_activity" data-uri="https://www.facebook.com/sharer/sharer.php?u='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div facebook_grey_48_img_div"></div></div><div title="Share on Twitter" class="actions_div" data-actions="open_external_activity" data-uri="https://twitter.com/intent/tweet?url='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div twitter_grey_48_img_div"></div></div><div title="Share on Google+" class="actions_div" data-actions="open_external_activity" data-uri="https://plus.google.com/share?url='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div googleplus_grey_48_img_div"></div></div>', button1: null, button2: null, cookie: null });
+		showDialog({ title: hsc(title), body_class: 'dialog_share_div', body_content: '<div title="Share on Facebook" class="actions_div" data-actions="open_external_activity" data-uri="https://www.facebook.com/sharer/sharer.php?u='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div facebook_grey_48_img_div"></div></div><div title="Share on Twitter" class="actions_div" data-actions="open_external_activity" data-uri="https://twitter.com/intent/tweet?url='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div twitter_grey_48_img_div"></div></div><div title="Share on Google+" class="actions_div" data-actions="open_external_activity" data-uri="https://plus.google.com/share?url='+uri+'" data-highlightclass="light_grey_highlight" onclick="void(0)"><div class="img_div img_48_div googleplus_grey_48_img_div"></div></div>', button1: null, button2: null, cookie: null });
 	}
 }
 
@@ -2308,7 +2309,7 @@ function setCss()
 	window_width = $(window).width();
 	window_height = $(window).height();
 
-	if(ua_is_android && !ua_is_standalone || ua_is_ios && !ua_is_standalone)
+	if(ua_android && !ua_standalone || ua_ios && !ua_standalone)
 	{
 		var min_height = window_height + 256;
 		$('div#activity_div').css('min-height', min_height+'px');
@@ -2418,11 +2419,11 @@ function scrollToTop(animate)
 function toggleListItemActions(element)
 {
 	var list_item_actions_div = $('div.list_item_actions_div', element.parent());
-	var is_list_item_actions_div_hidden = !isDisplayed(list_item_actions_div);
+	var list_item_actions_div_hidden = !isDisplayed(list_item_actions_div);
 
 	hideListItemActions();
 
-	if(is_list_item_actions_div_hidden) showListItemActions(element);
+	if(list_item_actions_div_hidden) showListItemActions(element);
 }
 
 function showListItemActions(element)
@@ -2732,7 +2733,7 @@ function showActionsDialog(dialog)
 		body += '<div title="'+actions[i].text+'" class="actions_div" '+data+' data-highlightclass="light_grey_highlight" onclick="void(0)">'+actions[i].text+'</div>';
 	}
 
-	showDialog({ title: title, body_class: 'dialog_actions_div', body_content: body, button1: null, button2: null, cookie: null });
+	showDialog({ title: hsc(title), body_class: 'dialog_actions_div', body_content: body, button1: null, button2: null, cookie: null });
 }
 
 function showDetailsDialog(dialog)
@@ -2746,7 +2747,7 @@ function showDetailsDialog(dialog)
 		body += '<div title="'+stripHtmlTags(details[i].value)+'">'+details[i].detail+': '+details[i].value+'</div>';
 	}
 
-	showDialog({ title: title, body_class: 'dialog_details_div', body_content: body, button1: null, button2: null, cookie: null });
+	showDialog({ title: hsc(title), body_class: 'dialog_details_div', body_content: body, button1: null, button2: null, cookie: null });
 }
 
 function hideDialog()
@@ -2824,9 +2825,9 @@ function checkForDialogs()
 		if(!isCookie(cookie.id)) showDialog({ title: 'Update Available', body_class: 'dialog_message_div', body_content: project_name+' '+latest_version+' has been released!', button1: { text: 'CLOSE', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?download'] }, cookie: cookie });
 	}
 
-	if(ua_is_android)
+	if(ua_android)
 	{
-		if(ua_is_android_app)
+		if(ua_android_app)
 		{
 			var versions = JSON.parse(Android.JSgetVersions());
 
@@ -2834,7 +2835,7 @@ function checkForDialogs()
 			var app_minimum_version = versions[1];
 
 			var android_app_version = versions[0];
-			var android_app_minimum_version = project_android_app_minimum_version;
+			var android_app_minimum_version = parseFloat(project_android_app_minimum_version);
 
 			var cookie = { id: 'hide_android_hardware_buttons_dialog', value: 'true', expires: 3650 };
 
@@ -2862,9 +2863,9 @@ function checkForDialogs()
 			if(!isCookie(cookie.id)) showDialog({ title: 'Android App', body_class: 'dialog_message_div', body_content: 'You should install the Android app. It will give you an experience much more similar to a native app, with many additional features.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'DOWNLOAD', keys : ['actions', 'uri'], values: ['open_external_activity', 'market://details?id=net.olejon.spotcommander'] }, cookie: cookie });
 		}
 	}
-	else if(ua_is_ios)
+	else if(ua_ios)
 	{
-		if(ua_is_standalone)
+		if(ua_standalone)
 		{
 			var cookie = { id: 'hide_ios_back_gesture_dialog', value: 'true', expires: 3650 };
 			if(!isCookie(cookie.id)) showDialog({ title: 'iOS Tip', body_class: 'dialog_message_div', body_content: 'Since you are running fullscreen and your device has no back button, you can swipe in from the right to go back.<br><br>Avoid the multitasking button at the center right of the screen on devices that run iOS 9 or newer that support it.', button1: null, button2: null, cookie: cookie });
@@ -2875,7 +2876,7 @@ function checkForDialogs()
 			if(!isCookie(cookie.id)) showDialog({ title: 'iOS Warning', body_class: 'dialog_message_div', body_content: 'To function correctly, '+project_name+' should be added to your home screen.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['open_external_activity', project_website+'?add_to_home_screen'] }, cookie: cookie });
 		}
 	}
-	else if(ua_is_os_x && !ua_is_standalone)
+	else if(ua_os_x && !ua_standalone)
 	{
 		var cookie = { id: 'hide_ox_x_integration_dialog', value: 'true', expires: 3650 };
 		if(!isCookie(cookie.id)) showDialog({ title: 'OS X Tip', body_class: 'dialog_message_div', body_content: 'Install Fluid to run '+project_name+' as a standalone app.', button1: { text: 'LATER', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'HELP', keys : ['actions', 'uri'], values: ['hide_dialog open_external_activity', project_website+'?os_x_integration'] }, cookie: cookie });
@@ -2940,7 +2941,7 @@ function saveScrollPosition()
 
 	scroll_position[time] = { position: position };
 
-	if(ua_is_ios && ua_is_standalone)
+	if(ua_ios && ua_standalone)
 	{
 		var cookie = { id: 'current_activity_'+project_version, expires: 1 };
 
@@ -2970,7 +2971,7 @@ function restoreScrollPosition()
 	var a = getActivity();
 	var time = a.time;
 
-	if($.isEmptyObject(scroll_position) && ua_is_ios && ua_is_standalone)
+	if($.isEmptyObject(scroll_position) && ua_ios && ua_standalone)
 	{
 		var cookie = { id: 'current_activity_'+project_version };
 
@@ -3024,9 +3025,9 @@ function scrollToNextListHeader()
 
 // System integration
 
-function nativeAppLoad(is_paused)
+function nativeAppLoad(paused)
 {
-	if(ua_is_android_app)
+	if(ua_android_app)
 	{
 		if(settings_persistent_notification)
 		{
@@ -3113,32 +3114,6 @@ function nativeAppLoad(is_paused)
 	}
 }
 
-function setNativeAppStatusBarColor(color)
-{
-	if(ua_is_android_app) Android.JSsetStatusBarColor(color);
-}
-
-function setNativeAppStatusBarColorFromImage(uri)
-{
-	if(ua_is_android_app && !isWidescreen()) Android.JSsetStatusBarColorFromImage(uri);
-}
-
-function resetNativeAppStatusBarColor(hide)
-{
-	if(hide == 'dialog' && isVisible('div#nowplaying_div'))
-	{
-		setNativeAppStatusBarColor('#212121');
-	}
-	else if($('div#cover_art_art_div').length)
-	{
-		setNativeAppStatusBarColor('cover_art');
-	}
-	else
-	{
-		setNativeAppStatusBarColor('primary');
-	}
-}
-
 function nativeAppAction(action)
 {
 	if(action == 'play_pause')
@@ -3171,26 +3146,52 @@ function nativeAppAction(action)
 	}
 }
 
-function confirmChangeNativeAppComputer()
-{
-	if(ua_is_android_app) Android.JSfinishActivity();
-}
-
-function changeNativeAppComputer()
-{
-	if(ua_is_android_app) showDialog({ title: 'Change Computer', body_class: 'dialog_message_div', body_content: 'You can always go back to the list of computers by long-pressing the back button on your device.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys: ['actions'], values: ['confirm_change_native_app_computer'] }, cookie: null });
-}
-
 function nativeAppCanCloseCover()
 {
 	if(!isWidescreen() && menuIsVisible() || isDisplayed('div#top_actionbar_overflow_actions_div') || isVisible('div#nowplaying_div') || isDisplayed('div#nowplaying_actionbar_overflow_actions_div') || isDisplayed('div#dialog_div'))
 	{
-		if(ua_is_android_app) Android.JSsetSharedBoolean('CAN_CLOSE_COVER', true);
+		if(ua_android_app) Android.JSsetSharedBoolean('CAN_CLOSE_COVER', true);
 	}
 	else
 	{
-		if(ua_is_android_app) Android.JSsetSharedBoolean('CAN_CLOSE_COVER', false);
+		if(ua_android_app) Android.JSsetSharedBoolean('CAN_CLOSE_COVER', false);
 	}
+}
+
+function setNativeAppStatusBarColor(color)
+{
+	if(ua_android_app) Android.JSsetStatusBarColor(color);
+}
+
+function setNativeAppStatusBarColorFromImage(uri)
+{
+	if(ua_android_app && !isWidescreen()) Android.JSsetStatusBarColorFromImage(uri);
+}
+
+function resetNativeAppStatusBarColor(hide)
+{
+	if(hide == 'dialog' && isVisible('div#nowplaying_div'))
+	{
+		setNativeAppStatusBarColor('#212121');
+	}
+	else if($('div#cover_art_art_div').length)
+	{
+		setNativeAppStatusBarColor('cover_art');
+	}
+	else
+	{
+		setNativeAppStatusBarColor('primary');
+	}
+}
+
+function confirmChangeNativeAppComputer()
+{
+	if(ua_android_app) Android.JSfinishActivity();
+}
+
+function changeNativeAppComputer()
+{
+	if(ua_android_app) showDialog({ title: 'Change Computer', body_class: 'dialog_message_div', body_content: 'You can always go back to the list of computers by long-pressing the back button on your device.', button1: { text: 'CANCEL', keys : ['actions'], values: ['hide_dialog'] }, button2: { text: 'CONTINUE', keys: ['actions'], values: ['confirm_change_native_app_computer'] }, cookie: null });
 }
 
 // Keyboard shortcuts

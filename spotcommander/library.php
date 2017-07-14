@@ -40,8 +40,6 @@ else
 {
 	$activity['title'] = 'Library';
 
-	$cover_art_cache = get_cover_art_cache('small');
-
 	$sort = $_COOKIE['settings_sort_library_tracks'];
 
 	$order = 'DESC';
@@ -61,22 +59,7 @@ else
 		$order2 = 'artist';
 	}
 
-	$tracks = get_db_rows('library', "SELECT artist, title, uri FROM library WHERE type = 'track' ORDER BY " . sqlite_escape($order1) . " COLLATE NOCASE " . sqlite_escape($order) . ", " . sqlite_escape($order2) . " COLLATE NOCASE " . sqlite_escape($order), array('artist', 'title', 'uri'));
-
-	if(!empty($tracks))
-	{
-		$queue_uris = array();
-		$n = 0;
-
-		foreach($tracks as $track)
-		{
-			$queue_uris[$n] = $track['uri'];
-
-			$n++;
-		}
-
-		$activity['queueuris'] = json_encode($queue_uris);
-	}
+	$tracks = get_db_rows('library', "SELECT artist, title, uri FROM library WHERE type = 'track' ORDER BY " . sqlite_escape($order1) . " COLLATE NOCASE " . sqlite_escape($order) . ", " . sqlite_escape($order2) . " COLLATE NOCASE " . sqlite_escape($order) . " LIMIT " . get_spotify_premium_tracks_limit(), array('artist', 'title', 'uri'));
 
 	$activity['actions'][] = array('action' => array('Refresh Library', 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('confirm_refresh_library'));
 	$activity['fab'] = array('label' => 'Go to Next Category', 'icon' => 'down_white_24_img_div', 'keys' => array('actions'), 'values' => array('scroll_to_next_list_header'));
@@ -101,6 +84,15 @@ else
 	}
 	else
 	{
+		$queue_uris = '';
+
+		foreach($tracks as $track)
+		{
+			$queue_uris .= $track['uri'] . ' ';
+		}
+
+		$queue_uris = rtrim($queue_uris);
+
 		foreach($tracks as $track)
 		{
 			$artist = $track['artist'];
@@ -108,26 +100,26 @@ else
 			$uri = $track['uri'];
 
 			$actions_dialog = array();
-			$actions_dialog['title'] = hsc($title);
+			$actions_dialog['title'] = $title;
 			$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 			$actions_dialog['actions'][] = array('text' => 'Go to Album', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_album', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 			$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
-			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
 			echo '
 				<div class="list_item_div list_item_track_div">
 				<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
 				<div class="list_item_main_actions_arrow_div"></div>
 				<div class="list_item_main_inner_div">
-				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 				</div>
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-queueuris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
 				<div title="Remove" class="actions_div" data-actions="remove" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div trash_grey_24_img_div"></div></div>
@@ -187,12 +179,14 @@ else
 			$uri = $album['uri'];
 
 			$actions_dialog = array();
-			$actions_dialog['title'] = hsc($title);
+			$actions_dialog['title'] = $title;
 			$actions_dialog['actions'][] = array('text' => 'Go to Artist', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_artist', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
-			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
-			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache[$uri] . '\')';
+			$cover_art_cache = get_cover_art_cache('small', $uri);
+
+			$style = (empty($cover_art_cache)) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache . '\')';
 
 			echo '
 				<div class="list_item_div list_item_album_div">
@@ -255,7 +249,9 @@ else
 			$name = $artist['artist'];
 			$uri = $artist['uri'];
 
-			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache[$uri] . '\')';
+			$cover_art_cache = get_cover_art_cache('small', $uri);
+
+			$style = (empty($cover_art_cache)) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache . '\')';
 
 			echo '
 				<div class="list_item_div list_item_album_div">
@@ -326,7 +322,9 @@ else
 			$name = $user['title'];
 			$uri = $user['uri'];
 
-			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache[$uri] . '\')';
+			$cover_art_cache = get_cover_art_cache('small', $uri);
+
+			$style = (empty($cover_art_cache)) ? 'color: initial' : 'background-size: cover; background-image: url(\'' . $cover_art_cache . '\')';
 
 			echo '
 				<div class="list_item_div list_item_album_div">
@@ -334,7 +332,7 @@ else
 				<div class="list_item_main_actions_arrow_div"></div>
 				<div class="list_item_main_inner_div">
 				<div class="list_item_main_inner_circle_div"><div class="person_grey_24_img_div" data-coverarturi="' . $uri . '" style="' . $style . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div">' . hsc($name) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc(is_facebook_user($username)) . '</div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div">' . hsc($name) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc(facebook_user($username)) . '</div></div>
 				</div>
 				</div>
 				<div class="list_item_actions_div">

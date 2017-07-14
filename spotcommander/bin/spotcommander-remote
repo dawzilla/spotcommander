@@ -35,7 +35,7 @@ if(!$daemon_server)
 
 chmod(daemon_socket, 0666);
 
-$spotify_is_new = spotify_is_new();
+$spotify_new = get_spotify_new();
 $qdbus = daemon_qdbus_select();
 $logind = daemon_logind_check($qdbus);
 
@@ -69,7 +69,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 
 		for($i = 0; $i < 20; $i++)
 		{
-			if(spotify_is_running())
+			if(get_spotify_running())
 			{
 				$metadata = trim(shell_exec($qdbus . ' org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Metadata'));
 				if(!empty($metadata)) break;
@@ -80,7 +80,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'spotify_quit')
 	{
-		if($spotify_is_new)
+		if($spotify_new)
 		{
 			exec('killall spotify');
 		}
@@ -91,7 +91,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 
 		for($i = 0; $i < 20; $i++)
 		{
-			if(!spotify_is_running()) break;
+			if(!get_spotify_running()) break;
 			usleep(250000);
 		}
 	}
@@ -176,7 +176,7 @@ while($daemon_connect = stream_socket_accept($daemon_server, -1))
 	}
 	elseif($action == 'shut_down_computer')
 	{
-		if($spotify_is_new)
+		if($spotify_new)
 		{
 			exec('killall spotify');
 		}

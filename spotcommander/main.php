@@ -22,12 +22,12 @@ along with this program. If not, see http://www.gnu.org/licenses/.
 // Project
 
 define('project_name', 'SpotCommander');
-define('project_version', 13.3);
-define('project_serial', 13300);
+define('project_version', 13.4);
+define('project_serial', 13400);
 define('project_website', 'http://www.olejon.net/code/spotcommander/');
 define('project_website_https', 'https://www.olejon.net/code/spotcommander/');
 define('project_developer', 'Ole Jon Bjørkum');
-define('project_android_app_minimum_version', 13.2);
+define('project_android_app_minimum_version', 13.4);
 
 // Configuration
 
@@ -50,7 +50,7 @@ if(isset($_POST['action']))
 
 	if($action == 'launch_quit')
 	{
-		$action = (spotify_is_running()) ? 'spotify_quit' : 'spotify_launch';
+		$action = (get_spotify_running()) ? 'spotify_quit' : 'spotify_launch';
 		clear_queue();
 		remote_control($action, $data);
 	}
@@ -60,7 +60,7 @@ if(isset($_POST['action']))
 	}
 	elseif($action == 'play')
 	{
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', null);
 		}
@@ -71,7 +71,7 @@ if(isset($_POST['action']))
 	}
 	elseif($action == 'pause')
 	{
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/pause', 'PUT', null);
 		}
@@ -82,7 +82,7 @@ if(isset($_POST['action']))
 	}
 	elseif($action == 'previous' || $action == 'next')
 	{
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/' . $action, 'POST', null);
 		}
@@ -90,14 +90,12 @@ if(isset($_POST['action']))
 		{
 			remote_control($action, $data);
 		}
-
-		if(queue_is_empty()) echo 'queue_is_empty';
 	}
 	elseif($action == 'seek_back' || $action == 'seek_forward')
 	{
-		if(!spotify_is_running())
+		if(!get_spotify_running())
 		{
-			echo 'spotify_is_not_running';
+			echo 'spotify_not_running';
 		}
 		else
 		{
@@ -110,9 +108,9 @@ if(isset($_POST['action']))
 	}
 	elseif($action == 'toggle_shuffle' || $action == 'toggle_shuffle_on' || $action == 'toggle_shuffle_off')
 	{
-		if(!spotify_is_running())
+		if(!get_spotify_running())
 		{
-			echo 'spotify_is_not_running';
+			echo 'spotify_not_running';
 		}
 		elseif($action == 'toggle_shuffle_on')
 		{
@@ -129,9 +127,9 @@ if(isset($_POST['action']))
 	}
 	elseif($action == 'toggle_repeat' || $action == 'toggle_repeat_all' || $action == 'toggle_repeat_track' || $action == 'toggle_repeat_off')
 	{
-		if(!spotify_is_running())
+		if(!get_spotify_running())
 		{
-			echo 'spotify_is_not_running';
+			echo 'spotify_not_running';
 		}
 		elseif($action == 'toggle_repeat_all')
 		{
@@ -180,7 +178,7 @@ if(isset($_POST['action']))
 			$data = 100;
 		}
 
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/volume?volume_percent=' . $data, 'PUT', null);
 		}
@@ -197,7 +195,7 @@ if(isset($_POST['action']))
 	{
 		clear_queue();
 
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array('context_uri' => $data)));
 		}
@@ -215,7 +213,7 @@ if(isset($_POST['action']))
 		$uri = $data['uri'];
 		$uris = $data['uris'];
 
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/play', 'PUT', json_encode(array('uris' => $uris, 'offset' => array('uri' => $uri))));
 		}
@@ -250,11 +248,12 @@ elseif(isset($_GET['global_variables']))
 		'project_website' => project_website,
 		'project_website_https' => project_website_https,
 		'project_developer' => project_developer,
-		'project_android_app_minimum_version' => project_android_app_minimum_version,
-		'project_error_code' => check_for_errors(),
-		'project_is_authorized_with_spotify' => is_authorized_with_spotify(),
-		'project_is_spotify_subscription_premium' => is_spotify_subscription_premium(),
-		'project_spotify_is_new' => spotify_is_new()
+		'project_error_code' => get_errors(),
+		'project_authorized_with_spotify' => get_authorized_with_spotify(),
+		'project_spotify_subscription_premium' => get_spotify_subscription_premium(),
+		'project_spotify_premium_tracks_limit' => get_spotify_premium_tracks_limit(),
+		'project_spotify_new' => get_spotify_new(),
+		'project_android_app_minimum_version' => project_android_app_minimum_version
 	);
 
 	echo json_encode($global_variables);

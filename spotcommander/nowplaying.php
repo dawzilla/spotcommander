@@ -34,7 +34,7 @@ $title = 'Spotify is Not Running';
 $album = '';
 $cover_art = 'img/no-cover-art-640.png?' . project_serial;
 $uri = '';
-$is_local = false;
+$local = false;
 $length = '';
 $popularity = '';
 
@@ -43,11 +43,11 @@ $actions[] = array('action' => array('Recently Played', ''), 'keys' => array('ac
 $actions[] = array('action' => array('Suspend Computer', ''), 'keys' => array('actions'), 'values' => array('confirm_suspend_computer'));
 $actions[] = array('action' => array('Shut Down Computer', ''), 'keys' => array('actions'), 'values' => array('confirm_shut_down_computer'));
 
-if(spotify_is_running())
+if(get_spotify_running())
 {
 	if($playbackstatus == 'Playing' || $playbackstatus == 'Paused')
 	{
-		$is_local = (get_uri_type($nowplaying['url']) == 'local');
+		$local = (get_uri_type($nowplaying['url']) == 'local');
 
 		$play_pause = ($playbackstatus == 'Playing') ? 'pause' : 'play';
 		$volume = get_current_volume();
@@ -60,18 +60,18 @@ if(spotify_is_running())
 		$popularity = (empty($nowplaying['autoRating'])) ? 'Unknown' : convert_popularity($nowplaying['autoRating']);
 
 		$details_dialog = array();
-		$details_dialog['title'] = hsc($title);
+		$details_dialog['title'] = $title;
 		$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
 		$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
 		$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 
 		$actions_dialog = array();
-		$actions_dialog['title'] = hsc($title);
+		$actions_dialog['title'] = $title;
 		$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 		$actions_dialog['actions'][] = array('text' => 'Go to Artist', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_artist', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
-		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 		$actions_dialog['actions'][] = array('text' => 'YouTube', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://www.youtube.com/results?search_query=' . rawurlencode($artist . ' ' . $title)));
 		$actions_dialog['actions'][] = array('text' => 'Last.fm', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'http://www.last.fm/music/' . urlencode($artist) . '/_/' . urlencode($title)));
 		$actions_dialog['actions'][] = array('text' => 'Wikipedia', 'keys' => array('actions', 'uri'), 'values' => array('open_external_activity', 'https://en.wikipedia.org/wiki/Special:Search?search=' . rawurlencode($artist)));
@@ -82,7 +82,7 @@ if(spotify_is_running())
 		$actions_dialog['actions'][] = array('text' => 'Suspend Computer', 'keys' => array('actions'), 'values' => array('hide_dialog confirm_suspend_computer'));
 		$actions_dialog['actions'][] = array('text' => 'Shut Down Computer', 'keys' => array('actions'), 'values' => array('hide_dialog confirm_shut_down_computer'));
 
-		$library_action = (is_saved($uri)) ? 'Remove from Library' : 'Save to Library';
+		$library_action = (saved($uri)) ? 'Remove from Library' : 'Save to Library';
 
 		$actions = array();
 		$actions[] = array('action' => array('Recently Played', ''), 'keys' => array('actions', 'activity', 'subactivity', 'args'), 'values' => array('change_activity', 'recently-played', '', ''));
@@ -107,7 +107,7 @@ echo json_encode(array(
 	'album' => $album,
 	'cover_art' => $cover_art,
 	'uri' => $uri,
-	'is_local' => $is_local,
+	'local' => $local,
 	'tracklength' => $length,
 	'current_volume' => $volume,
 	'actions' => $actions

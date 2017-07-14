@@ -29,7 +29,7 @@ $lyrics = json_decode($files[0], true);
 
 $activity = array();
 $activity['project_version'] = project_version;
-$activity['title'] = hsc($title);
+$activity['title'] = $title;
 
 if(empty($lyrics['lyrics']))
 {

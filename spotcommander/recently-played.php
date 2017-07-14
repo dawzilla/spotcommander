@@ -28,24 +28,7 @@ $activity['title'] = 'Recently Played';
 $files = get_external_files(array('https://api.spotify.com/v1/me/player/recently-played?limit=50'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token()), null);
 $metadata = json_decode($files[0], true);
 
-$items = $metadata['items'];
-
-if(!empty($items))
-{
-	$queue_uris = array();
-	$n = 0;
-
-	foreach($items as $item)
-	{
-		$queue_uris[$n] = $item['track']['uri'];
-
-		$n++;
-	}
-
-	$activity['queueuris'] = json_encode($queue_uris);
-
-	$activity['fab'] = array('label' => 'Play', 'icon' => 'play_white_24_img_div', 'keys' => array('actions', 'uri', 'queueuris'), 'values' => array('play_uris', $queue_uris[0], $activity['queueuris']));
-}
+$tracks = $metadata['items'];
 
 $activity['actions'][] = array('action' => array('Refresh', 'refresh_white_24_img_div'), 'keys' => array('actions'), 'values' => array('reload_activity'));
 
@@ -57,39 +40,48 @@ echo '
 	<div class="list_div">
 ';
 
-if(empty($items))
+if(empty($tracks))
 {
 	echo '<div class="list_empty_div">No tracks.</div>';
 }
 else
 {
-	foreach($items as $item)
+	$queue_uris = '';
+
+	foreach($tracks as $track)
 	{
-		$artist = get_artists($item['track']['artists']);
-		$title = $item['track']['name'];
-		$uri = $item['track']['uri'];
+		$queue_uris .= $track['track']['uri'] . ' ';
+	}
+
+	$queue_uris = rtrim($queue_uris);
+
+	foreach($tracks as $track)
+	{
+		$artist = get_artists($track['track']['artists']);
+		$title = $track['track']['name'];
+		$uri = $track['track']['uri'];
 
 		$actions_dialog = array();
-		$actions_dialog['title'] = hsc($title);
+		$actions_dialog['title'] = $title;
 		$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 		$actions_dialog['actions'][] = array('text' => 'Go to Album', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_album', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 		$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 		$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
-		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+		$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
 		echo '
 			<div class="list_item_div">
 			<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" onclick="void(0)">
 			<div class="list_item_main_actions_arrow_div"></div>
 			<div class="list_item_main_inner_div">
-			<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-			<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+			<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+			<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 			</div>
 			</div>
 			<div class="list_item_actions_div">
 			<div class="list_item_actions_inner_div">
-			<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+			<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-queueuris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 			<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 			<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 			<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>

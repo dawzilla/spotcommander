@@ -25,10 +25,10 @@ chdir(__DIR__);
 
 require_once('../main.php');
 
-$spotify_is_new = spotify_is_new();
+$spotify_new = get_spotify_new();
 $qdbus = daemon_qdbus_select();
 
-$tracks = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT 226", array('id', 'uri', 'sortorder'));
+$tracks = get_db_rows('queue', "SELECT id, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT " . get_spotify_premium_tracks_limit(), array('id', 'uri', 'sortorder'));
 
 if(!empty($tracks))
 {
@@ -40,7 +40,7 @@ if(!empty($tracks))
 
 	if($uri == 'pause')
 	{
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			remote_control_spotify('https://api.spotify.com/v1/me/player/pause', 'PUT', null);
 		}
@@ -53,7 +53,7 @@ if(!empty($tracks))
 	{
 		clear_queue();
 
-		if($spotify_is_new)
+		if($spotify_new)
 		{
 			exec('killall spotify');
 		}
@@ -68,7 +68,7 @@ if(!empty($tracks))
 
 		clear_queue();
 
-		if($spotify_is_new)
+		if($spotify_new)
 		{
 			exec('killall spotify');
 		}
@@ -94,7 +94,7 @@ if(!empty($tracks))
 
 		clear_queue();
 
-		if($spotify_is_new)
+		if($spotify_new)
 		{
 			exec('killall spotify');
 		}
@@ -116,7 +116,7 @@ if(!empty($tracks))
 	}
 	else
 	{
-		if(is_spotify_subscription_premium())
+		if(get_spotify_subscription_premium())
 		{
 			$uris = array();
 			$i = 0;

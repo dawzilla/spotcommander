@@ -35,7 +35,7 @@ if(isset($_GET['transfer_device']))
 
 	get_external_files(array('https://api.spotify.com/v1/me/player'), array('Accept: application/json', 'Authorization: Bearer ' . get_spotify_token(), 'Content-Type: application/json'), array('PUT', json_encode(array('device_ids' => array($deviceid), 'play' => true))));
 }
-elseif(!is_spotify_subscription_premium())
+elseif(!get_spotify_subscription_premium())
 {
 	$activity['actions'][] = array('action' => array('Authorize with Spotify', 'lock_open_white_24_img_div'), 'keys' => array('actions'), 'values' => array('confirm_authorize_with_spotify'));
 

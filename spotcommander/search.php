@@ -61,25 +61,14 @@ elseif(isset($_GET['search']))
 		$artists = $search['artists'];
 		$playlists = $search['playlists'];
 
-		if(is_array($tracks))
-		{
-			$queue_uris = array();
-			$n = 0;
-
-			foreach($tracks as $track)
-			{
-				$queue_uris[$n] = $track['uri'];
-
-				$n++;
-			}
-
-			$activity['queueuris'] = json_encode($queue_uris);
-		}
-
 		echo '<div id="activity_inner_div" data-activitydata="' . base64_encode(json_encode($activity)) . '">';
 
 		if(!empty($user))
 		{
+			$name = $user['name'];
+			$username = $user['username'];
+			$followers = $user['followers'];
+
 			$style = (empty($user['image'])) ? '' : 'background-size: cover; background-image: url(\'' . $user['image'] . '\')';
 			$text = ($user['followers'] == 1) ? 'follower' : 'followers';
 
@@ -89,10 +78,10 @@ elseif(isset($_GET['search']))
 				<div class="list_div">
 
 				<div class="list_item_div">
-				<div title="' . hsc($user['name']) . '" class="list_item_main_div actions_div" data-actions="get_user" data-username="' . rawurlencode($user['username']) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">
+				<div title="' . hsc($name) . '" class="list_item_main_div actions_div" data-actions="get_user" data-username="' . rawurlencode($username) . '" data-highlightclass="light_grey_highlight" onclick="void(0)">
 				<div class="list_item_main_inner_div">
 				<div class="list_item_main_inner_circle_div"><div class="person_grey_24_img_div" style="' . $style . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div">' . hsc($user['name']) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($user['username']) . ' / ' . $user['followers'] . ' ' . $text . '</div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div">' . hsc($name) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($username) . ' / ' . $followers . ' ' . $text . '</div></div>
 				</div>
 				</div>
 				</div>
@@ -105,6 +94,15 @@ elseif(isset($_GET['search']))
 
 		if(is_array($tracks))
 		{
+			$queue_uris = '';
+
+			foreach($tracks as $track)
+			{
+				$queue_uris .= $track['uri'] . ' ';
+			}
+
+			$queue_uris = rtrim($queue_uris);
+
 			$initial_results = (get_search_type($string) == 'track' || get_search_type($string) == 'isrc') ? 50 : 5;
 
 			$actions_dialog = array();
@@ -159,20 +157,20 @@ elseif(isset($_GET['search']))
 				$uri = $track['uri'];
 
 				$details_dialog = array();
-				$details_dialog['title'] = hsc($title);
+				$details_dialog['title'] = $title;
 				$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
 				$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
 				$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 
 				$actions_dialog = array();
-				$actions_dialog['title'] = hsc($title);
+				$actions_dialog['title'] = $title;
 				$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 				$actions_dialog['actions'][] = array('text' => 'Go to Album', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog browse_album', $album_uri));
 				$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 				$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 				$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
 				$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
-				$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+				$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
 				$class = ($i > $initial_results) ? 'hidden_div' : '';
 
@@ -181,13 +179,13 @@ elseif(isset($_GET['search']))
 					<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
 					<div class="list_item_main_actions_arrow_div"></div>
 					<div class="list_item_main_inner_div">
-					<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-					<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+					<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+					<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 					</div>
 					</div>
 					<div class="list_item_actions_div">
 					<div class="list_item_actions_inner_div">
-					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+					<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-queueuris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 					<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 					<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 					<div title="Go to Artist" class="actions_div" data-actions="browse_artist" data-uri="' . $artist_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div person_grey_24_img_div"></div></div>
@@ -257,7 +255,7 @@ elseif(isset($_GET['search']))
 				$uri = $playlist['uri'];
 				$cover_art = $playlist['cover_art'];
 
-				echo '<div class="card_vertical_div"><div title="' . hsc($name) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($name) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">Playlist by ' . hsc(is_facebook_user($user)) . '</div></div></div>';
+				echo '<div class="card_vertical_div"><div title="' . hsc($name) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($name) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" style="background-image: url(\'' . $cover_art . '\')"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">Playlist by ' . hsc(facebook_user($user)) . '</div></div></div>';
 			}
 
 			echo '<div class="clear_float_div"></div></div>';

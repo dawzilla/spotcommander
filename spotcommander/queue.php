@@ -28,6 +28,10 @@ if(isset($_GET['queue_uri']))
 {
 	echo queue_uri(rawurldecode($_POST['artist']), rawurldecode($_POST['title']), $_POST['uri']);
 }
+elseif(isset($_GET['queue_uris']))
+{
+	echo queue_uris($_POST['queueuri'], $_POST['randomly']);
+}
 elseif(isset($_GET['move']))
 {
 	echo move_queued_uri($_POST['id'], $_POST['sortorder'], $_POST['direction']);
@@ -49,7 +53,7 @@ else
 	$activity['title'] = 'Queue';
 	$activity['actions'][] = array('action' => array('Clear', 'trash_white_24_img_div'), 'keys' => array('actions'), 'values' => array('clear_queue'));
 
-	$tracks = get_db_rows('queue', "SELECT id, artist, title, uri, sortorder FROM queue ORDER BY sortorder, id LIMIT 226", array('id', 'artist', 'title', 'uri', 'sortorder'));
+	$tracks = get_db_rows('queue', "SELECT id, artist, title, uri, sortorder FROM queue ORDER BY sortorder, id", array('id', 'artist', 'title', 'uri', 'sortorder'));
 
 	if(empty($tracks))
 	{
@@ -81,19 +85,16 @@ else
 
 			$type = get_uri_type($uri);
 
-			$is_action = ($type != 'track' && $type != 'local');
+			$action = ($type != 'track' && $type != 'local');
 
-			if($is_action)
+			if($action)
 			{
-				$class = 'underline_text';
 				$title = strtoupper($title);
 			}
 			else
 			{
-				$class = track_is_playing($uri, 'text');
-
 				$actions_dialog = array();
-				$actions_dialog['title'] = hsc($title);
+				$actions_dialog['title'] = $title;
 				$actions_dialog['actions'][] = array('text' => 'Pause After Track', 'keys' => array('actions', 'queueaction', 'sortorder'), 'values' => array('hide_dialog queue_action', 'pause', $sortorder));
 				$actions_dialog['actions'][] = array('text' => 'Stop After Track', 'keys' => array('actions', 'queueaction', 'sortorder'), 'values' => array('hide_dialog queue_action', 'stop', $sortorder));
 				$actions_dialog['actions'][] = array('text' => 'Suspend After Track', 'keys' => array('actions', 'queueaction', 'sortorder'), 'values' => array('hide_dialog queue_action', 'suspend', $sortorder));
@@ -105,8 +106,8 @@ else
 				<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" onclick="void(0)">
 				<div class="list_item_main_actions_arrow_div"></div>
 				<div class="list_item_main_inner_div">
-				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . $class . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 				</div>
 				</div>
 				<div class="list_item_actions_div">
@@ -117,7 +118,7 @@ else
 				<div title="Remove" class="actions_div" data-actions="remove_from_queue" data-id="' . $id . '" data-sortorder="' . $sortorder . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div trash_grey_24_img_div"></div></div>
 			';
 
-			if(!$is_action) echo '<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>';
+			if(!$action) echo '<div title="More" class="show_actions_dialog_div actions_div" data-actions="show_actions_dialog" data-dialogactions="' . base64_encode(json_encode($actions_dialog)) . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div more_grey_24_img_div"></div></div>';
 
 			echo '</div></div></div>';
 		}

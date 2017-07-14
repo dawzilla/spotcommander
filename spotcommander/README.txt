@@ -11,9 +11,9 @@ BEFORE UPGRADING:
 * Close SpotCommander completely on all your devices before upgrading
 * You must reauthorize with Spotify for this version to work (from Profile in the side menu)
 * It is recommended that Spotify Premium users update to the latest Spotify desktop client
-* Before updating to the latest Spotify desktop client, you should delete the directories ~/.config/spotify and ~/.cache/spotify
+* If you update to the latest Spotify desktop client, you should delete the directories ~/.config/spotify and ~/.cache/spotify (~ means your user's Home Folder)
 
-CHANGELOG v 13.3:
+CHANGELOG v 13.4:
 
 * Fixes for the previous version's new features (see below)
 * Toggle if a Playlist is Collaborative when creating or editing a Playlist

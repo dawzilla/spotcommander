@@ -24,18 +24,19 @@ function setGlobalVariables(global_variables)
 	global_variables = JSON.parse(global_variables);
 
 	// Project
+	project_path = window.location.pathname;
 	project_name = global_variables.project_name;
 	project_version = global_variables.project_version;
 	project_serial = global_variables.project_serial;
-	project_path = window.location.pathname;
 	project_website = global_variables.project_website;
 	project_website_https = global_variables.project_website_https;
 	project_developer = global_variables.project_developer;
-	project_android_app_minimum_version = parseFloat(global_variables.project_android_app_minimum_version);
 	project_error_code = global_variables.project_error_code;
-	project_is_authorized_with_spotify = global_variables.project_is_authorized_with_spotify;
-	project_is_spotify_subscription_premium = global_variables.project_is_spotify_subscription_premium;
-	project_spotify_is_new = global_variables.project_spotify_is_new;
+	project_authorized_with_spotify = global_variables.project_authorized_with_spotify;
+	project_spotify_new = global_variables.project_spotify_new;
+	project_spotify_subscription_premium = global_variables.project_spotify_subscription_premium;
+	project_spotify_premium_tracks_limit = global_variables.project_spotify_premium_tracks_limit;
+	project_android_app_minimum_version = global_variables.project_android_app_minimum_version;
 
 	// User agent
 	ua = window.navigator.userAgent;
@@ -64,11 +65,11 @@ function setGlobalVariables(global_variables)
 	}
 
 	// Device & browser
-	ua_is_android = (shc(ua, 'Android'));
-	ua_is_ios = (shc(ua, 'iPhone') || shc(ua, 'iPod') || shc(ua, 'iPad'));
-	ua_is_os_x = (shc(ua, 'Macintosh; Intel Mac OS X'));
-	ua_is_standalone = (ua_is_android && shc(ua, project_name) || ua_is_ios && ('standalone' in window.navigator) && window.navigator.standalone || ua_is_os_x && shc(ua, 'FluidApp'));
-	ua_is_android_app = (ua_is_android && ua_is_standalone);
+	ua_android = (shc(ua, 'Android'));
+	ua_ios = (shc(ua, 'iPhone') || shc(ua, 'iPod') || shc(ua, 'iPad'));
+	ua_os_x = (shc(ua, 'Macintosh; Intel Mac OS X'));
+	ua_standalone = (ua_android && shc(ua, project_name) || ua_ios && ('standalone' in window.navigator) && window.navigator.standalone || ua_os_x && shc(ua, 'FluidApp'));
+	ua_android_app = (ua_android && ua_standalone);
 
 	// Scrolling
 	scrolling = false;
@@ -79,7 +80,7 @@ function setGlobalVariables(global_variables)
 	scrolling_last_list_header = null;
 
 	// Pointer
-	pointer_is_down = false;
+	pointer_down = false;
 	pointer_moved = false;
 	pointer_moved_sensitivity = 10;
 
@@ -247,7 +248,7 @@ $(window).on('load', function()
 			$(document).on(pointer_down_event, function(event)
 			{
 				pointer_points = event.originalEvent.touches.length;
-				pointer_is_down = true;
+				pointer_down = true;
 				pointer_moved = (pointer_points != 1);
 				pointer_gesture_done = false;
 
@@ -295,7 +296,7 @@ $(window).on('load', function()
 					pointer_gesture_done = true;
 				}
 
-				if(ua_is_ios && ua_is_standalone)
+				if(ua_ios && ua_standalone)
 				{
 					if(pointer_start_x > window_width - pointer_edge)
 					{
@@ -315,14 +316,14 @@ $(window).on('load', function()
 
 			$(document).on(pointer_up_event, function()
 			{
-				pointer_is_down = false;
+				pointer_down = false;
 			});
 		}
 		else
 		{
 			$(document).on(pointer_down_event, function(event)
 			{
-				pointer_is_down = true;
+				pointer_down = true;
 				pointer_moved = false;
 
 				pointer_start_x = event.pageX;
@@ -344,7 +345,7 @@ $(window).on('load', function()
 
 			$(document).on(pointer_up_event, function()
 			{
-				pointer_is_down = false;
+				pointer_down = false;
 			});
 		}
 
@@ -736,7 +737,7 @@ $(window).on('load', function()
 				}
 				else if(action == 'play_uris')
 				{
-					playUris(data.uri, data.queueuris);
+					playUris(data.uri, data.queueuri, data.queueuris);
 				}
 				else if(action == 'transfer_device')
 				{
@@ -749,6 +750,10 @@ $(window).on('load', function()
 				else if(action == 'queue_uri')
 				{
 					queueUri(data.artist, data.title, data.uri);
+				}
+				else if(action == 'queue_uris')
+				{
+					queueUris(data.queueuri, data.randomly);
 				}
 				else if(action == 'move_queued_uri')
 				{
@@ -999,7 +1004,7 @@ $(window).on('load', function()
 
 		var cookie = { id: 'current_activity_'+project_version };
 
-		if(ua_is_ios && ua_is_standalone && isCookie(cookie.id))
+		if(ua_ios && ua_standalone && isCookie(cookie.id))
 		{
 			var a = Cookies.getJSON(cookie.id);
 

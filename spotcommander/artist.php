@@ -84,24 +84,21 @@ else
 	}
 	else
 	{
-		$queue_uris = array();
-		$n = 0;
+		$queue_uris = '';
 
 		foreach($tracks as $track)
 		{
-			$queue_uris[$n] = $track['uri'];
-
-			$n++;
+			$queue_uris .= $track['uri'] . ' ';
 		}
 
-		$activity['queueuris'] = json_encode($queue_uris);
+		$queue_uris = rtrim($queue_uris);
 
-		$library_action = (is_saved($artist_uri)) ? 'Remove from Library' : 'Save to Library';
+		$library_action = (saved($artist_uri)) ? 'Remove from Library' : 'Save to Library';
 
 		$activity['actions'][] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), '', $artist_uri));
 		$activity['actions'][] = array('action' => array('Add to Playlist', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('add_to_playlist', $artist, $artist_uri));
 		$activity['actions'][] = array('action' => array('Search Artist', ''), 'keys' => array('actions', 'string'), 'values' => array('get_search', rawurlencode('artist:"' . $artist . '"')));
-		$activity['actions'][] = array('action' => array('Share'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', hsc($artist), rawurlencode(uri_to_url($artist_uri))));
+		$activity['actions'][] = array('action' => array('Share'), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', $artist, rawurlencode(uri_to_url($artist_uri))));
 
 		$albums_count = ($albums_count == 1) ? $albums_count . ' album' : $albums_count . ' albums';
 
@@ -136,31 +133,31 @@ else
 			$album_uri = $track['album_uri'];
 
 			$details_dialog = array();
-			$details_dialog['title'] = hsc($title);
+			$details_dialog['title'] = $title;
 			$details_dialog['details'][] = array('detail' => 'Album', 'value' => $album);
 			$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
 			$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 
 			$actions_dialog = array();
-			$actions_dialog['title'] = hsc($title);
+			$actions_dialog['title'] = $title;
 			$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 			$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
 			$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
-			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
 			echo '
 				<div class="list_item_div list_item_track_div">
 				<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
 				<div class="list_item_main_actions_arrow_div"></div>
 				<div class="list_item_main_inner_div">
-				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 				</div>
 				</div>
 				<div class="list_item_actions_div">
 				<div class="list_item_actions_inner_div">
-				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
+				<div title="Play" class="actions_div" data-actions="play_uris" data-uri="' . $uri . '" data-queueuris="' . $queue_uris . '" data-highlightclass="dark_grey_highlight" data-highlightotherelement="div.list_item_main_actions_arrow_div" data-highlightotherelementparent="div.list_item_div" data-highlightotherelementclass="up_arrow_dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div play_grey_24_img_div"></div></div>
 				<div title="Queue" class="actions_div" data-actions="queue_uri" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div queue_grey_24_img_div"></div></div>
 				<div title="Save to/Remove from Library" class="actions_div" data-actions="save" data-artist="' . rawurlencode($artist) . '" data-title="' . rawurlencode($title) . '" data-uri="' . $uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div ' . save_remove_icon($uri) . '_grey_24_img_div"></div></div>
 				<div title="Go to Album" class="actions_div" data-actions="browse_album" data-uri="' . $album_uri . '" data-highlightclass="dark_grey_highlight" onclick="void(0)"><div class="img_div img_24_div album_grey_24_img_div"></div></div>

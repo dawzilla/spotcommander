@@ -475,7 +475,7 @@ div#dialog_body_div::-webkit-scrollbar
 {
 	width: 8px;
 }
- 
+
 div#dialog_body_div::-webkit-scrollbar-thumb
 {
 	background-color: #689f38;
@@ -958,7 +958,7 @@ div.list_item_main_actions_arrow_div
 	position: absolute;
 	bottom: 0;
 	left: 24px;
-	width: 0; 
+	width: 0;
 	height: 0;
 	margin: -12px 0 0 0;
 	border-style: solid;

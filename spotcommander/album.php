@@ -59,13 +59,13 @@ else
 	$total_length = $metadata['total_length'];
 
 	$details_dialog = array();
-	$details_dialog['title'] = hsc($title);
+	$details_dialog['title'] = $title;
 	$details_dialog['details'][] = array('detail' => 'Type', 'value' => $type);
 	$details_dialog['details'][] = array('detail' => 'Released', 'value' => $released);
 	$details_dialog['details'][] = array('detail' => 'Popularity', 'value' => $popularity);
 	$details_dialog['details'][] = array('detail' => 'Total Length', 'value' => $total_length);
 
-	$library_action = (is_saved($album_uri)) ? 'Remove from Library' : 'Save to Library';
+	$library_action = (saved($album_uri)) ? 'Remove from Library' : 'Save to Library';
 
 	$activity['title'] = $title;
 	$activity['actions'][] = array('action' => array($library_action, ''), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($artist), rawurlencode($title), $album_uri));
@@ -73,7 +73,7 @@ else
 	$activity['actions'][] = array('action' => array('Go to Artist', ''), 'keys' => array('actions', 'uri'), 'values' => array('browse_artist', $artist_uri));
 	$activity['actions'][] = array('action' => array('Search Artist', ''), 'keys' => array('actions', 'string'), 'values' => array('get_search', rawurlencode('artist:"' . $artist . '"')));
 	$activity['actions'][] = array('action' => array('Details', ''), 'keys' => array('actions', 'dialogdetails'), 'values' => array('show_details_dialog', base64_encode(json_encode($details_dialog))));
-	$activity['actions'][] = array('action' => array('Share', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', hsc($title), rawurlencode(uri_to_url($album_uri))));
+	$activity['actions'][] = array('action' => array('Share', ''), 'keys' => array('actions', 'title', 'uri'), 'values' => array('share_uri', $title, rawurlencode(uri_to_url($album_uri))));
 
 	$tracks_count = ($tracks_count == 1) ? $tracks_count . ' track' : $tracks_count . ' tracks';
 
@@ -95,17 +95,14 @@ else
 
 		$i++;
 
-		$queue_uris = array();
-		$n = 0;
+		$queue_uris = '';
 
 		foreach($tracks as $track)
 		{
-			$queue_uris[$n] = $track['uri'];
-
-			$n++;
+			$queue_uris .= $track['uri'] . ' ';
 		}
 
-		$queue_uris = base64_encode(json_encode($queue_uris));
+		$queue_uris = rtrim($queue_uris);
 
 		echo '
 			<div class="list_header_div list_header_below_cover_art_div"><div>Disc ' . $i . '</div><div></div></div>
@@ -124,27 +121,27 @@ else
 			$uri = $track['uri'];
 
 			$details_dialog = array();
-			$details_dialog['title'] = hsc($title);
+			$details_dialog['title'] = $title;
 			$details_dialog['details'][] = array('detail' => 'Disc Number', 'value' => $disc_number);
 			$details_dialog['details'][] = array('detail' => 'Track Number', 'value' => $track_number);
 			$details_dialog['details'][] = array('detail' => 'Length', 'value' => $length);
 
 			$actions_dialog = array();
-			$actions_dialog['title'] = hsc($title);
+			$actions_dialog['title'] = $title;
 			$actions_dialog['actions'][] = array('text' => 'Add to Playlist', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog add_to_playlist', $title, $uri));
 			$actions_dialog['actions'][] = array('text' => 'Search Artist', 'keys' => array('actions', 'string'), 'values' => array('hide_dialog get_search', rawurlencode('artist:"' . $artist . '"')));
 			$actions_dialog['actions'][] = array('text' => 'Recommendations', 'keys' => array('actions', 'uri'), 'values' => array('hide_dialog get_recommendations', $uri));
 			$actions_dialog['actions'][] = array('text' => 'Lyrics', 'keys' => array('actions', 'artist', 'title'), 'values' => array('hide_dialog get_lyrics', rawurlencode($artist), rawurlencode($title)));
 			$actions_dialog['actions'][] = array('text' => 'Details', 'keys' => array('actions', 'dialogdetails'), 'values' => array('hide_dialog show_details_dialog', base64_encode(json_encode($details_dialog))));
-			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', hsc($title), rawurlencode(uri_to_url($uri))));
+			$actions_dialog['actions'][] = array('text' => 'Share', 'keys' => array('actions', 'title', 'uri'), 'values' => array('hide_dialog share_uri', $title, rawurlencode(uri_to_url($uri))));
 
 			echo '
 				<div class="list_item_div">
 				<div title="' . hsc($artist . ' - ' . $title) . '" class="list_item_main_div actions_div" data-actions="toggle_list_item_actions" data-trackuri="' . $uri . '" onclick="void(0)">
 				<div class="list_item_main_actions_arrow_div"></div>
 				<div class="list_item_main_inner_div">
-				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_is_playing($uri, 'icon') . '"></div></div>
-				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_is_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
+				<div class="list_item_main_inner_icon_div"><div class="img_div img_24_div unfold_more_grey_24_img_div ' . track_playing($uri, 'icon') . '"></div></div>
+				<div class="list_item_main_inner_text_div"><div class="list_item_main_inner_text_upper_div ' . track_playing($uri, 'text') . '">' . hsc($title) . '</div><div class="list_item_main_inner_text_lower_div">' . hsc($artist) . '</div></div>
 				</div>
 				</div>
 				<div class="list_item_actions_div">

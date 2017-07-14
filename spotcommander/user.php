@@ -48,10 +48,10 @@ else
 
 	$user_uri = 'spotify:user:' . rawurlencode($profile['username']);
 
-	$is_saved = is_saved($user_uri);
+	$saved = saved($user_uri);
 
-	$library_action = ($is_saved) ? 'Remove from Library' : 'Save to Library';
-	$library_icon = ($is_saved) ? 'check_white_24_img_div' : 'plus_white_24_img_div';
+	$library_action = ($saved) ? 'Remove from Library' : 'Save to Library';
+	$library_icon = ($saved) ? 'check_white_24_img_div' : 'plus_white_24_img_div';
 
 	$activity['actions'][] = array('action' => array($library_action, $library_icon), 'keys' => array('actions', 'artist', 'title', 'uri'), 'values' => array('save', rawurlencode($profile['username']), rawurlencode($profile['name']), $user_uri));
 
@@ -67,7 +67,7 @@ else
 		</div>
 		<div>
 		<div>' . hsc($profile['name']) . '</div>
-		<div>' . is_facebook_user($profile['username']) . ' / ' . $profile['followers'] . ' ' . $text . '</div>
+		<div>' . facebook_user($profile['username']) . ' / ' . $profile['followers'] . ' ' . $text . '</div>
 		</div>
 		</div>
 
@@ -82,15 +82,15 @@ else
 	{
 		echo '<div class="cards_vertical_div">';
 
-		$cover_art_cache = get_cover_art_cache('medium');
-
 		foreach($playlists as $playlist)
 		{
 			$name = $playlist['name'];
 			$uri = $playlist['uri'];
-			$user = is_facebook_user(get_playlist_user($uri));
+			$user = facebook_user(get_playlist_user($uri));
 
-			$style = (empty($cover_art_cache[$uri])) ? 'color: initial' : 'background-image: url(\'' . $cover_art_cache[$uri] . '\')';
+			$cover_art_cache = get_cover_art_cache('medium', $uri);
+
+			$style = (empty($cover_art_cache)) ? 'color: initial' : 'background-image: url(\'' . $cover_art_cache . '\')';
 
 			echo '<div class="card_vertical_div"><div title="' . hsc($name) . '" class="card_vertical_inner_div actions_div" data-actions="browse_playlist" data-uri="' . $uri . '" data-description="' . rawurlencode($name) . '" data-highlightclass="card_highlight" onclick="void(0)"><div class="card_vertical_cover_art_div" data-coverarturi="' . $uri . '" style="' . $style . '"></div><div class="card_vertical_upper_div">' . hsc($name) . '</div><div class="card_vertical_lower_div">' . $user . '</div></div></div>';
 		}
