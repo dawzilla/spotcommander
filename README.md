@@ -2,14 +2,14 @@
 
 The most intuitive and feature-rich remote control for Spotify for Linux, NOT Windows or Mac OS X.
 
+### Disclaimer
+
+This product is not developed, endorsed or certified in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.
+
 #### Links
 * [Project website](https://www.olejon.net/code/spotcommander/)
 * [Download](https://www.olejon.net/code/spotcommander/?download)
 * [Wiki](https://www.olejon.net/code/spotcommander/?wiki)
-
-### Disclaimer
-
-This product is not developed, endorsed or certified in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.
 
 <p>Copyright 2017 Ole Jon Bjørkum - <a href="https://www.olejon.net/code/spotcommander/?olejondotnet" target="_blank">OleJon.net</a></p>
 
