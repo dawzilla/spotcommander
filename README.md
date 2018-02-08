@@ -9,6 +9,9 @@ The most intuitive and feature-rich remote control for Spotify for Linux, NOT Wi
 
 ### Disclaimer
 
-This product uses a Spotify API but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.
+This product is not developed, endorsed or certified in any way by Spotify. Spotify is the registered trade mark of the Spotify Group.
+
+<p>Copyright 2017 Ole Jon Bjørkum - <a href="https://www.olejon.net/code/spotcommander/?olejondotnet" target="_blank">OleJon.net</a></p>
+
 
 [![Image](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.olejon.net/code/spotcommander/?donate)
