@@ -11,7 +11,7 @@ This product is not developed, endorsed or certified in any way by Spotify. Spot
 * [Download](https://www.olejon.net/code/spotcommander/?download)
 * [Wiki](https://www.olejon.net/code/spotcommander/?wiki)
 
-<p>Copyright 2018 Ole Jon Bjørkum - <a href="https://www.olejon.net/code/spotcommander/?olejondotnet" target="_blank">OleJon.net</a></p>
+"Human knowledge belongs to the world"
 
 
 [![Image](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.olejon.net/code/spotcommander/?donate)
