@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="@string/settings_category_appearance">
+		<CheckBoxPreference android:key="HIDE_STATUS_BAR" android:defaultValue="false" android:title="@string/settings_hide_status_bar_title" android:summary="@string/settings_hide_status_bar_summary"/>
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/settings_category_advanced">
+		<CheckBoxPreference android:key="HARDWARE_ACCELERATED_ANIMATIONS" android:defaultValue="true" android:title="@string/settings_accelerated_animations_title" android:summary="@string/settings_accelerated_animations_summary"/>
+	</PreferenceCategory>
+</PreferenceScreen>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/main_layout">
+	<android.support.v7.widget.Toolbar android:id="@+id/main_toolbar" android:layout_alignParentTop="true" style="@style/toolbar"/>
+	<LinearLayout android:layout_below="@+id/main_toolbar" style="@style/main_inner_layout">
+		<ListView android:id="@+id/main_list" style="@style/listview"/>
+		<TextView android:id="@+id/main_empty" android:drawableTop="@drawable/ic_new_releases_grey600_48dp" android:text="@string/main_list_empty" style="@style/listview_empty"/>
+	</LinearLayout>
+	<android.support.design.widget.FloatingActionButton android:id="@+id/main_fab" android:layout_alignParentBottom="true" android:layout_alignParentEnd="true" android:layout_alignParentRight="true" android:src="@drawable/ic_add_white_24dp" style="@style/fab_layout"/>
+</RelativeLayout>

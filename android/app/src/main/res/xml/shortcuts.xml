@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+	<shortcut android:shortcutId="last_computer" android:icon="@drawable/ic_shortcut_computer" android:shortcutShortLabel="@string/shortcut_last_computer" tools:ignore="UnusedAttribute">
+		<intent android:action="android.intent.action.VIEW" android:targetPackage="net.olejon.spotcommander" android:targetClass="net.olejon.spotcommander.WebViewActivity"/>
+	</shortcut>
+</shortcuts>

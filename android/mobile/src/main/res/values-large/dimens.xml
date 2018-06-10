@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<resources>
-
-    <dimen name="add_computer_body_layout_padding_top">16dp</dimen>
-    <dimen name="add_computer_body_layout_padding_right">8dp</dimen>
-    <dimen name="add_computer_body_layout_padding_left">8dp</dimen>
-
-</resources>

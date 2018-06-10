@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/add_computer_layout">
+	<android.support.design.widget.AppBarLayout style="@style/appbar">
+		<android.support.design.widget.CollapsingToolbarLayout style="@style/collapsing_toolbar">
+			<LinearLayout android:layout_below="@+id/add_computer_toolbar" style="@style/add_computer_collapsing_toolbar_layout">
+				<android.support.design.widget.TextInputLayout android:id="@+id/add_computer_text_input_name_layout" style="@style/add_computer_text_input_layout">
+					<EditText android:id="@+id/add_computer_name" android:text="@string/add_computer_name_text" android:hint="@string/add_computer_name_hint" android:inputType="textNoSuggestions" style="@style/add_computer_text_input_layout_edittext"/>
+				</android.support.design.widget.TextInputLayout>
+				<android.support.design.widget.TextInputLayout android:id="@+id/add_computer_text_input_uri_layout" style="@style/add_computer_text_input_layout">
+					<EditText android:id="@+id/add_computer_uri" android:text="@string/add_computer_uri_text" android:hint="@string/add_computer_uri_hint" android:inputType="textUri" style="@style/add_computer_text_input_layout_edittext"/>
+				</android.support.design.widget.TextInputLayout>
+			</LinearLayout>
+			<android.support.v7.widget.Toolbar android:id="@+id/add_computer_toolbar" style="@style/collapsing_toolbar_toolbar">
+				<ProgressBar android:id="@+id/add_computer_progressbar" style="@style/toolbar_progressbar"/>
+			</android.support.v7.widget.Toolbar>
+		</android.support.design.widget.CollapsingToolbarLayout>
+	</android.support.design.widget.AppBarLayout>
+	<android.support.v4.widget.NestedScrollView style="@style/nested_scrollview">
+		<LinearLayout style="@style/add_computer_inner_layout">
+			<TextView android:text="@string/add_computer_authentication" style="@style/subheader"/>
+			<LinearLayout style="@style/add_computer_inner_inner_layout">
+				<EditText android:id="@+id/add_computer_username" android:hint="@string/add_computer_username_hint" android:inputType="textNoSuggestions" style="@style/add_computer_inner_inner_edittext"/>
+				<EditText android:id="@+id/add_computer_password" android:hint="@string/add_computer_password_hint" android:inputType="textPassword" style="@style/add_computer_inner_inner_edittext"/>
+				<TextView android:id="@+id/add_computer_information" android:text="@string/add_computer_information" style="@style/add_computer_information"/>
+			</LinearLayout>
+		</LinearLayout>
+	</android.support.v4.widget.NestedScrollView>
+</android.support.design.widget.CoordinatorLayout>
